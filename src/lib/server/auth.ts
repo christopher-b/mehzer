@@ -1,7 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
 
 export const SESSION_COOKIE = 'mehzur_session';
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const encoder = new TextEncoder();
 
@@ -33,20 +33,20 @@ export async function checkPassword(secret: string, expected: string, given: str
 	return timingSafeEqual(a, b);
 }
 
-export async function createSessionToken(secret: string, now = Date.now()): Promise<string> {
-	const exp = String(now + SESSION_TTL_MS);
-	return `${exp}.${await hmac(secret, `session:${exp}`)}`;
+/** A new random token (256 bits, URL-safe) for a cookie, invite link or reset link. */
+export function randomToken(): string {
+	return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+		.replace(/\+/g, '-')
+		.replace(/\//g, '_')
+		.replace(/=+$/, '');
 }
 
-export async function verifySessionToken(
-	secret: string,
-	token: string | undefined,
-	now = Date.now()
-): Promise<boolean> {
-	if (!token) return false;
-	const [exp, sig] = token.split('.');
-	if (!exp || !sig || !/^\d+$/.test(exp) || Number(exp) < now) return false;
-	return timingSafeEqual(sig, await hmac(secret, `session:${exp}`));
+/**
+ * What is stored for a token: a keyed hash, so a copy of the database cannot be used to sign in, and
+ * changing `SESSION_SECRET` invalidates every session and link.
+ */
+export function hashToken(secret: string, token: string): Promise<string> {
+	return hmac(secret, `token:${token}`);
 }
 
 /**

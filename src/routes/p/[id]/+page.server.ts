@@ -7,10 +7,11 @@ import { messages } from '#lib/server/messages.ts';
 import { annotationOrder, deletePhoto, numberWithinPhoto, photoOrder, roomOrder } from '#lib/server/photos.ts';
 import { setRoomArea } from '#lib/server/rooms.ts';
 import { deleteProject, getProjectOr404, parseName, parseUnitSystem } from '#lib/server/projects.ts';
+import { requireUser } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	const project = await getProjectOr404(locals.db, params.id);
+	const project = await getProjectOr404(locals.db, requireUser(locals).id, params.id);
 	const projectPhotos = await locals.db
 		.select()
 		.from(photos)
@@ -50,25 +51,29 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
 	createRoom: async ({ request, locals, params }) => {
-		await getProjectOr404(locals.db, params.id);
+		const user = requireUser(locals);
+		await getProjectOr404(locals.db, user.id, params.id);
 		const name = parseName((await request.formData()).get('name'));
 		if (!name) return fail(400, { error: messages.roomName });
-		await locals.db.insert(rooms).values({ projectId: params.id, name });
+		await locals.db.insert(rooms).values({ projectId: params.id, name, createdBy: user.id, updatedBy: user.id });
 	},
 
 	renameRoom: async ({ request, locals, params }) => {
+		const user = requireUser(locals);
+		await getProjectOr404(locals.db, user.id, params.id);
 		const form = await request.formData();
 		const name = parseName(form.get('name'));
 		if (!name) return fail(400, { error: messages.roomName });
 		const updated = await locals.db
 			.update(rooms)
-			.set({ name })
+			.set({ name, updatedBy: user.id })
 			.where(and(eq(rooms.id, formString(form, 'roomId')), eq(rooms.projectId, params.id)))
 			.returning({ id: rooms.id });
 		if (!updated.length) return fail(404, { error: 'Room not found' });
 	},
 
 	deleteRoom: async ({ request, locals, params }) => {
+		await getProjectOr404(locals.db, requireUser(locals).id, params.id);
 		const form = await request.formData();
 		const deleted = await locals.db
 			.delete(rooms)
@@ -78,6 +83,7 @@ export const actions: Actions = {
 	},
 
 	setRoomArea: async ({ request, locals, params }) => {
+		await getProjectOr404(locals.db, requireUser(locals).id, params.id);
 		const form = await request.formData();
 		const result = await setRoomArea(
 			locals.db,
@@ -94,24 +100,26 @@ export const actions: Actions = {
 	},
 
 	update: async ({ request, locals, params }) => {
-		await getProjectOr404(locals.db, params.id);
+		const user = requireUser(locals);
+		await getProjectOr404(locals.db, user.id, params.id);
 		const form = await request.formData();
 		const name = parseName(form.get('name'));
 		const unitSystem = parseUnitSystem(form.get('unitSystem'));
 		if (!name || !unitSystem) {
 			return fail(400, { error: messages.projectFields });
 		}
-		await locals.db.update(projects).set({ name, unitSystem }).where(eq(projects.id, params.id));
+		await locals.db.update(projects).set({ name, unitSystem, updatedBy: user.id }).where(eq(projects.id, params.id));
 		return { saved: true };
 	},
 
 	delete: async ({ locals, params }) => {
-		await getProjectOr404(locals.db, params.id);
+		await getProjectOr404(locals.db, requireUser(locals).id, params.id);
 		await deleteProject(locals.db, locals.storage, params.id);
 		redirect(303, '/');
 	},
 
 	deletePhoto: async ({ request, locals, params }) => {
+		await getProjectOr404(locals.db, requireUser(locals).id, params.id);
 		const form = await request.formData();
 		const deleted = await deletePhoto(
 			locals.db,

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { rooms } from '#lib/server/db/schema.ts';
 import { buildProjectExport, exportFileName, toCsv } from '#lib/server/export.ts';
 import { buildPdf, readJpeg, type PdfImages } from '#lib/server/pdf.ts';
-import { createContext, seedAnnotation, seedPhoto, seedProject, seedRoom } from './helpers.ts';
+import { createContext, seedAnnotation, seedPhoto, seedProject, seedRoom, TEST_USER } from './helpers.ts';
 
 async function seed() {
 	const { db } = createContext();
@@ -22,7 +22,7 @@ async function seed() {
 describe('export', () => {
 	it('gathers rooms in creation order, then No room, with areas and numbered measurements', async () => {
 		const { db, project } = await seed();
-		const data = await buildProjectExport(db, project.id);
+		const data = await buildProjectExport(db, TEST_USER.id, project.id);
 		expect(data.rooms.map((r) => r.name)).toEqual(['Kitchen', 'Empty', 'No room']);
 		expect(data.rooms[0].area).toBe('12.00 m²');
 		expect(data.rooms[0].measurements.map((m) => [m.photo, m.name, m.value])).toEqual([
@@ -34,7 +34,7 @@ describe('export', () => {
 
 	it('writes a CSV that quotes, guards formulas and keeps rooms without measurements', async () => {
 		const { db, project } = await seed();
-		const csv = toCsv(await buildProjectExport(db, project.id));
+		const csv = toCsv(await buildProjectExport(db, TEST_USER.id, project.id));
 		const lines = csv.replace('\uFEFF', '').trimEnd().split('\r\n');
 		expect(lines[0]).toBe('Room,Room area,Photo,Measurement,Value,Value (mm)');
 		expect(lines).toContain("Kitchen,12.00 m²,1,'=Width,3 m,3000");
@@ -49,7 +49,7 @@ describe('export', () => {
 
 	it('writes a well-formed PDF, escaping text and starting new pages', async () => {
 		const { db, project } = await seed();
-		const data = await buildProjectExport(db, project.id);
+		const data = await buildProjectExport(db, TEST_USER.id, project.id);
 		data.name = 'A (tricky) \\ name ☃';
 		const text = new TextDecoder('latin1').decode(buildPdf(data, new Map(), '2026-10-24'));
 		expect(text.startsWith('%PDF-1.4')).toBe(true);
@@ -65,7 +65,7 @@ describe('export', () => {
 
 	it('embeds JPEG photos with the measurement lines and labels drawn over them', async () => {
 		const { db, project } = await seed();
-		const data = await buildProjectExport(db, project.id);
+		const data = await buildProjectExport(db, TEST_USER.id, project.id);
 		const key = data.rooms[0].photos[0].blobKey;
 		const jpeg = fakeJpeg(640, 480, 3);
 		const images: PdfImages = new Map([[key, readJpeg(jpeg)!]]);

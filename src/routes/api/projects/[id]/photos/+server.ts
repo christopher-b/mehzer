@@ -3,6 +3,7 @@ import { photos } from '#lib/server/db/schema.ts';
 import { formId } from '#lib/server/forms.ts';
 import { findRoomInProject } from '#lib/server/rooms.ts';
 import { getProjectOr404 } from '#lib/server/projects.ts';
+import { requireUser } from '#lib/server/users.ts';
 import type { RequestHandler } from './$types';
 
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -21,7 +22,8 @@ function parseDimension(value: FormDataEntryValue | null): number {
 
 /** Upload one (already client-resized) photo: multipart fields `file`, `width`, `height`, optional `roomId`. */
 export const POST: RequestHandler = async ({ request, locals, params }) => {
-	const project = await getProjectOr404(locals.db, params.id);
+	const user = requireUser(locals);
+	const project = await getProjectOr404(locals.db, user.id, params.id);
 	const form = await request.formData();
 
 	const roomId = formId(form, 'roomId');
@@ -45,7 +47,7 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		const [photo] = await locals.db
 			.insert(photos)
-			.values({ projectId: project.id, roomId, blobKey, width, height })
+			.values({ projectId: project.id, roomId, blobKey, width, height, createdBy: user.id, updatedBy: user.id })
 			.returning();
 		return Response.json(photo, { status: 201 });
 	} catch (e) {

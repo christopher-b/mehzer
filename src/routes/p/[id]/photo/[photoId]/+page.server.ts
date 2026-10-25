@@ -13,6 +13,7 @@ import {
 	roomOrder,
 	setPhotoRoom
 } from '#lib/server/photos.ts';
+import { requireUser } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 function annotationWhere(id: string, photoId: string) {
@@ -20,7 +21,7 @@ function annotationWhere(id: string, photoId: string) {
 }
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	const { project, photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+	const { project, photo } = await getPhotoOr404(locals.db, requireUser(locals).id, params.id, params.photoId);
 	const [photoAnnotations, projectRooms, neighbours] = await Promise.all([
 		locals.db
 			.select()
@@ -39,7 +40,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
 	create: async ({ request, locals, params }) => {
-		const { project, photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const user = requireUser(locals);
+		const { project, photo } = await getPhotoOr404(locals.db, user.id, params.id, params.photoId);
 		const form = await request.formData();
 		const coords = parseCoords(form);
 		if (!coords) return fail(400, { error: 'Invalid line endpoints' });
@@ -49,13 +51,14 @@ export const actions: Actions = {
 
 		const [created] = await locals.db
 			.insert(annotations)
-			.values({ photoId: photo.id, ...coords, ...fields })
+			.values({ photoId: photo.id, ...coords, ...fields, createdBy: user.id, updatedBy: user.id })
 			.returning({ id: annotations.id });
 		return { id: created.id };
 	},
 
 	update: async ({ request, locals, params }) => {
-		const { project, photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const user = requireUser(locals);
+		const { project, photo } = await getPhotoOr404(locals.db, user.id, params.id, params.photoId);
 		const form = await request.formData();
 		const parsed = parseAnnotationFields(project, form);
 		if (!parsed.ok) return parsed.failure;
@@ -63,7 +66,7 @@ export const actions: Actions = {
 
 		const updated = await locals.db
 			.update(annotations)
-			.set(fields)
+			.set({ ...fields, updatedBy: user.id })
 			.where(annotationWhere(formString(form, 'id'), photo.id))
 			.returning({ id: annotations.id });
 		if (!updated.length) return fail(404, { error: messages.annotationNotFound });
@@ -71,40 +74,43 @@ export const actions: Actions = {
 	},
 
 	deletePhoto: async ({ locals, params }) => {
-		const { photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const { photo } = await getPhotoOr404(locals.db, requireUser(locals).id, params.id, params.photoId);
 		await deletePhoto(locals.db, locals.storage, params.id, photo.id);
 		redirect(303, `/p/${params.id}`);
 	},
 
 	setRoom: async ({ request, locals, params }) => {
-		const { photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const user = requireUser(locals);
+		const { photo } = await getPhotoOr404(locals.db, user.id, params.id, params.photoId);
 		const form = await request.formData();
 		const result = await setPhotoRoom(
 			locals.db,
 			params.id,
 			photo.id,
-			formId(form, 'roomId')
+			formId(form, 'roomId'),
+			user.id
 		);
 		if (result === 'unknown-room') return fail(400, { error: 'Unknown room' });
 		if (result === 'not-found') return fail(404, { error: 'Photo not found' });
 	},
 
 	move: async ({ request, locals, params }) => {
-		const { photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const user = requireUser(locals);
+		const { photo } = await getPhotoOr404(locals.db, user.id, params.id, params.photoId);
 		const form = await request.formData();
 		const coords = parseCoords(form);
 		if (!coords) return fail(400, { error: 'Invalid line endpoints' });
 
 		const updated = await locals.db
 			.update(annotations)
-			.set(coords)
+			.set({ ...coords, updatedBy: user.id })
 			.where(annotationWhere(formString(form, 'id'), photo.id))
 			.returning({ id: annotations.id });
 		if (!updated.length) return fail(404, { error: messages.annotationNotFound });
 	},
 
 	delete: async ({ request, locals, params }) => {
-		const { photo } = await getPhotoOr404(locals.db, params.id, params.photoId);
+		const { photo } = await getPhotoOr404(locals.db, requireUser(locals).id, params.id, params.photoId);
 		const form = await request.formData();
 		const deleted = await locals.db
 			.delete(annotations)

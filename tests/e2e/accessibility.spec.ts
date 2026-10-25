@@ -48,6 +48,17 @@ for (const colorScheme of ['light', 'dark'] as const) {
 	});
 }
 
+test('the account and users pages, and the account menu, are readable and every control is named', async ({ page }) => {
+	for (const path of ['/account', '/admin/users']) {
+		await visit(page, path);
+		await expectReadable(page);
+		await expectAllControlsNamed(page);
+	}
+	await page.getByRole('button', { name: 'Account menu' }).click();
+	await expectReadable(page);
+	await expectAllControlsNamed(page);
+});
+
 test('every control has an accessible name (home, project and photo pages, and dialogs)', async ({ page }) => {
 	await visit(page, '/');
 	await expectAllControlsNamed(page);

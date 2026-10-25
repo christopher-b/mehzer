@@ -7,7 +7,9 @@ import {
 	seedAnnotation,
 	seedPhoto,
 	seedProject,
-	seedRoom
+	seedRoom,
+	seedUser,
+	TEST_USER
 } from '../../tests/helpers.ts';
 
 describe('parseName', () => {
@@ -41,8 +43,22 @@ describe('getProjectOr404', () => {
 	it('returns the project, or throws a 404', async () => {
 		const { db } = createContext();
 		const project = await seedProject(db);
-		expect((await getProjectOr404(db, project.id)).id).toBe(project.id);
-		await expect(getProjectOr404(db, 'missing')).rejects.toMatchObject({ status: 404 });
+		expect((await getProjectOr404(db, TEST_USER.id, project.id)).id).toBe(project.id);
+		await expect(getProjectOr404(db, TEST_USER.id, 'missing')).rejects.toMatchObject({ status: 404 });
+	});
+
+	it("404s for someone else's project exactly as for a missing one", async () => {
+		const { db } = createContext();
+		const other = await seedUser(db);
+		const theirs = await seedProject(db, { ownerId: other.id });
+		await expect(getProjectOr404(db, TEST_USER.id, theirs.id)).rejects.toMatchObject({ status: 404 });
+		expect((await getProjectOr404(db, other.id, theirs.id)).id).toBe(theirs.id);
+	});
+
+	it('404s for a project nobody owns yet', async () => {
+		const { db } = createContext();
+		const orphan = await seedProject(db, { ownerId: null });
+		await expect(getProjectOr404(db, TEST_USER.id, orphan.id)).rejects.toMatchObject({ status: 404 });
 	});
 });
 

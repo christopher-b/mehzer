@@ -1,8 +1,11 @@
 import { redirect } from '@sveltejs/kit';
-import { clearSessionCookie } from '#lib/server/auth.ts';
+import { SESSION_SECRET } from '$app/env/private';
+import { clearSessionCookie, SESSION_COOKIE } from '#lib/server/auth.ts';
+import { deleteSession } from '#lib/server/sessions.ts';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = ({ cookies }) => {
+export const POST: RequestHandler = async ({ cookies, locals }) => {
+	await deleteSession(locals.db, SESSION_SECRET, cookies.get(SESSION_COOKIE));
 	clearSessionCookie(cookies);
 	redirect(303, '/login');
 };

@@ -2,14 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import {
 	checkPassword,
 	clearSessionCookie,
-	createSessionToken,
+	hashToken,
+	randomToken,
 	SESSION_COOKIE,
-	setSessionCookie,
-	verifySessionToken
+	setSessionCookie
 } from './auth.ts';
 
 const SECRET = 'test-secret-value';
-const DAY = 24 * 60 * 60 * 1000;
 
 describe('checkPassword', () => {
 	it('accepts the right password and rejects others', async () => {
@@ -21,42 +20,20 @@ describe('checkPassword', () => {
 	});
 });
 
-describe('session tokens', () => {
-	const now = 1_700_000_000_000;
-
-	it('round-trips a valid token', async () => {
-		const token = await createSessionToken(SECRET, now);
-		expect(await verifySessionToken(SECRET, token, now + 1000)).toBe(true);
+describe('tokens', () => {
+	it('makes long, URL-safe, different random tokens', () => {
+		const a = randomToken();
+		const b = randomToken();
+		expect(a).not.toBe(b);
+		expect(a).toMatch(/^[A-Za-z0-9_-]{43}$/);
 	});
 
-	it('is valid for 30 days and not after', async () => {
-		const token = await createSessionToken(SECRET, now);
-		expect(await verifySessionToken(SECRET, token, now + 30 * DAY - 1)).toBe(true);
-		expect(await verifySessionToken(SECRET, token, now + 30 * DAY + 1)).toBe(false);
-	});
-
-	it('rejects a token signed with another secret', async () => {
-		const token = await createSessionToken('other-secret', now);
-		expect(await verifySessionToken(SECRET, token, now)).toBe(false);
-	});
-
-	it('rejects a tampered signature or expiry', async () => {
-		const token = await createSessionToken(SECRET, now);
-		const [exp, sig] = token.split('.');
-		expect(await verifySessionToken(SECRET, `${exp}.${sig.slice(0, -2)}AA`, now)).toBe(false);
-		// Extending the expiry must invalidate the signature.
-		expect(await verifySessionToken(SECRET, `${Number(exp) + DAY}.${sig}`, now)).toBe(false);
-	});
-
-	it.each([undefined, '', 'garbage', '.', 'abc.def', '123.', '.abc', '-5.sig', '1e9.sig'])(
-		'rejects malformed token %j',
-		async (token) => {
-			expect(await verifySessionToken(SECRET, token, now)).toBe(false);
-		}
-	);
-
-	it('produces different tokens at different times', async () => {
-		expect(await createSessionToken(SECRET, now)).not.toBe(await createSessionToken(SECRET, now + 1));
+	it('hashes a token with the secret: stable, but different for another token or secret', async () => {
+		const hash = await hashToken(SECRET, 'abc');
+		expect(await hashToken(SECRET, 'abc')).toBe(hash);
+		expect(await hashToken(SECRET, 'abd')).not.toBe(hash);
+		expect(await hashToken('other-secret', 'abc')).not.toBe(hash);
+		expect(hash).not.toContain('abc');
 	});
 });
 

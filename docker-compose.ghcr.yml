@@ -19,6 +19,16 @@ services:
       PLAIN_HTTP: ${PLAIN_HTTP:-true}
       PROTOCOL_HEADER: ${PROTOCOL_HEADER:-}
       HOST_HEADER: ${HOST_HEADER:-}
+      # Accounts and email (see docs/deployment.md). Email is optional: without SMTP_HOST, invites are shared by
+      # copying the link and "forgot password" asks people to contact the administrator.
+      APP_URL: ${APP_URL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-Mehzur <mehzur@cbennell.com>}
+      # Behind a proxy, the header that carries the visitor's address (for limiting failed sign-ins).
+      ADDRESS_HEADER: ${ADDRESS_HEADER:-}
     volumes:
       - mehzur-data:/data
 

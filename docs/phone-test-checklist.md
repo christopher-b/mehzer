@@ -11,12 +11,17 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 - [ ] Test both **light and dark mode** on the phone (the app should look the same in both: it is light-only). Do the main run in your usual setting, then repeat steps 4 and 6 in the other.
 - [ ] Have a way to see a few real photos: take new ones, and pick one large photo from the library (12 megapixels or more is ideal).
 
-## 1. Sign in
+## 1. Sign in and accounts
 
-- [ ] The password field opens the keyboard; your password manager offers to fill it.
-- [ ] A wrong password shows "Incorrect password" and does not sign you in.
-- [ ] The right password signs you in. **Close the browser completely and reopen it: you are still signed in.**
+- [ ] The email and password fields open the keyboard (the email field shows the `@` keyboard); your password manager offers to fill both.
+- [ ] A wrong password or an unknown email shows "Incorrect email or password" (the same message for both) and does not sign you in.
+- [ ] The right email and password sign you in. **Close the browser completely and reopen it: you are still signed in.**
 - [ ] Docker over plain `http` only: signing in works and stays signed in (if you land back on the sign-in page every time, the session cookie is being dropped; report it).
+- [ ] **First start** (fresh server only): the first visit goes to **Set up Mehzur**; the setup password creates the administrator and signs you in.
+- [ ] The **account menu** (your name in the header) shows your email, **Account**, **Users** (administrator only) and **Sign out**. Tap outside it: it closes. A long name is shortened with "…" and the project-menu button still fits beside the project name.
+- [ ] **Invite** (administrator): Users > Create invite link. Send the link to yourself (or open it in a private tab): the Join page asks for a name and a password, signs you in, and shows no projects from the administrator. Opening the same link again says it is no longer valid.
+- [ ] **Forgot your password?** (needs email set up): the email arrives from mehzur@cbennell.com within a minute, the link opens the new-password page, and the old password stops working afterwards. Asking for an address that has no account shows the same "we have sent it a link" message and sends nothing.
+- [ ] **Account > Change password** signs out your other devices; **Sign out everywhere else** does too.
 
 ## 2. Project, header and rooms
 

@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { Db } from './db/types.ts';
 import { NAME_MAX_LENGTH } from '#lib/constants.ts';
 import { UNIT_SYSTEMS, type UnitSystem } from '#lib/units.ts';
@@ -15,8 +15,11 @@ export function parseName(value: FormDataEntryValue | null, max = NAME_MAX_LENGT
 	return name && name.length <= max ? name : null;
 }
 
-export async function getProjectOr404(db: Db, id: string) {
-	const project = await db.query.projects.findFirst({ where: eq(projects.id, id) });
+/** A project the user owns, or a 404: other people's projects look exactly like missing ones. */
+export async function getProjectOr404(db: Db, userId: string, id: string) {
+	const project = await db.query.projects.findFirst({
+		where: and(eq(projects.id, id), eq(projects.ownerId, userId))
+	});
 	if (!project) error(404, 'Project not found');
 	return project;
 }

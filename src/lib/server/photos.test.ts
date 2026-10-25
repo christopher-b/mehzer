@@ -8,7 +8,8 @@ import {
 	seedAnnotation,
 	seedPhoto,
 	seedProject,
-	seedRoom
+	seedRoom,
+	TEST_USER
 } from '../../tests/helpers.ts';
 
 const roomOf = async (db: ReturnType<typeof createTestDb>, photoId: string) =>
@@ -301,7 +302,7 @@ describe('getPhotoOr404', () => {
 		const db = createTestDb();
 		const project = await seedProject(db);
 		const photo = await seedPhoto(db, project.id);
-		const found = await getPhotoOr404(db, project.id, photo.id);
+		const found = await getPhotoOr404(db, TEST_USER.id, project.id, photo.id);
 		expect(found.project.id).toBe(project.id);
 		expect(found.photo.id).toBe(photo.id);
 	});
@@ -311,9 +312,9 @@ describe('getPhotoOr404', () => {
 		const mine = await seedProject(db);
 		const other = await seedProject(db, { name: 'Other' });
 		const photo = await seedPhoto(db, other.id);
-		await expect(getPhotoOr404(db, 'nope', photo.id)).rejects.toMatchObject({ status: 404 });
-		await expect(getPhotoOr404(db, mine.id, 'nope')).rejects.toMatchObject({ status: 404 });
-		await expect(getPhotoOr404(db, mine.id, photo.id)).rejects.toMatchObject({ status: 404 });
+		await expect(getPhotoOr404(db, TEST_USER.id, 'nope', photo.id)).rejects.toMatchObject({ status: 404 });
+		await expect(getPhotoOr404(db, TEST_USER.id, mine.id, 'nope')).rejects.toMatchObject({ status: 404 });
+		await expect(getPhotoOr404(db, TEST_USER.id, mine.id, photo.id)).rejects.toMatchObject({ status: 404 });
 	});
 });
 

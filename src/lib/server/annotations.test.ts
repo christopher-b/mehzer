@@ -45,7 +45,10 @@ const project = (unitSystem: Project['unitSystem']): Project => ({
 	id: 'p',
 	name: 'P',
 	unitSystem,
-	createdAt: new Date()
+	createdAt: new Date(),
+	ownerId: null,
+	createdBy: null,
+	updatedBy: null
 });
 const form = (o: Record<string, string>) => {
 	const f = new FormData();

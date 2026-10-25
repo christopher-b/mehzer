@@ -6,6 +6,7 @@
 	import { notify } from '#lib/client/notify.svelte.ts';
 	import { online } from '#lib/client/online.svelte.ts';
 	import ProjectMenu from '#lib/components/ProjectMenu.svelte';
+	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
 	import SessionExpired from '#lib/components/ui/SessionExpired.svelte';
 	import Notifications from '#lib/components/ui/Notifications.svelte';
 	import { onMount } from 'svelte';
@@ -45,7 +46,23 @@
 			{/if}
 		{/if}
 		<span class="spacer"></span>
-		<form method="POST" action="/logout"><button type="submit" class="link">Sign out</button></form>
+		{#if page.data.user}
+			<PopupMenu label="Account menu">
+				{#snippet trigger(props)}
+					<button type="button" class="link account" aria-label="Account menu" {...props}>{page.data.user?.name}</button>
+				{/snippet}
+				{#snippet children(close)}
+					<p role="none" class="menu-note">{page.data.user?.email}</p>
+					<a role="menuitem" href="/account" onclick={() => close()}>Account</a>
+					{#if page.data.user?.role === 'admin'}
+						<a role="menuitem" href="/admin/users" onclick={() => close()}>Users</a>
+					{/if}
+					<form method="POST" action="/logout">
+						<button type="submit" role="menuitem">Sign out</button>
+					</form>
+				{/snippet}
+			</PopupMenu>
+		{/if}
 	</header>
 {/if}
 
@@ -98,6 +115,19 @@
 		text-decoration: none;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+	.account {
+		max-width: 9rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	header :global(.menu-note) {
+		margin: 0;
+		padding: 0.5rem 0.75rem;
+		color: var(--text-muted);
+		border-bottom: 1px solid var(--border);
+		overflow-wrap: anywhere;
 	}
 	.brand {
 		display: block;

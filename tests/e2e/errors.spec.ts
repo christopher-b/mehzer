@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test';
-import { PASSWORD } from './constants';
 import { expect, test } from './fixtures';
 import {
 	addRoom,
@@ -31,7 +30,8 @@ import {
 	uniqueName,
 	visit,
 	waitForHydration,
-	projectMenuItem
+	projectMenuItem,
+	signIn
 } from './helpers';
 
 // The baseline failures measured before error handling was built, as tests that are expected to fail until the task
@@ -39,8 +39,7 @@ import {
 
 async function signInAgain(page: Page, goToLogin = false) {
 	if (goToLogin) await page.goto('/login');
-	await page.getByLabel('Password').fill(PASSWORD);
-	await page.getByRole('button', { name: 'Sign in' }).click();
+	await signIn(page);
 }
 
 test.beforeEach(({ page }) => recordShownMessages(page));
@@ -204,12 +203,14 @@ test.describe('E6: error pages', () => {
 		const name = uniqueName('E6 fault');
 		const projectUrl = await createProject(page, name);
 		await page.goto('/');
-		// (The error id is made by the server's `handleError` and covered by its unit tests: a faked answer
-		// cannot carry one, so it is not checked here.)
-		await page.route('**/__data.json*', (route) => route.fulfill({ status: 500, body: 'boom' }));
+		// This is the shape of the answer the server gives when a page's load fails and `handleError` has made an id
+		// for it (a bare 500 would make the browser fall back to loading the page normally, which then works).
+		const fault = { type: 'data', nodes: [{ type: 'skip' }, { type: 'error', error: { status: 500, message: 'Something went wrong on our side.', id: 'abc12345' } }] };
+		await page.route('**/__data.json*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fault) }));
 		await page.locator('.projects').getByRole('link', { name: new RegExp(name) }).click();
 		await expect(page.getByRole('heading', { name: 'Something went wrong' })).toBeVisible();
 		await expect(page.getByText('Something went wrong on our side. Try again in a moment.')).toBeVisible();
+		await expect(page.getByText('Error id: abc12345')).toBeVisible();
 		await expect(page.getByText(/boom|stack|undefined/)).toHaveCount(0);
 		await page.unroute('**/__data.json*');
 		await page.getByRole('link', { name: 'Back to projects' }).click();

@@ -1,11 +1,14 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { SESSION_SECRET } from '$app/env/private';
-import { SESSION_COOKIE, verifySessionToken } from '#lib/server/auth.ts';
+import { SESSION_COOKIE } from '#lib/server/auth.ts';
+import { findSession } from '#lib/server/sessions.ts';
 import { getServices } from '#lib/server/platform.ts';
 
 const PUBLIC_PATHS = new Set([
 	'/login',
+	'/setup',
+	'/forgot',
 	'/manifest.webmanifest',
 	'/icon.svg',
 	'/icon-192.png',
@@ -13,13 +16,20 @@ const PUBLIC_PATHS = new Set([
 	'/apple-touch-icon.png'
 ]);
 
-export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.authenticated = await verifySessionToken(
-		SESSION_SECRET,
-		event.cookies.get(SESSION_COOKIE)
-	);
+// Links from emails: the token in the address is the credential.
+const PUBLIC_PREFIXES = ['/invite/', '/reset/'];
 
-	if (!event.locals.authenticated && !PUBLIC_PATHS.has(event.url.pathname)) {
+export const handle: Handle = async ({ event, resolve }) => {
+	const { db, storage } = await getServices();
+	event.locals.db = db;
+	event.locals.storage = storage;
+
+	const session = await findSession(db, SESSION_SECRET, event.cookies.get(SESSION_COOKIE));
+	event.locals.user = session?.user ?? null;
+	event.locals.sessionId = session?.sessionId ?? null;
+
+	const path = event.url.pathname;
+	if (!event.locals.user && !PUBLIC_PATHS.has(path) && !PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))) {
 		if (event.url.pathname.startsWith('/api/')) error(401, 'Unauthorized');
 		// Scripted action calls (`use:enhance`, `postAction`) get a machine-readable 401 the page can
 		// turn into a "Signed out" prompt; following a redirect would hand them the sign-in page.
@@ -33,10 +43,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const next = event.url.pathname + (event.url.search.startsWith('?/') ? '' : event.url.search);
 		redirect(303, `/login?next=${encodeURIComponent(next)}`);
 	}
-
-	const { db, storage } = await getServices();
-	event.locals.db = db;
-	event.locals.storage = storage;
 
 	return resolve(event);
 };

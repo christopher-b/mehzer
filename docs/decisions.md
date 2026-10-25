@@ -2,7 +2,7 @@
 
 ## Product decisions
 
-- One shared password, no accounts; online only (no offline mode).
+- Accounts: email and password, created by invite link from the single administrator; each person's projects are private to them. (Until Oct 2026 the app had one shared password.) Online only (no offline mode).
 - Units are per project; measurements are stored in mm and shown as ft/in or m/cm.
 - Every photo belongs to one room or to "No room"; a measurement's room is always its photo's room.
 - A room's area is length × width from exactly two of its measurements: no L-shaped rooms and no manual entry.
@@ -52,13 +52,28 @@
 | D34 | `src/hooks.client.ts` tags requests that got no response, so a lost connection can be told apart from a bad response (SvelteKit otherwise reports both as "Internal Error") | Keeps one way of doing it across the app |
 | D35 | the error page's link back to a project says "Back to project", not the project's name, because naming it would need an extra database query on every project page | Keeps one way of doing it across the app |
 | D36 | the "one of three uploads fails, then Retry" browser test is skipped in WebKit: Playwright's WebKit drops the body of an upload it intercepts | Keeps one way of doing it across the app |
+| D37 | Passwords are hashed with PBKDF2-SHA256 (600,000 iterations) through Web Crypto, stored as `pbkdf2-sha256$<iterations>$<salt>$<hash>` | Portable to Cloudflare, no native dependency; the cost can be raised later |
+| D38 | Sessions are random tokens in the cookie; the database stores only an HMAC of the token (keyed with `SESSION_SECRET`). Same for invite and reset links | A copy of the database cannot be used to sign in; changing the secret voids everything |
+| D39 | `project.owner_id` is nullable in the database; every project lookup goes through `getProjectOr404(db, userId, id)`, which answers 404 for other people's projects. The administrator sees only their own projects | SQLite cannot add a NOT NULL column to a table that has rows; 404 rather than 403 so ids do not leak |
+| D40 | Existing projects have no owner after migration 0003; the first administrator (created at `/setup` with `APP_PASSWORD`) is given all of them | No placeholder user is needed |
+| D41 | `created_by` / `updated_by` on projects, rooms, photos and measurements are recorded but not shown; they become null when the user is deleted (to be shown as "deleted user") | Ready for sharing; no interface yet |
+| D42 | Deleting an account (own, or by the administrator) deletes that person's projects, photos and measurements | Chosen over keeping or transferring them |
+| D43 | One administrator; members cannot invite. Invites expire after 7 days, reset links after 1 hour; both are single use | Small known group |
+| D44 | Email is sent with `nodemailer` over SMTP on the Node build only (loaded dynamically, so the Cloudflare bundle does not contain it). Without SMTP settings, invites are shared by copying the link | Keeps the Cloudflare build compiling; email is optional |
+| D45 | Failed sign-ins are recorded in the database and limited per email (5) and per visitor address (50) per 15 minutes; "forgot password" requests are limited per address and always give the same answer | Guessing and email-flooding limits that work without extra services |
+| D46 | Multi-user is supported on Docker only for now; the Cloudflare build still compiles but is untested with accounts and cannot send email | Chosen scope |
 
 ## Data model
 
-- project(id, name, unit_system, created_at)
-- photo(id, project_id, room_id?, blob_key, width, height, caption, created_at)
-- room(id, project_id, name, area_a_annotation_id?, area_b_annotation_id?)
-- annotation(id, photo_id, name?, x1, y1, x2, y2, value_mm, created_at)
+- user(id, email, name, password_hash, role admin|member, created_at, disabled_at?)
+- session(id, user_id, token_hash, user_agent?, created_at, last_seen_at, expires_at)
+- invite(id, token_hash, email?, created_by?, expires_at, used_at?, used_by?, revoked_at?)
+- password_reset(id, user_id, token_hash, expires_at, used_at?)
+- login_attempt(id, key, at): failed sign-ins and password-reset requests, counted over a 15-minute window
+- project(id, owner_id?, name, unit_system, created_at, created_by?, updated_by?)
+- photo(id, project_id, room_id?, blob_key, width, height, caption, created_at, created_by?, updated_by?)
+- room(id, project_id, name, area_a_annotation_id?, area_b_annotation_id?, created_at, created_by?, updated_by?)
+- annotation(id, photo_id, name?, x1, y1, x2, y2, value_mm, created_at, created_by?, updated_by?)
 - A measurement has no room of its own: its room is always its photo's room (`photo.room_id`).
 - Area is computed on read: a.value × b.value (null if either is missing, or no longer on a photo in the room).
 
@@ -80,8 +95,9 @@
 
 ## Known limitations
 
-- The error id on the 500 page is covered by the `handleError` unit tests, not end to end (a real server fault cannot be made on demand).
+- The 500 error page is tested end to end with a faked failed page-data answer (a real server fault cannot be made on demand); the error id itself is made by `handleError`, covered by its unit tests.
+- Passkeys and sharing a project between people are not built yet; accounts are untested on Cloudflare.
 - The "one of three uploads fails, then Retry" browser test is skipped in WebKit (D36); a test that fails all three uploads covers Retry there.
 - Real-phone behaviour (camera sheet, number pad, touch drag) is only covered by the manual list in `phone-test-checklist.md`; Playwright's WebKit is Safari's engine, not iOS Safari.
-- No Firefox, no CI.
+- No Firefox. CI (GitHub Actions) runs the type check and unit tests, not the browser tests.
 - The PDF export is built in memory, so a project with very many large photos could hit the Workers memory limit.

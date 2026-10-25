@@ -15,12 +15,16 @@ declare global {
 			id?: string;
 		}
 		interface Locals {
-			authenticated: boolean;
+			/** The signed-in user, or null (public pages only). */
+			user: import('#lib/server/users.ts').SessionUser | null;
+			sessionId: string | null;
 			db: Db;
 			storage: BlobStorage;
 		}
 		interface PageData {
 			/** Set by the project and photo pages; the header shows its name. */
+			/** Set for signed-in pages; the header shows the account menu. */
+			user?: import('#lib/server/users.ts').SessionUser;
 			project?: { id: string; name: string; unitSystem: import('#lib/units.ts').UnitSystem };
 		}
 		// interface PageState {}

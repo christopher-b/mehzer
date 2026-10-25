@@ -7,7 +7,7 @@ Photograph a room, tap two points on a photo to draw a line, and type the real-w
 - **Measurements**: tap two points, enter a length (`12' 6"`, `3.2m`, `320cm`), optionally name it. Drag the end points to adjust.
 - **Rooms**: every photo is in one room or in "No room". A room's area is length × width from two of its measurements.
 - **Export** a project as CSV or as a PDF with the annotated photos. **Add to home screen** on a phone.
-- **Single user**: one shared password, no accounts. Online only (no offline mode).
+- **Accounts**: sign in with an email and password. The administrator invites people by link; each person sees only their own projects. Passwords can be reset by email. Online only (no offline mode).
 
 Built with SvelteKit 3 (Svelte 5), SQLite (Drizzle ORM) and photos on disk or in Cloudflare R2. It deploys two ways:
 

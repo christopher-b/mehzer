@@ -1,4 +1,5 @@
 import type { BrowserContext, Locator, Page } from '@playwright/test';
+import { ADMIN } from './constants';
 import { expect, test } from './fixtures';
 
 export const isTouch = () => !!test.info().project.use.hasTouch;
@@ -203,6 +204,19 @@ export async function failAction(page: Page, action: string, how: 'offline' | 's
 
 export const goOffline = (context: BrowserContext) => context.setOffline(true);
 export const goOnline = (context: BrowserContext) => context.setOffline(false);
+
+/** Fill in the sign-in form (on /login) as the test administrator and submit it. */
+export async function signIn(page: Page, who: { email: string; password: string } = ADMIN) {
+	await page.getByLabel('Email').fill(who.email);
+	await page.getByLabel('Password').fill(who.password);
+	await page.getByRole('button', { name: 'Sign in' }).click();
+}
+
+/** Choose "Sign out" from the account menu in the header. */
+export async function signOut(page: Page) {
+	await page.getByRole('button', { name: 'Account menu' }).click();
+	await page.getByRole('menuitem', { name: 'Sign out' }).click();
+}
 
 /** Sign out without telling the page: the next request is made with no session. */
 export const expireSession = (context: BrowserContext) => context.clearCookies();

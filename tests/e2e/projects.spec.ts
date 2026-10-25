@@ -73,11 +73,11 @@ test('deleting a project can be cancelled at the confirmation', async ({ page, c
 	await expect(page).toHaveURL('/');
 });
 
-test('a very long project name shortens in the header without pushing Sign out away', async ({ page }) => {
+test('a very long project name shortens in the header without pushing the account menu away', async ({ page }) => {
 	await createProject(page, `The Very Long Named Cottage By The Lake With A Boathouse ${uniqueName('x')}`);
-	const signOut = page.getByRole('button', { name: 'Sign out' });
-	const box = (await signOut.boundingBox())!;
-	expect(box.height, 'Sign out stays on one line').toBeLessThan(30);
+	const account = page.getByRole('button', { name: 'Account menu' });
+	const box = (await account.boundingBox())!;
+	expect(box.height, 'the account name stays on one line').toBeLessThan(30);
 	expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 	await expectNoHorizontalOverflow(page);
 	await deleteCurrentProject(page);

@@ -6,7 +6,7 @@ For a map of the server addresses see [endpoints.md](endpoints.md).
 
 ```
 src/app.css                 Design tokens (colours, radii, shadows) and global styles
-src/hooks.server.ts         Sign-in check for every request; logs unexpected errors with an id
+src/hooks.server.ts         Finds the signed-in user from the session cookie, refuses signed-out requests; logs unexpected errors with an id
 src/hooks.client.ts         Tags lost connections; ids for unexpected browser errors
 src/lib/units.ts            Parse and format measurements (12' 6", 3.2m), areas, unit labels
 src/lib/measurements.ts     How a measurement is named and labelled
@@ -18,7 +18,10 @@ src/lib/components/         AnnotationCanvas.svelte (draws and edits lines on a 
 src/lib/components/ui/      Shared building blocks: PopupMenu, Modal, AddTile, HamburgerIcon, Notifications, SessionExpired
 src/lib/server/db/          Drizzle schema, Node (SQLite) and D1 clients
 src/lib/server/storage/     Photo storage: filesystem and R2
-src/lib/server/             Auth, platform selection, form parsing, messages, photo and room rules
+src/lib/server/             Platform selection, form parsing, messages, photo and room rules, and accounts:
+                              password.ts (hashing), auth.ts (token hashing, cookie), sessions.ts, users.ts (accounts,
+                              sign-in limits, deleting a user), invites.ts (invite and reset links), signin.ts,
+                              email.ts (SMTP, Node build only)
 src/routes/                 Pages and endpoints; each page's own components sit beside it
                             (for example src/routes/p/[id]/ for the project page and its photo page)
 drizzle/                    SQL migrations, used by both Docker and D1
@@ -46,4 +49,4 @@ The app has a web manifest and icons, so on a phone you can add it to the home s
 
 ## Limits
 
-One shared password, no offline mode, the CSV export has no photos, and room areas use exactly two measurements (no L-shaped rooms).
+No offline mode, no sharing of a project between people yet, no passkeys yet, email only on the Docker build, the CSV export has no photos, and room areas use exactly two measurements (no L-shaped rooms).

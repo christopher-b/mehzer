@@ -20,11 +20,35 @@ export const variables = defineEnvVars({
 	},
 	DATABASE_PATH: {
 		description: 'Node/Docker only: SQLite database file',
-		schema: withDefault('./data/rooms.db')
+		schema: withDefault('./data/mehzur.db')
 	},
 	PHOTOS_PATH: {
 		description: 'Node/Docker only: directory for uploaded photos',
 		schema: withDefault('./data/photos')
+	},
+	APP_URL: {
+		description: 'Public address of the app, used in links sent by email (for example https://mehzur.cbennell.com)',
+		schema: withDefault('')
+	},
+	SMTP_HOST: {
+		description: 'Node/Docker only: SMTP server for invite and password-reset emails (leave empty to turn email off)',
+		schema: withDefault('')
+	},
+	SMTP_PORT: {
+		description: 'SMTP port (587 uses STARTTLS, 465 uses TLS)',
+		schema: withDefault('587')
+	},
+	SMTP_USER: {
+		description: 'SMTP user name',
+		schema: withDefault('')
+	},
+	SMTP_PASSWORD: {
+		description: 'SMTP password or token',
+		schema: withDefault('')
+	},
+	MAIL_FROM: {
+		description: 'Sender of emails',
+		schema: withDefault('Mehzur <mehzur@cbennell.com>')
 	},
 	MIGRATIONS_PATH: {
 		description: 'Node/Docker only: directory containing Drizzle SQL migrations',

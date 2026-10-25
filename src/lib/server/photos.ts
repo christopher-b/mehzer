@@ -13,8 +13,8 @@ import { findRoomInProject } from './rooms.ts';
 export const photoOrder = [asc(photos.createdAt), asc(sql`${photos}.rowid`)];
 
 /** The project and one of its photos, or a 404 if either doesn't exist. */
-export async function getPhotoOr404(db: Db, projectId: string, photoId: string) {
-	const project = await getProjectOr404(db, projectId);
+export async function getPhotoOr404(db: Db, userId: string, projectId: string, photoId: string) {
+	const project = await getProjectOr404(db, userId, projectId);
 	const photo = await db.query.photos.findFirst({
 		where: and(eq(photos.id, photoId), eq(photos.projectId, project.id))
 	});
@@ -110,7 +110,8 @@ export async function setPhotoRoom(
 	db: Db,
 	projectId: string,
 	photoId: string,
-	roomId: string | null
+	roomId: string | null,
+	userId: string | null = null
 ): Promise<SetPhotoRoomResult> {
 	if (roomId) {
 		const room = await findRoomInProject(db, projectId, roomId);
@@ -119,7 +120,7 @@ export async function setPhotoRoom(
 
 	const moved = await db
 		.update(photos)
-		.set({ roomId })
+		.set({ roomId, updatedBy: userId })
 		.where(and(eq(photos.id, photoId), eq(photos.projectId, projectId)))
 		.returning({ id: photos.id });
 	if (!moved.length) return 'not-found';

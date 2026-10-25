@@ -42,8 +42,8 @@ export interface ProjectExport {
 }
 
 /** Everything the CSV and PDF exports show, already formatted: rooms in creation order, then "No room". */
-export async function buildProjectExport(db: Db, projectId: string): Promise<ProjectExport> {
-	const project = await getProjectOr404(db, projectId);
+export async function buildProjectExport(db: Db, userId: string, projectId: string): Promise<ProjectExport> {
+	const project = await getProjectOr404(db, userId, projectId);
 	const projectPhotos = await db
 		.select({ id: photos.id, blobKey: photos.blobKey, roomId: photos.roomId })
 		.from(photos)

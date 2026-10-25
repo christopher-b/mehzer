@@ -34,9 +34,10 @@ export default defineConfig({
 	projects: [
 		// Each browser signs in once and saves its own session for the projects that depend on it.
 		{ name: 'setup', testMatch: /auth\.setup\.ts/, use: { ...chromium } },
-		{ name: 'setup-safari', testMatch: /auth\.setup\.ts/, use: { ...devices['Desktop Safari'] } },
+		// After `setup`, so the two never race to create the first account.
+		{ name: 'setup-safari', testMatch: /auth\.setup\.ts/, dependencies: ['setup'], use: { ...devices['Desktop Safari'] } },
 		// Sign-in behaviour itself: starts signed out.
-		{ name: 'auth', testMatch: /auth\.spec\.ts/, use: { ...chromium, viewport: { width: 1100, height: 1000 } } },
+		{ name: 'auth', testMatch: /auth\.spec\.ts/, dependencies: ['setup'], use: { ...chromium, viewport: { width: 1100, height: 1000 } } },
 		// Everything else runs signed in, on a desktop and on a phone-sized touch screen.
 		{
 			name: 'desktop',

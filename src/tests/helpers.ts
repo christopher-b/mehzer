@@ -2,9 +2,13 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from '#lib/server/db/schema.ts';
-import { annotations, photos, projects, rooms } from '#lib/server/db/schema.ts';
+import { annotations, photos, projects, rooms, users } from '#lib/server/db/schema.ts';
+import type { SessionUser } from '#lib/server/users.ts';
 import type { Db } from '#lib/server/db/types.ts';
 import type { BlobStorage } from '#lib/server/storage/types.ts';
+
+/** The signed-in user of every test context; its row exists in each fresh test database. */
+export const TEST_USER: SessionUser = { id: 'user-test-1', email: 'test@example.com', name: 'Test User', role: 'admin' };
 
 /** Fresh in-memory SQLite database with the real migrations applied and foreign keys enforced. */
 export function createTestDb(): Db {
@@ -12,6 +16,9 @@ export function createTestDb(): Db {
 	sqlite.pragma('foreign_keys = ON');
 	const db = drizzle(sqlite, { schema });
 	migrate(db, { migrationsFolder: './drizzle' });
+	sqlite
+		.prepare('insert into user (id, email, name, password_hash, role) values (?, ?, ?, ?, ?)')
+		.run(TEST_USER.id, TEST_USER.email, TEST_USER.name, 'not-a-real-hash', TEST_USER.role);
 	return db as unknown as Db;
 }
 
@@ -44,16 +51,32 @@ export function createMemoryStorage() {
 export function createContext() {
 	const db = createTestDb();
 	const { storage, blobs } = createMemoryStorage();
-	const locals = { db, storage, authenticated: true } as App.Locals;
+	const locals = { db, storage, user: TEST_USER, sessionId: 'session-test-1' } as App.Locals;
 	return { db, storage, blobs, locals };
 }
 
 export async function seedProject(db: Db, values: Partial<typeof projects.$inferInsert> = {}) {
 	const [row] = await db
 		.insert(projects)
-		.values({ name: 'House', unitSystem: 'imperial', ...values })
+		.values({ name: 'House', unitSystem: 'imperial', ownerId: TEST_USER.id, ...values })
 		.returning();
 	return row;
+}
+
+/** Another account, for tests about who can see what. */
+export async function seedUser(db: Db, values: Partial<typeof users.$inferInsert> = {}) {
+	const n = ++userCounter;
+	const [row] = await db
+		.insert(users)
+		.values({ email: `user${n}@example.com`, name: `User ${n}`, passwordHash: 'not-a-real-hash', ...values })
+		.returning();
+	return row;
+}
+let userCounter = 1;
+
+/** The same context as `createContext`, but signed in as another user. */
+export function asUser<T extends { locals: App.Locals }>(ctx: T, user: SessionUser): T {
+	return { ...ctx, locals: { ...ctx.locals, user } };
 }
 
 export async function seedRoom(db: Db, projectId: string, name = 'Kitchen') {
