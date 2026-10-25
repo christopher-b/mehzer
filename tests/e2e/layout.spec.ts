@@ -118,3 +118,14 @@ test('dialogs open at the top of the screen with a margin', async ({ page }) => 
 	expect(box.y).toBeGreaterThanOrEqual(8);
 	expect(box.y).toBeLessThanOrEqual(40);
 });
+
+test('the header is the same height with and without the project menu button', async ({ page }) => {
+	await createProject(page, uniqueName('Header'));
+	await addRoom(page, 'Kitchen');
+	const withMenu = (await page.locator('header').first().boundingBox())!.height;
+	await expect(page.getByRole('button', { name: 'Project menu' })).toBeVisible();
+	await visit(page, '/');
+	await expect(page.getByRole('button', { name: 'Project menu' })).toHaveCount(0);
+	const without = (await page.locator('header').first().boundingBox())!.height;
+	expect(without).toBe(withMenu);
+});

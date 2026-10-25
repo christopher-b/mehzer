@@ -61,9 +61,11 @@
 <Notifications />
 
 <style>
+	/* Always as tall as when the project menu button (2.25rem) is showing, so the page does not jump. */
 	header {
 		display: flex;
 		align-items: center;
+		min-height: calc(2.25rem + 1.5rem + 1px);
 		gap: 0.6rem;
 		padding: 0.75rem 1rem;
 		background: var(--surface);
