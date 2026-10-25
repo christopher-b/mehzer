@@ -1,0 +1,28 @@
+# Mehzer behind Traefik (which terminates https). Use it on top of the main file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
+#
+# Set in .env: APP_PASSWORD, SESSION_SECRET, MEHZER_HOST (the public host name, for example mehzer.example.com),
+# and PLAIN_HTTP=false, PROTOCOL_HEADER=x-forwarded-proto, HOST_HEADER=x-forwarded-host.
+# Assumes Traefik runs with the Docker provider, an `websecure` entry point, and a Docker network
+# named by TRAEFIK_NETWORK (default `traefik`) that it shares with this service.
+services:
+  mehzer:
+    # Traefik reaches the container over the shared network; nothing is published on the host.
+    ports: !reset []
+    networks:
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:-traefik}
+      traefik.http.routers.mehzer.rule: Host(`${MEHZER_HOST:?Set MEHZER_HOST in .env}`)
+      traefik.http.routers.mehzer.entrypoints: websecure
+      traefik.http.routers.mehzer.tls: "true"
+      # Add this line for Let's Encrypt, using the name of your certificate resolver:
+      # traefik.http.routers.mehzer.tls.certresolver: letsencrypt
+      traefik.http.services.mehzer.loadbalancer.server.port: "3000"
+
+networks:
+  traefik:
+    name: ${TRAEFIK_NETWORK:-traefik}
+    external: true

@@ -1,0 +1,36 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Local data
+/data
+.dev.vars
+
+# End-to-end test output
+/.e2e-data
+/test-results
+/playwright-report
+/blob-report
+
+# Test coverage report
+/coverage

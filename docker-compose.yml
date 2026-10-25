@@ -1,0 +1,30 @@
+# Mehzer, self-hosted. See docs/deployment.md (behind Traefik: also docker-compose.traefik.yml).
+#
+#   cp .env.example .env     # then set APP_PASSWORD and SESSION_SECRET
+#   docker compose up -d --build
+#
+# Photos and the SQLite database persist in the `mehzer-data` volume.
+name: mehzer
+services:
+  mehzer:
+    build: .
+    image: mehzer:latest
+    init: true
+    restart: unless-stopped
+    ports:
+      # Change the left side to use another port. To expose it only to a reverse proxy running on
+      # the same machine, use "127.0.0.1:3000:3000".
+      - "${PORT:-3000}:3000"
+    environment:
+      APP_PASSWORD: ${APP_PASSWORD:?Set APP_PASSWORD in .env}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      # true: served over plain http (home/LAN). false: behind an https reverse proxy, in which
+      # case also set PROTOCOL_HEADER=x-forwarded-proto (and HOST_HEADER=x-forwarded-host).
+      PLAIN_HTTP: ${PLAIN_HTTP:-true}
+      PROTOCOL_HEADER: ${PROTOCOL_HEADER:-}
+      HOST_HEADER: ${HOST_HEADER:-}
+    volumes:
+      - mehzer-data:/data
+
+volumes:
+  mehzer-data:
