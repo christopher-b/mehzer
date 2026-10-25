@@ -1,5 +1,5 @@
 {
-	"name": "mehzer",
+	"name": "mehzur",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -13,8 +13,8 @@
 		"build:node": "vite build",
 		"build:cf": "DEPLOY_TARGET=cloudflare vite build",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:cf:local": "wrangler d1 migrations apply mehzer --local",
-		"db:migrate:cf": "wrangler d1 migrations apply mehzer --remote",
+		"db:migrate:cf:local": "wrangler d1 migrations apply mehzur --local",
+		"db:migrate:cf": "wrangler d1 migrations apply mehzur --remote",
 		"deploy:cf": "npm run build:cf && wrangler deploy",
 		"start": "node build",
 		"dev:cf": "DEPLOY_TARGET=cloudflare vite dev",

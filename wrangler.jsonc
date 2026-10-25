@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "mehzer",
+	"name": "mehzur",
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2026-10-01",
 	"compatibility_flags": ["nodejs_compat"],
@@ -13,7 +13,7 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "mehzer",
+			"database_name": "mehzur",
 			"database_id": "REPLACE_WITH_D1_DATABASE_ID",
 			"migrations_dir": "drizzle"
 		}
@@ -21,7 +21,7 @@
 	"r2_buckets": [
 		{
 			"binding": "PHOTOS",
-			"bucket_name": "mehzer-photos"
+			"bucket_name": "mehzur-photos"
 		}
 	]
 	// Secrets: `wrangler secret put APP_PASSWORD` and `wrangler secret put SESSION_SECRET`

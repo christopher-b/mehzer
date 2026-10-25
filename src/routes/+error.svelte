@@ -6,7 +6,7 @@
 	const serverFault = $derived(status >= 500);
 </script>
 
-<svelte:head><title>{notFound ? 'Page not found' : 'Something went wrong'} · Mehzer</title></svelte:head>
+<svelte:head><title>{notFound ? 'Page not found' : 'Something went wrong'} · Mehzur</title></svelte:head>
 
 <section>
 	<h1>{notFound ? 'Page not found' : 'Something went wrong'}</h1>

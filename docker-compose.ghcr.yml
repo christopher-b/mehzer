@@ -1,14 +1,14 @@
-# Mehzer from the published image, for a server that only needs this file and a .env (no source code):
+# Mehzur from the published image, for a server that only needs this file and a .env (no source code):
 #
 #   docker compose -f docker-compose.ghcr.yml up -d
 #   docker compose -f docker-compose.ghcr.yml pull && docker compose -f docker-compose.ghcr.yml up -d   # update
 #
 # Behind Traefik, add the override: -f docker-compose.ghcr.yml -f docker-compose.traefik.yml
-# Settings are described in docs/deployment.md. Pin a version with MEHZER_TAG (default: latest).
-name: mehzer
+# Settings are described in docs/deployment.md. Pin a version with MEHZUR_TAG (default: latest).
+name: mehzur
 services:
-  mehzer:
-    image: ghcr.io/christopher-b/mehzer:${MEHZER_TAG:-latest}
+  mehzur:
+    image: ghcr.io/christopher-b/mehzur:${MEHZUR_TAG:-latest}
     init: true
     restart: unless-stopped
     ports:
@@ -20,7 +20,7 @@ services:
       PROTOCOL_HEADER: ${PROTOCOL_HEADER:-}
       HOST_HEADER: ${HOST_HEADER:-}
     volumes:
-      - mehzer-data:/data
+      - mehzur-data:/data
 
 volumes:
-  mehzer-data:
+  mehzur-data:

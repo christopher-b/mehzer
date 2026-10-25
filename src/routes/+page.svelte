@@ -8,7 +8,7 @@
 	let { data, form }: PageProps = $props();
 </script>
 
-<svelte:head><title>Projects · Mehzer</title></svelte:head>
+<svelte:head><title>Projects · Mehzur</title></svelte:head>
 
 <h1>Projects</h1>
 

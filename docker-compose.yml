@@ -1,14 +1,14 @@
-# Mehzer, self-hosted. See docs/deployment.md (behind Traefik: also docker-compose.traefik.yml).
+# Mehzur, self-hosted. See docs/deployment.md (behind Traefik: also docker-compose.traefik.yml).
 #
 #   cp .env.example .env     # then set APP_PASSWORD and SESSION_SECRET
 #   docker compose up -d --build
 #
-# Photos and the SQLite database persist in the `mehzer-data` volume.
-name: mehzer
+# Photos and the SQLite database persist in the `mehzur-data` volume.
+name: mehzur
 services:
-  mehzer:
+  mehzur:
     build: .
-    image: mehzer:latest
+    image: mehzur:latest
     init: true
     restart: unless-stopped
     ports:
@@ -24,7 +24,7 @@ services:
       PROTOCOL_HEADER: ${PROTOCOL_HEADER:-}
       HOST_HEADER: ${HOST_HEADER:-}
     volumes:
-      - mehzer-data:/data
+      - mehzur-data:/data
 
 volumes:
-  mehzer-data:
+  mehzur-data:

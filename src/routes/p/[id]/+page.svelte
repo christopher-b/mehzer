@@ -50,7 +50,7 @@
 	const uploadFiles = (files: FileList, roomId: string | null) => uploads.add(files, roomId);
 </script>
 
-<svelte:head><title>{data.project.name} · Mehzer</title></svelte:head>
+<svelte:head><title>{data.project.name} · Mehzur</title></svelte:head>
 
 <ProjectEditForm project={data.project} />
 {#if form?.error}<p class="error">{form.error}</p>{/if}

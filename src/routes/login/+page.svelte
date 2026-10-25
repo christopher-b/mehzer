@@ -4,10 +4,10 @@
 	let { form }: PageProps = $props();
 </script>
 
-<svelte:head><title>Sign in · Mehzer</title></svelte:head>
+<svelte:head><title>Sign in · Mehzur</title></svelte:head>
 
 <div class="login">
-	<h1>Mehzer</h1>
+	<h1>Mehzur</h1>
 	<form method="POST">
 		<label>
 			Password

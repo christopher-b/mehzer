@@ -29,7 +29,7 @@ const server = spawn(process.execPath, [vite, 'preview', '--port', port, '--stri
 		...env,
 		APP_PASSWORD: process.env.E2E_PASSWORD,
 		SESSION_SECRET: process.env.E2E_SECRET,
-		DATABASE_PATH: join(dataDir, 'mehzer.db'),
+		DATABASE_PATH: join(dataDir, 'mehzur.db'),
 		PHOTOS_PATH: join(dataDir, 'photos')
 	}
 });

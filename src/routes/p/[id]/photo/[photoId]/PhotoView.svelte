@@ -187,7 +187,7 @@
 
 <svelte:window onkeydown={onKeydown} />
 <svelte:head>
-	<title>Photo · {data.project.name} · Mehzer</title>
+	<title>Photo · {data.project.name} · Mehzur</title>
 	{#each [data.neighbours.previous, data.neighbours.next] as neighbour}
 		{#if neighbour}<link rel="prefetch" href="/api/photos/{neighbour.blobKey}" />{/if}
 	{/each}

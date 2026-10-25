@@ -11,9 +11,9 @@ afterAll(() => Promise.all(dirs.map((d) => rm(d, { recursive: true, force: true 
 
 describe('getNodeDb', () => {
 	it('creates the file and any missing folders, applies the migrations, and enforces foreign keys', async () => {
-		const dir = await mkdtemp(join(tmpdir(), 'mehzer-db-'));
+		const dir = await mkdtemp(join(tmpdir(), 'mehzur-db-'));
 		dirs.push(dir);
-		const path = join(dir, 'nested', 'deeper', 'mehzer.db');
+		const path = join(dir, 'nested', 'deeper', 'mehzur.db');
 
 		const db = getNodeDb(path, './drizzle');
 

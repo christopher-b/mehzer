@@ -4,7 +4,7 @@ export type Draft =
 	| { kind: 'measurement'; mode: 'create'; line: { x1: number; y1: number; x2: number; y2: number }; name: string; value: string }
 	| { kind: 'measurement'; mode: 'edit'; id: string; name: string; value: string };
 
-const key = () => `mehzer:draft:${location.pathname}`;
+const key = () => `mehzur:draft:${location.pathname}`;
 
 export function saveDraft(draft: Draft) {
 	try {

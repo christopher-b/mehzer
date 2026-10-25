@@ -1,6 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
 
-export const SESSION_COOKIE = 'mehzer_session';
+export const SESSION_COOKIE = 'mehzur_session';
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const encoder = new TextEncoder();

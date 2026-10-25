@@ -21,7 +21,7 @@ test('a wrong password is rejected with a message and no session', async ({ page
 	await page.getByRole('button', { name: 'Sign in' }).click();
 	await expect(page.getByText('Incorrect password')).toBeVisible();
 	await expect(page).toHaveURL(/\/login/);
-	expect((await context.cookies()).some((c) => c.name === 'mehzer_session')).toBe(false);
+	expect((await context.cookies()).some((c) => c.name === 'mehzur_session')).toBe(false);
 
 	await page.goto('/');
 	await expect(page).toHaveURL(/\/login/);
@@ -36,7 +36,7 @@ test('signing in keeps you signed in across reloads, and signing out ends the se
 
 	await page.reload();
 	await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
-	await expect(page.getByRole('link', { name: 'Mehzer', exact: true })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Mehzur', exact: true })).toBeVisible();
 
 	await page.getByRole('button', { name: 'Sign out' }).click();
 	await expect(page).toHaveURL(/\/login$/);
@@ -49,7 +49,7 @@ test('the session cookie is HttpOnly and not marked Secure over plain http', asy
 	await page.getByLabel('Password').fill(PASSWORD);
 	await page.getByRole('button', { name: 'Sign in' }).click();
 	await expect(page).toHaveURL('/');
-	const cookie = (await context.cookies()).find((c) => c.name === 'mehzer_session')!;
+	const cookie = (await context.cookies()).find((c) => c.name === 'mehzur_session')!;
 	expect(cookie.httpOnly).toBe(true);
 	expect(cookie.sameSite).toBe('Lax');
 	expect(cookie.secure).toBe(false);

@@ -8,7 +8,7 @@ export class CollapsedState {
 	}
 
 	get #key() {
-		return `mehzer:collapsed:${this.#projectId()}`;
+		return `mehzur:collapsed:${this.#projectId()}`;
 	}
 
 	/** Reads the saved choice. Call once the page is mounted in the browser. */

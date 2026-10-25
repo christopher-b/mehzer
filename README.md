@@ -1,4 +1,4 @@
-# Mehzer
+# Mehzur
 
 Photograph a room, tap two points on a photo to draw a line, and type the real-world length. Group photos into rooms and calculate a room's floor area from two of its measurements.
 
@@ -26,7 +26,7 @@ cp .env.example .env      # set APP_PASSWORD and SESSION_SECRET (for example: op
 docker compose up -d --build
 ```
 
-Open `http://<host>:3000` and sign in. Data lives in the `mehzer-data` volume.
+Open `http://<host>:3000` and sign in. Data lives in the `mehzur-data` volume.
 
 To run the published image on a server instead of building it, see `docker-compose.ghcr.yml` and [docs/deployment.md](docs/deployment.md).
 

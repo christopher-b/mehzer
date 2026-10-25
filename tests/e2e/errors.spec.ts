@@ -183,7 +183,7 @@ test.describe('E6: error pages', () => {
 		for (const url of ['/p/does-not-exist', '/no/such/page']) {
 			await page.goto(url);
 			await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
-			await expect(page.getByRole('link', { name: 'Mehzer', exact: true })).toBeVisible();
+			await expect(page.getByRole('link', { name: 'Mehzur', exact: true })).toBeVisible();
 			await expect(page.getByText(/Error id|stack|undefined/)).toHaveCount(0);
 			await page.getByRole('link', { name: 'Back to projects' }).click();
 			await expect(page).toHaveURL('/');

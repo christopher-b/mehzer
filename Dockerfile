@@ -21,7 +21,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     PORT=3000 \
-    DATABASE_PATH=/data/mehzer.db \
+    DATABASE_PATH=/data/mehzur.db \
     PHOTOS_PATH=/data/photos \
     MIGRATIONS_PATH=/app/drizzle \
     BODY_SIZE_LIMIT=20M \

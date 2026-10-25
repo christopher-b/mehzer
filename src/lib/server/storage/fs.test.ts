@@ -6,7 +6,7 @@ import { createFsStorage } from './fs.ts';
 
 let root: string;
 beforeAll(async () => {
-	root = await mkdtemp(join(tmpdir(), 'mehzer-fs-'));
+	root = await mkdtemp(join(tmpdir(), 'mehzur-fs-'));
 });
 afterAll(() => rm(root, { recursive: true, force: true }));
 

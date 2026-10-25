@@ -29,7 +29,7 @@
 
 {#if page.url.pathname !== '/login'}
 	<header>
-		<a href="/" class="brand"><img src={wordmark} alt="Mehzer" /></a>
+		<a href="/" class="brand"><img src={wordmark} alt="Mehzur" /></a>
 		{#if page.data.project}
 			<span class="sep" aria-hidden="true">/</span>
 			<h1 class="project-title">

@@ -29,7 +29,7 @@ test('create a project, see it listed, rename it and change its units, then dele
 	await expect(headerTitle(page)).toHaveText(name);
 	await expect(page.locator('main h1')).toHaveCount(0);
 	await expectUnitsInMenu(page, 'ft/in');
-	await expect(page.getByRole('link', { name: 'Mehzer', exact: true })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Mehzur', exact: true })).toBeVisible();
 
 	// it appears on the home page with its units and photo count
 	await visit(page, '/');

@@ -7,6 +7,6 @@ export default defineConfig({
 	schema: './src/lib/server/db/schema.ts',
 	out: './drizzle',
 	dbCredentials: {
-		url: process.env.DATABASE_PATH ?? './data/mehzer.db'
+		url: process.env.DATABASE_PATH ?? './data/mehzur.db'
 	}
 });

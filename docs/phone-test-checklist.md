@@ -20,7 +20,7 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 
 ## 2. Project, header and rooms
 
-- [ ] Create a project with a **very long name** (for example "The Very Long Named Cottage By The Lake"). The header shows `Mehzer / <name…> ☰` with the name shortened by "…", the project-menu button still visible beside it, and **"Sign out" stays on one line** and fully on screen.
+- [ ] Create a project with a **very long name** (for example "The Very Long Named Cottage By The Lake"). The header shows `Mehzur / <name…> ☰` with the name shortened by "…", the project-menu button still visible beside it, and **"Sign out" stays on one line** and fully on screen.
 - [ ] Tap **+ Room**: a popover opens centred under the button, the name field is focused and the keyboard opens. The **name field and the Add room button are still visible above the keyboard** (scroll if you must, but they must be reachable).
 - [ ] Add rooms "Kitchen" and "Bedroom". The popover closes and both cards appear.
 - [ ] Open a room's **hamburger menu**: Rename and Delete room appear fully on screen. Tap outside the menu: it closes.
@@ -102,7 +102,7 @@ Write down, for each failure: **which step**, **what you expected**, **what happ
 
 ## 9. Add to home screen
 
-- [ ] **iPhone (Safari):** Share > **Add to Home Screen**. The icon is a blue square with a white room outline and the name is "Mehzer". Opening it shows the app full-screen with no address bar, and you are still signed in.
+- [ ] **iPhone (Safari):** Share > **Add to Home Screen**. The icon is a blue square with a white room outline and the name is "Mehzur". Opening it shows the app full-screen with no address bar, and you are still signed in.
 - [ ] **Android (Chrome):** menu > **Install app** (or Add to Home screen). Same checks. The icon should not be cropped oddly.
 - [ ] Signing out and back in inside the home-screen app works, and photo upload and camera still work from it.
 

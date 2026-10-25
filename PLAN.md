@@ -1,4 +1,4 @@
-# Mehzer: what is left
+# Mehzur: what is left
 
 The app is built: single-user house photo measurement with projects, rooms, areas, CSV/PDF export, home-screen install, error handling, Docker and Cloudflare deployment. How it works is in the [README](README.md) and [docs/](docs/); decisions are in [docs/decisions.md](docs/decisions.md).
 
