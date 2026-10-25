@@ -28,6 +28,8 @@ docker compose up -d --build
 
 Open `http://<host>:3000` and sign in. Data lives in the `mehzer-data` volume.
 
+To run the published image on a server instead of building it, see `docker-compose.ghcr.yml` and [docs/deployment.md](docs/deployment.md).
+
 Or develop locally (Node 22.17 or newer; `mise.toml` pins Node 24):
 
 ```sh

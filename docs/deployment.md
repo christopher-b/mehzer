@@ -14,6 +14,22 @@ docker compose up -d --build
 
 Open `http://<host>:3000` and sign in. The SQLite database and all photos live in the `mehzer-data` Docker volume, so they survive restarts, rebuilds and `docker compose down` (but not `down -v`).
 
+### From a published image (GitHub Container Registry)
+
+Every push to `main` is checked (type check and unit tests) by GitHub Actions and then built into an image at `ghcr.io/christopher-b/mehzer` (linux/amd64), tagged `latest` and with the commit (`sha-abc1234`). A tag such as `v1.2.0` also publishes `1.2.0` and `1.2`. See `.github/workflows/docker.yml`.
+
+On the server you only need two files, `docker-compose.ghcr.yml` and a `.env` (see the settings below):
+
+```sh
+docker compose -f docker-compose.ghcr.yml up -d
+# later, to update:
+docker compose -f docker-compose.ghcr.yml pull && docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Set `MEHZER_TAG` in `.env` to pin a version (default `latest`). Behind Traefik, add `-f docker-compose.traefik.yml` to those commands.
+
+First publish: after the first successful run, open the repository's **Packages** on GitHub, open `mehzer`, and under **Package settings** make sure it is **Public** (a new package can start as private); a private package needs `docker login ghcr.io` with a token that has `read:packages` on the server. Also check **Settings > Actions > General > Workflow permissions** allow the workflow to write packages.
+
 ### Settings (`.env`)
 
 | Variable | Default | Notes |
