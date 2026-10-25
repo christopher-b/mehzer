@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '#lib/assets/favicon.svg';
+	import wordmark from '../art/wordmark.svg';
 	import { page } from '$app/state';
 	import { notify } from '#lib/client/notify.svelte.ts';
 	import { online } from '#lib/client/online.svelte.ts';
@@ -28,7 +29,7 @@
 
 {#if page.url.pathname !== '/login'}
 	<header>
-		<a href="/" class="brand">Mehzer</a>
+		<a href="/" class="brand"><img src={wordmark} alt="Mehzer" /></a>
 		{#if page.data.project}
 			<span class="sep" aria-hidden="true">/</span>
 			<h1 class="project-title">
@@ -97,10 +98,13 @@
 		white-space: nowrap;
 	}
 	.brand {
+		display: block;
 		flex: none;
-		font-weight: 700;
-		color: inherit;
-		text-decoration: none;
+	}
+	.brand img {
+		display: block;
+		height: 1.5rem;
+		width: auto;
 	}
 	.offline {
 		padding: 0.4rem 1rem;
