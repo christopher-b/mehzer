@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Plus from '@lucide/svelte/icons/plus';
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
@@ -24,7 +25,7 @@
 	{@const file = props}
 	<!-- No `capture` attribute: phones then offer "Take Photo" alongside the photo library. -->
 	<label class="tile file">
-		<span class="plus" aria-hidden="true">+</span>
+		<span class="plus" aria-hidden="true"><Plus size={48} strokeWidth={1.5} /></span>
 		<input
 			type="file"
 			accept={file.accept}
@@ -60,11 +61,13 @@
 		border-radius: var(--radius-md);
 	}
 	.plus {
-		font-size: 3rem;
-		font-weight: 300;
-		line-height: 1;
+		display: grid;
 	}
 	.action {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 		min-width: 12rem;
 		padding: 0.9rem 2.5rem;
 		font-size: 1.25rem;

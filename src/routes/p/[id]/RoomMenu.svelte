@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { submitWith } from '#lib/client/enhance.ts';
 	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
 	import type { UnitSystem } from '#lib/units.ts';
@@ -22,12 +24,13 @@
 	{#snippet children(close)}
 		<button
 			type="button"
+			class="item"
 			onclick={() => {
 				onrename();
 				close();
 			}}
 		>
-			Rename
+			<Pencil size={18} />Rename
 		</button>
 		{#if measured.length >= 2}
 			<RoomAreaForm {room} {measured} {unitSystem} ondone={close} />
@@ -42,7 +45,7 @@
 			})}
 		>
 			<input type="hidden" name="roomId" value={room.id} />
-			<button type="submit" class="danger-item">Delete room</button>
+			<button type="submit" class="item danger-item"><Trash2 size={18} />Delete room</button>
 		</form>
 	{/snippet}
 </PopupMenu>

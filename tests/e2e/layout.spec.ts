@@ -32,7 +32,7 @@ test('pages never scroll sideways', async ({ page }) => {
 test('the + Room button is centred and large, below the room cards (including No room)', async ({ page }) => {
 	await createProject(page, uniqueName('Layout'));
 	await addRoom(page, 'Kitchen');
-	const button = page.getByRole('button', { name: '+ Room' });
+	const button = page.getByRole('button', { name: 'Room', exact: true });
 	const box = (await button.boundingBox())!;
 	const main = (await page.locator('main').boundingBox())!;
 	expect(Math.abs(box.x + box.width / 2 - (main.x + main.width / 2)), 'centred').toBeLessThanOrEqual(2);
@@ -65,8 +65,8 @@ test('the "+" photo tiles are big, and match the thumbnails\' height', async ({ 
 	expect(t.width).toBeGreaterThanOrEqual(100);
 	expect(t.height).toBeGreaterThanOrEqual(90);
 	expect(Math.abs(t.height - th.height)).toBeLessThanOrEqual(2);
-	const plus = await roomCard(page, 'Kitchen').locator('.add-photo .plus').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-	expect(plus).toBeGreaterThanOrEqual(40);
+	const plus = (await roomCard(page, 'Kitchen').locator('.add-photo .plus svg').boundingBox())!;
+	expect(plus.width).toBeGreaterThanOrEqual(40);
 });
 
 test('menus and the hamburger sit inside the screen', async ({ page }) => {

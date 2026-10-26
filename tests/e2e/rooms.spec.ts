@@ -28,7 +28,7 @@ test('a new project starts with only the No room card and no hint text', async (
 
 test('adding a room with the "+ Room" popover', async ({ page }) => {
 	await createProject(page, uniqueName('Rooms'));
-	const addButton = page.getByRole('button', { name: '+ Room' });
+	const addButton = page.getByRole('button', { name: 'Room', exact: true });
 	const popover = page.getByRole('dialog', { name: 'Add a room' });
 	await expect(popover).toBeHidden();
 

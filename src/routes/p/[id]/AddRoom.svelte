@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Plus from '@lucide/svelte/icons/plus';
 	import { onMount } from 'svelte';
 	import { saveDraft, takeDraft } from '#lib/client/drafts.ts';
 	import { failureMessage } from '#lib/client/actions.ts';
@@ -24,7 +25,7 @@
 <div class="add-room">
 	<PopupMenu bind:this={popup} label="Add a room" kind="dialog" align="center" onopen={() => (error = '')}>
 		{#snippet trigger(props)}
-			<AddTile mode="button" {...props}>+ Room</AddTile>
+			<AddTile mode="button" {...props}><Plus size={22} aria-hidden="true" />Room</AddTile>
 		{/snippet}
 		{#snippet children(close)}
 			<form

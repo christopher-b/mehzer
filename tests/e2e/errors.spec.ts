@@ -119,7 +119,7 @@ test.describe('failures that should never be silent (baseline)', () => {
 
 	test('E5: an expired session while adding a room asks to sign in, then restores the name', async ({ page, context }) => {
 		const projectUrl = await createProject(page, uniqueName('Expired room'));
-		await page.getByRole('button', { name: '+ Room' }).click();
+		await page.getByRole('button', { name: 'Room', exact: true }).click();
 		const popover = page.getByRole('dialog', { name: 'Add a room' });
 		await popover.getByLabel('Room name').fill('Kitchen');
 		await expireSession(context);
@@ -216,7 +216,7 @@ test.describe('E6: error pages', () => {
 		await page.getByRole('link', { name: 'Back to projects' }).click();
 		await expect(page).toHaveURL('/');
 		await page.goto(projectUrl);
-		await expect(page.getByRole('button', { name: '+ Room' })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Room', exact: true })).toBeVisible();
 	});
 
 	test('API errors stay JSON', async ({ page }) => {
@@ -255,7 +255,7 @@ for (const how of ['offline', 'server'] as const) {
 		test('add room shows the message inside the popover and keeps the name', async ({ page }) => {
 			await createProject(page, uniqueName('E4 add room'));
 			await failAction(page, 'createRoom', how);
-			await page.getByRole('button', { name: '+ Room' }).click();
+			await page.getByRole('button', { name: 'Room', exact: true }).click();
 			const popover = page.getByRole('dialog', { name: 'Add a room' });
 			await popover.getByLabel('Room name').fill('Kitchen');
 			await popover.getByRole('button', { name: 'Add room' }).click();
@@ -388,7 +388,7 @@ test('E7: the offline banner appears offline, actions say so, and "Back online" 
 	await goOffline(context);
 	await expect(banner).toBeVisible();
 
-	await page.getByRole('button', { name: '+ Room' }).click();
+	await page.getByRole('button', { name: 'Room', exact: true }).click();
 	const popover = page.getByRole('dialog', { name: 'Add a room' });
 	await popover.getByLabel('Room name').fill('Kitchen');
 	await popover.getByRole('button', { name: 'Add room' }).click();

@@ -26,7 +26,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 			await expectReadable(page);
 			await page.keyboard.press('Escape');
 
-			await page.getByRole('button', { name: '+ Room' }).click();
+			await page.getByRole('button', { name: 'Room', exact: true }).click();
 			await expectReadable(page);
 		});
 
@@ -74,6 +74,6 @@ test('every control has an accessible name (home, project and photo pages, and d
 	await roomMenuButton(page, 'Kitchen').click();
 	await expectAllControlsNamed(page);
 	await page.keyboard.press('Escape');
-	await page.getByRole('button', { name: '+ Room' }).click();
+	await page.getByRole('button', { name: 'Room', exact: true }).click();
 	await expectAllControlsNamed(page);
 });

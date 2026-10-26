@@ -77,7 +77,7 @@ test('a very long project name shortens in the header without pushing the accoun
 	await createProject(page, `The Very Long Named Cottage By The Lake With A Boathouse ${uniqueName('x')}`);
 	const account = page.getByRole('button', { name: 'Account menu' });
 	const box = (await account.boundingBox())!;
-	expect(box.height, 'the account name stays on one line').toBeLessThan(30);
+	expect(box.height, 'the account button keeps its size').toBeLessThan(40);
 	expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 	await expectNoHorizontalOverflow(page);
 	await deleteCurrentProject(page);

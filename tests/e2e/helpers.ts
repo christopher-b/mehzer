@@ -60,7 +60,7 @@ export const roomMenuButton = (page: Page, room: string) => roomCard(page, room)
 export const roomMenu = (page: Page, room: string) => roomCard(page, room).locator('.menu');
 
 export async function addRoom(page: Page, name: string) {
-	await page.getByRole('button', { name: '+ Room' }).click();
+	await page.getByRole('button', { name: 'Room', exact: true }).click();
 	const popover = page.getByRole('dialog', { name: 'Add a room' });
 	await popover.getByLabel('Room name').fill(name);
 	await popover.getByRole('button', { name: 'Add room' }).click();

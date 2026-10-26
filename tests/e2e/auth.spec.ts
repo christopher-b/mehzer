@@ -114,7 +114,9 @@ test.describe('inviting someone', () => {
 			await ben.page.getByLabel('Repeat the password').fill('ben has a long password');
 			await ben.page.getByRole('button', { name: 'Create account' }).click();
 			await expect(ben.page).toHaveURL('/');
-			await expect(ben.page.getByRole('button', { name: 'Account menu' })).toHaveText('Ben');
+			await ben.page.getByRole('button', { name: 'Account menu' }).click();
+			await expect(ben.page.getByRole('menu').getByText('Ben', { exact: true })).toBeVisible();
+			await ben.page.keyboard.press('Escape');
 			await expect(ben.page.getByText('Private house')).toHaveCount(0);
 
 			// not the admin's page, not the users page

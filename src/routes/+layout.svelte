@@ -5,6 +5,10 @@
 	import { page } from '$app/state';
 	import { notify } from '#lib/client/notify.svelte.ts';
 	import { online } from '#lib/client/online.svelte.ts';
+	import CircleUser from '@lucide/svelte/icons/circle-user';
+	import LogOut from '@lucide/svelte/icons/log-out';
+	import User from '@lucide/svelte/icons/user';
+	import Users from '@lucide/svelte/icons/users';
 	import ProjectMenu from '#lib/components/ProjectMenu.svelte';
 	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
 	import SessionExpired from '#lib/components/ui/SessionExpired.svelte';
@@ -49,16 +53,18 @@
 		{#if page.data.user}
 			<PopupMenu label="Account menu">
 				{#snippet trigger(props)}
-					<button type="button" class="link account" aria-label="Account menu" {...props}>{page.data.user?.name}</button>
+					<button type="button" class="icon-button" aria-label="Account menu" title={page.data.user?.name} {...props}>
+						<CircleUser size={22} />
+					</button>
 				{/snippet}
 				{#snippet children(close)}
-					<p role="none" class="menu-note">{page.data.user?.email}</p>
-					<a role="menuitem" href="/account" onclick={() => close()}>Account</a>
+					<p role="none" class="menu-note"><strong>{page.data.user?.name}</strong><br />{page.data.user?.email}</p>
+					<a role="menuitem" class="item" href="/account" onclick={() => close()}><User size={18} />Account</a>
 					{#if page.data.user?.role === 'admin'}
-						<a role="menuitem" href="/admin/users" onclick={() => close()}>Users</a>
+						<a role="menuitem" class="item" href="/admin/users" onclick={() => close()}><Users size={18} />Users</a>
 					{/if}
 					<form method="POST" action="/logout">
-						<button type="submit" role="menuitem">Sign out</button>
+						<button type="submit" role="menuitem" class="item"><LogOut size={18} />Sign out</button>
 					</form>
 				{/snippet}
 			</PopupMenu>
@@ -113,12 +119,6 @@
 		overflow: hidden;
 		color: inherit;
 		text-decoration: none;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.account {
-		max-width: 9rem;
-		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import DoorOpen from '@lucide/svelte/icons/door-open';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -209,13 +211,14 @@
 					<button
 						type="button"
 						role="menuitem"
+						class="item"
 						onclick={() => {
 							close();
 							roomError = '';
 							roomDialogOpen = true;
 						}}
 					>
-						Change room
+						<DoorOpen size={18} />Change room
 					</button>
 					<form
 						method="POST"
@@ -225,7 +228,7 @@
 							confirm: () => confirm('Delete this photo and its measurements?')
 						})}
 					>
-						<button type="submit" role="menuitem" class="danger-item">Delete photo</button>
+						<button type="submit" role="menuitem" class="item danger-item"><Trash2 size={18} />Delete photo</button>
 					</form>
 				{/snippet}
 			</PopupMenu>

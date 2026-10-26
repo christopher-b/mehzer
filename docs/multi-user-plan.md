@@ -152,15 +152,33 @@ Estimated effort: phase 1 about 3 to 4 days including tests; sharing (phase 2) a
   `docs/deployment.md` (first admin, `APP_PASSWORD` role, backups now hold accounts), `.env.example`,
   phone checklist (sign in as a named user).
 
-## Phase 2: sharing (optional, after phase 1)
+## Phase 2: sharing and passkeys (decided, not built)
 
-- `project_member` (`project_id`, `user_id`, `role`: `editor` | `viewer`); owner is implicit.
-- Project menu: "Share" listing members, add by email (existing users only, or invite, Q5),
-  change role, remove. Owner can transfer ownership (Q4).
-- `canAccess` reads membership; viewers get read-only pages (hide edit controls, and the server
-  rejects writes with 404/403 as decided).
-- Home page shows "Shared with me" separately, or mixed with a label.
-- Tests for each role on each action.
+### Decisions (26 Oct 2026)
+
+| Topic | Decision |
+|---|---|
+| Deleting a project | Only the owner can delete a project. Guests cannot |
+| Who can be added | Only people who already have an account. Sharing does not send invites to new addresses |
+| Ownership | An owner can hand the project over to another account. The previous owner stays on the project as a guest |
+| Cloudflare | Out of scope for phase 2 (Docker only) |
+
+### Roles
+
+- **Owner:** one per project. Everything a guest can do, plus: delete the project, manage guests, and hand over ownership.
+- **Guest:** added by the owner by email (must already have an account). Sees the project on the home page under "Shared with me". A guest can do everything the owner can do to the project's contents: add, edit and delete photos, rooms and measurements; rename rooms; and rename the project and change its units. A guest cannot delete the project, and cannot share it or hand it over.
+
+### Build notes
+
+- `project_member` (`project_id`, `user_id`, `added_at`, `added_by`); the owner stays in `project.owner_id`.
+- Handing over: in one step, set `project.owner_id` to the new owner and add the previous owner as a
+  guest. Only the current owner can do it; the new owner must already be a guest or have an account.
+- Removing a guest removes access at once. Deleting an account removes its guest memberships; projects it owned are deleted with it (existing rule).
+- `canAccess(user, project, need)` reads membership; `need: 'owner'` for delete, manage guests and hand over.
+- Project menu gets "Share" (guests list, add by email, remove) and "Hand over" (owner only).
+- Home page: "Shared with me" section, separate from the owner's own projects.
+- Tests for owner, guest and stranger on every action, plus the hand-over and removal cases.
+- Passkeys (U10) follow sharing, as before.
 
 ## Risks and notes
 
