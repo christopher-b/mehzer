@@ -29,11 +29,24 @@ export function uniqueName(label: string) {
 
 // ---------------------------------------------------------------- projects and rooms
 
+/** On the home page: open the "+ Project" popover. */
+export function addProjectPopover(page: Page) {
+	return page.getByRole('dialog', { name: 'Add a project' });
+}
+
+export async function openAddProject(page: Page) {
+	await page.getByRole('button', { name: 'Project', exact: true }).click();
+	const popover = addProjectPopover(page);
+	await expect(popover).toBeVisible();
+	return popover;
+}
+
 export async function createProject(page: Page, name: string, units: 'imperial' | 'metric' = 'imperial') {
 	await visit(page, '/');
-	await page.getByPlaceholder(/New project/).fill(name);
-	await page.getByLabel('Units').selectOption(units);
-	await page.getByRole('button', { name: 'Create' }).click();
+	const popover = await openAddProject(page);
+	await popover.getByLabel('Project name').fill(name);
+	await popover.getByLabel('Units').selectOption(units);
+	await popover.getByRole('button', { name: 'Create' }).click();
 	await expect(page).toHaveURL(/\/p\/[0-9a-f-]+$/);
 	await waitForHydration(page);
 	return page.url();

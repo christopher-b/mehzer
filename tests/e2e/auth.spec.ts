@@ -99,7 +99,8 @@ test.describe('inviting someone', () => {
 
 		// the admin makes a project that the new person must never see
 		await page.goto('/');
-		await page.getByPlaceholder(/New project/).fill('Private house');
+		await page.getByRole('button', { name: 'Project', exact: true }).click();
+		await page.getByLabel('Project name').fill('Private house');
 		await page.getByRole('button', { name: 'Create' }).click();
 		await expect(page).toHaveURL(/\/p\//);
 		const adminProjectUrl = page.url();
@@ -133,7 +134,8 @@ test.describe('inviting someone', () => {
 			await again.context.close();
 
 			// Ben can leave, and it deletes what he made
-			await ben.page.getByPlaceholder(/New project/).fill("Ben's house");
+			await ben.page.getByRole('button', { name: 'Project', exact: true }).click();
+			await ben.page.getByLabel('Project name').fill("Ben's house");
 			await ben.page.getByRole('button', { name: 'Create' }).click();
 			await expect(ben.page).toHaveURL(/\/p\//);
 			await ben.page.goto('/account');

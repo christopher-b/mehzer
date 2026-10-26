@@ -21,6 +21,7 @@ import {
 	goOnline,
 	measurementDialog,
 	measurementField,
+	openAddProject,
 	roomMenu,
 	roomMenuButton,
 	seedKitchenWithMeasurements,
@@ -238,17 +239,18 @@ for (const how of ['offline', 'server'] as const) {
 		const noErrorPage = (page: Page) => expect(page.getByRole('heading', { name: FAILURE_PAGE })).toHaveCount(0);
 		const alert = (page: Page) => page.getByRole('alert').getByText(messages[how]);
 
-		test('create project keeps the typed name; works again afterwards', async ({ page }) => {
+		test('create project shows the message inside the popover and keeps the name; works again afterwards', async ({ page }) => {
 			const name = uniqueName('E4 home');
 			await visit(page, '/');
 			await failAction(page, 'create', how);
-			await page.getByPlaceholder(/New project/).fill(name);
-			await page.getByRole('button', { name: 'Create' }).click();
-			await expect(alert(page)).toBeVisible();
+			const popover = await openAddProject(page);
+			await popover.getByLabel('Project name').fill(name);
+			await popover.getByRole('button', { name: 'Create' }).click();
+			await expect(popover.getByText(messages[how])).toBeVisible();
 			await noErrorPage(page);
-			await expect(page.getByPlaceholder(/New project/)).toHaveValue(name);
+			await expect(popover.getByLabel('Project name')).toHaveValue(name);
 			await page.unroute('**/*?/create');
-			await page.getByRole('button', { name: 'Create' }).click();
+			await popover.getByRole('button', { name: 'Create' }).click();
 			await expect(page).toHaveURL(/\/p\//);
 		});
 

@@ -7,6 +7,7 @@ The app is built: house photo measurement for a small group of invited people, w
 - Tried for real (25 Oct 2026): invite and account creation through Proton SMTP, the phone checklist (`docs/phone-test-checklist.md`, assumed passed), and the Safari browser suite (148 passed, 6 skipped).
 - Deployed with Dokploy from the GitHub Container Registry image `ghcr.io/christopher-b/mehzur` (linux/amd64); the GitHub Actions workflow builds and publishes it.
 - Icons in the menus (Lucide), corrected wordmark, wider account menu.
+- The home page's create-project form is now a dashed "+ Project" tile that opens a popover (name, units, Create), like the "+ Room" tile.
 - M3: removed the Cloudflare support (D1 and R2 code, `wrangler.jsonc`, `__DEPLOY_TARGET__`, the `:cf` scripts and packages). The `Db` type is now synchronous only; existing code still `await`s database calls and mostly avoids transactions (see `docs/decisions.md`).
 
 ## Left to do

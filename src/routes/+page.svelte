@@ -1,30 +1,17 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { submitWith } from '#lib/client/enhance.ts';
-	import { NAME_MAX_LENGTH } from '#lib/constants.ts';
-	import { UNIT_OPTIONS, formatArea, unitLabel } from '#lib/units.ts';
+	import { formatArea, unitLabel } from '#lib/units.ts';
+	import AddProject from './AddProject.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 </script>
 
 <svelte:head><title>Projects · Mehzur</title></svelte:head>
 
 <h1>Projects</h1>
 
-<form method="POST" action="?/create" use:enhance={submitWith()} class="create">
-	<input name="name" aria-label="Project name" placeholder="New project, e.g. 12 Elm St" maxlength={NAME_MAX_LENGTH} required />
-	<select name="unitSystem" aria-label="Units">
-		{#each UNIT_OPTIONS as unit (unit.value)}
-			<option value={unit.value}>{unit.label}</option>
-		{/each}
-	</select>
-	<button type="submit" class="primary">Create</button>
-</form>
-{#if form?.error}<p class="error">{form.error}</p>{/if}
-
 {#if data.projects.length === 0}
-	<p class="empty">No projects yet. Create one for each house you're measuring.</p>
+	<p class="empty">No projects yet. Add one for each house you're measuring.</p>
 {:else}
 	<ul class="projects">
 		{#each data.projects as project (project.id)}
@@ -50,15 +37,9 @@
 	</ul>
 {/if}
 
+<AddProject />
+
 <style>
-	.create {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-	.create input {
-		flex: 1 1 14rem;
-	}
 	.projects {
 		list-style: none;
 		padding: 0;

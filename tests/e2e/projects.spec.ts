@@ -5,6 +5,7 @@ import {
 	createProject,
 	deleteCurrentProject,
 	expectNoHorizontalOverflow,
+	openAddProject,
 	seedKitchenWithMeasurements,
 	uniqueName,
 	visit,
@@ -59,6 +60,16 @@ test('Cancel leaves the project unchanged', async ({ page }) => {
 	await page.locator('form.edit').getByLabel('Name', { exact: true }).fill('something else');
 	await page.locator('form.edit').getByRole('button', { name: 'Cancel' }).click();
 	await expect(headerTitle(page)).toHaveText(name);
+});
+
+test('the "+ Project" tile opens a popover; Cancel closes it without creating anything', async ({ page }) => {
+	await visit(page, '/');
+	const popover = await openAddProject(page);
+	await expect(popover.getByLabel('Units')).toHaveValue('imperial');
+	await popover.getByLabel('Project name').fill('Never made');
+	await popover.getByRole('button', { name: 'Cancel' }).click();
+	await expect(popover).toBeHidden();
+	await expect(page.getByRole('link', { name: /Never made/ })).toHaveCount(0);
 });
 
 test('deleting a project can be cancelled at the confirmation', async ({ page, confirmations }) => {
