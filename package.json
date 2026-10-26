@@ -43,6 +43,8 @@
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.61.0",
+		"@simplewebauthn/browser": "^14.0.0",
+		"@simplewebauthn/server": "^14.0.3",
 		"better-sqlite3": "^13.0.3",
 		"drizzle-orm": "^0.45.4",
 		"nodemailer": "^10.2.1"

@@ -222,7 +222,7 @@ export const goOnline = (context: BrowserContext) => context.setOffline(false);
 export async function signIn(page: Page, who: { email: string; password: string } = ADMIN) {
 	await page.getByLabel('Email').fill(who.email);
 	await page.getByLabel('Password').fill(who.password);
-	await page.getByRole('button', { name: 'Sign in' }).click();
+	await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 }
 
 /** Choose "Sign out" from the account menu in the header. */

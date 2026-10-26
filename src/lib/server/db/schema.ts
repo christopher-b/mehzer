@@ -88,6 +88,34 @@ export const emailChanges = sqliteTable(
 	(t) => [index('email_change_user_idx').on(t.userId)]
 );
 
+/** A passkey (WebAuthn credential) that signs a user in. The public key is base64url text. */
+export const passkeys = sqliteTable(
+	'passkey',
+	{
+		id: id(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		credentialId: text('credential_id').notNull().unique(),
+		publicKey: text('public_key').notNull(),
+		counter: integer('counter').notNull().default(0),
+		transports: text('transports'),
+		name: text('name').notNull(),
+		createdAt: createdAt(),
+		lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' })
+	},
+	(t) => [index('passkey_user_idx').on(t.userId)]
+);
+
+/** The one-time challenge of a passkey registration or sign-in in progress; the browser holds only its id. */
+export const passkeyChallenges = sqliteTable('passkey_challenge', {
+	id: text('id').primaryKey(),
+	challenge: text('challenge').notNull(),
+	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+	kind: text('kind', { enum: ['register', 'login'] }).notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull()
+});
+
 /** Failed sign-ins, kept to limit guessing. `key` is `email:<address>` or `ip:<address>`. */
 export const loginAttempts = sqliteTable(
 	'login_attempt',

@@ -14,7 +14,7 @@ setup('create the first account (or sign in) and save the session for the other 
 	} else {
 		await page.getByLabel('Email').fill(ADMIN.email);
 		await page.getByLabel('Password').fill(ADMIN.password);
-		await page.getByRole('button', { name: 'Sign in' }).click();
+		await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 	}
 	await expect(page).toHaveURL('/');
 	await page.context().storageState({ path: authFile(testInfo.project.name as 'setup' | 'setup-safari') });

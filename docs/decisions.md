@@ -65,6 +65,7 @@
 | D47 | Cloudflare deployment is not planned and its code was removed (PLAN.md, M3): `wrangler.jsonc`, the D1 and R2 code, `__DEPLOY_TARGET__`, the `:cf` scripts and the Cloudflare packages. Docker, run from the published image, is the only supported target. Supersedes D4, D12, D13, D15, D17 and D25 | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
 | D48 | Project sharing: a `project_member(project_id, user_id, added_at, added_by)` table lists guests; the owner stays in `project.owner_id`. `getProjectOr404(db, userId, id, need?)` returns the project with `role` (`owner` or `guest`): strangers get 404, a guest asking for an owner-only action (delete, share, unshare, hand over) gets 403. Guests can edit photos, rooms, measurements, rename the project and change its units, and can leave. Only people with an enabled account can be added (by email; nobody is invited). Hand over makes a guest the owner and the previous owner a guest, in one transaction. Deleting an account deletes the projects it owns (even if shared) and removes its guest rows. The home page lists shared projects under "Shared with me" | Small known group; one owner keeps deletion and sharing simple |
 | D49 | Changing your email address needs your current password. With email set up, a one-hour single-use link goes to the new address (stored in `email_change`, token hashed) and the address changes only when the link is confirmed while signed in as that account; the confirmation is a button (POST), so mail scanners opening the link change nothing. The old address gets a notice and other devices are signed out. Without email set up, the address changes at once. An address that already has an account is refused | Catches typos and addresses you do not own without locking anyone out; works on a plain install |
+| D50 | Passkeys (WebAuthn, `@simplewebauthn/server` and `/browser`): a passkey is a discoverable credential that the device verifies (PIN, fingerprint or face), so it signs in alone, without typing an email, and the password keeps working. Bound to `APP_URL`: relying-party id = its host, accepted origin = its origin, never the request's Host header. On only for an https `APP_URL` (or `http://localhost`); otherwise hidden and the endpoints answer 404. Challenges are stored on the server (`passkey_challenge`, 5 minutes, single use, tied to the person or to a sign-in) and the browser holds only an id in an httpOnly cookie. Up to 10 per person. Passkey sign-ins use the same failed-attempt limit per visitor address as passwords. Public keys are stored in `passkey` (the credential id, key, counter and transports, name, last used) | The production address is fixed, so the settings cannot be steered by a request; a lost device never locks anyone out because the password stays |
 
 ## Data model
 
@@ -72,6 +73,8 @@
 - session(id, user_id, token_hash, user_agent?, created_at, last_seen_at, expires_at)
 - invite(id, token_hash, email?, created_by?, expires_at, used_at?, used_by?, revoked_at?)
 - password_reset(id, user_id, token_hash, expires_at, used_at?)
+- passkey(id, user_id, credential_id, public_key, counter, transports?, name, created_at, last_used_at?)
+- passkey_challenge(id, challenge, user_id?, kind, expires_at): a registration or sign-in in progress
 - email_change(id, user_id, new_email, token_hash, created_at, expires_at, used_at?)
 - login_attempt(id, key, at): failed sign-ins and password-reset requests, counted over a 15-minute window
 - project_member(project_id, user_id, added_at, added_by?): guests; primary key (project_id, user_id)
@@ -101,7 +104,7 @@
 ## Known limitations
 
 - The 500 error page is tested end to end with a faked failed page-data answer (a real server fault cannot be made on demand); the error id itself is made by `handleError`, covered by its unit tests.
-- Passkeys and sharing a project between people are not built yet; Cloudflare support is not planned (D47).
+- Cloudflare support is not planned (D47).
 - The "one of three uploads fails, then Retry" browser test is skipped in WebKit (D36); a test that fails all three uploads covers Retry there.
 - Real-phone behaviour (camera sheet, number pad, touch drag) is only covered by the manual list in `phone-test-checklist.md`; Playwright's WebKit is Safari's engine, not iOS Safari.
 - No Firefox. CI (GitHub Actions) runs the type check and unit tests, not the browser tests.

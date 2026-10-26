@@ -49,4 +49,4 @@ The app has a web manifest and icons, so on a phone you can add it to the home s
 
 ## Limits
 
-No offline mode, no sharing of a project between people yet, no passkeys yet, email only on the Docker build, the CSV export has no photos, and room areas use exactly two measurements (no L-shaped rooms).
+No offline mode, email only on the Docker build, the CSV export has no photos, and room areas use exactly two measurements (no L-shaped rooms).

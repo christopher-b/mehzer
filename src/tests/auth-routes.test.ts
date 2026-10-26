@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('$app/env/private', () => ({ APP_PASSWORD: 'open-sesame', SESSION_SECRET: 'unit-test-secret' }));
+vi.mock('$app/env/private', () => ({ APP_PASSWORD: 'open-sesame', SESSION_SECRET: 'unit-test-secret', APP_URL: '' }));
 
 const { actions, load } = await import('../routes/login/+page.server.ts');
 const { POST: logout } = await import('../routes/logout/+server.ts');
@@ -124,7 +124,7 @@ describe('login page load', () => {
 
 	it('shows the form when signed out and accounts exist', async () => {
 		const ctx = createContext();
-		expect(await run({ ...ctx.locals, user: null })).toBeUndefined();
+		expect(await run({ ...ctx.locals, user: null })).toEqual({ passkeys: false }); // no APP_URL: no passkeys
 	});
 	it('sends you to set up the first account when there are none', async () => {
 		const ctx = createContext();

@@ -27,6 +27,8 @@ const server = spawn(process.execPath, [vite, 'preview', '--port', port, '--stri
 		...env,
 		APP_PASSWORD: process.env.E2E_PASSWORD,
 		SESSION_SECRET: process.env.E2E_SECRET,
+		// Passkeys are bound to this address (localhost is allowed over plain http); email stays off without SMTP_HOST.
+		APP_URL: `http://localhost:${port}`,
 		DATABASE_PATH: join(dataDir, 'mehzur.db'),
 		PHOTOS_PATH: join(dataDir, 'photos')
 	}

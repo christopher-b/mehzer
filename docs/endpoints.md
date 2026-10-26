@@ -15,6 +15,7 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `GET /` | Home: your projects (newest first) with photo count, room count and total calculated area |
 | `GET /login` | Sign-in form (email and password). Redirects to `/setup` while there are no accounts. Public |
 | `GET /setup` | First-run page: creates the administrator, using `APP_PASSWORD` as the setup password. `404` once any account exists. Public |
+| `POST /login/passkey/options`, `POST /login/passkey/verify` | JSON. Sign in with a passkey: options (a challenge), then the device's answer; starts a session. Public; `404` when passkeys are off; counted by the failed-attempt limit. The challenge id travels in a 5-minute `mehzur_passkey` cookie |
 | `GET /forgot` | Ask for a password-reset email. Public |
 | `GET /reset/<token>` | Choose a new password from an emailed (or administrator-made) link. Public |
 | `GET /invite/<token>` | Create an account from an invite link. Public |
@@ -59,6 +60,9 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 |---|---|---|
 | `?/profile` | `name` | Changes your name |
 | `?/email` | `email`, `current` | Changes your email address. With email set up it sends a one-hour link to the new address and changes nothing until it is used (limited to 5 requests per 15 minutes); without email it changes at once. Needs your current password; refuses an address that already has an account |
+| `POST /account/passkeys/options`, `POST /account/passkeys/verify` | JSON. Add a passkey to your account: options, then the device's answer and a name. Signed in; `404` when passkeys are off |
+| `?/renamePasskey` | `id`, `name` | Renames one of your passkeys |
+| `?/removePasskey` | `id` | Removes one of your passkeys |
 | `?/password` | `current`, `password`, `confirm` | Changes your password (needs the current one); signs out your other devices |
 | `?/signOutOthers` | none | Signs out every other device |
 | `?/deleteAccount` | `confirmEmail`, `current` | Members only: deletes your account and all the projects you own (even if shared), with their photos and measurements |

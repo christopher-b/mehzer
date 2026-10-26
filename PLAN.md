@@ -8,12 +8,13 @@ The app is built: house photo measurement for a small group of invited people, w
 - Deployed with Dokploy from the GitHub Container Registry image `ghcr.io/christopher-b/mehzur` (linux/amd64); the GitHub Actions workflow builds and publishes it.
 - Icons in the menus (Lucide), corrected wordmark, wider account menu.
 - The home page's create-project form is now a dashed "+ Project" tile that opens a popover (name, units, Create), like the "+ Room" tile.
+- M1 (done): passkeys (D50, migration 0006), bound to `APP_URL`; set it to the https address in Dokploy and do not change the domain later. Try one on a phone in production.
 - M1 (part): changing your email address (D49, migration 0005): confirmed by an emailed link when email is set up, immediate otherwise.
 - M1 (part): project sharing. Owner shares by email with existing accounts; guests edit but cannot delete, share or hand over; guests can leave; hand over swaps roles; "Shared with me" on the home page (D48, migration 0004).
 - M3: removed the Cloudflare support (D1 and R2 code, `wrangler.jsonc`, `__DEPLOY_TARGET__`, the `:cf` scripts and packages). The `Db` type is now synchronous only; existing code still `await`s database calls and mostly avoids transactions (see `docs/decisions.md`).
 
 ## Left to do
-- [ ] M1 Multi-user phase 2, remaining: passkeys. Decisions are in `docs/multi-user-plan.md`
+- [ ] M4 Passkeys in production: check `APP_URL=https://mehzur.cbennell.com` is set in Dokploy, deploy, then add and use a passkey on a phone (the e2e tests use a virtual authenticator)
 - [ ] M2b Send a real password-reset email through Proton SMTP, and run migration 0003 on a copy of the real database (the invite email and account creation are done)
 
 ## Not planned

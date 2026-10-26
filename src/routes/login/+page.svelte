@@ -1,7 +1,30 @@
 <script lang="ts">
+	import KeyRound from '@lucide/svelte/icons/key-round';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { browserSupportsWebAuthn, signInWithPasskey } from '#lib/client/passkeys.ts';
+	import { safeNext } from '#lib/safeNext.ts';
 	import type { PageProps } from './$types';
 
-	let { form }: PageProps = $props();
+	let { data, form }: PageProps = $props();
+
+	let supported = $state(false);
+	let busy = $state(false);
+	let passkeyError = $state('');
+	onMount(() => (supported = browserSupportsWebAuthn()));
+
+	async function usePasskey() {
+		busy = true;
+		passkeyError = '';
+		const result = await signInWithPasskey();
+		if (result.ok) {
+			// A full page load, so everything starts again as the signed-in person.
+			window.location.assign(safeNext(page.url.searchParams.get('next')));
+			return;
+		}
+		passkeyError = result.error;
+		busy = false;
+	}
 </script>
 
 <svelte:head><title>Sign in · Mehzur</title></svelte:head>
@@ -21,5 +44,25 @@
 		{#if form?.error}<p class="error">{form.error}</p>{/if}
 		<button type="submit" class="primary">Sign in</button>
 	</form>
+	{#if data.passkeys && supported}
+		<div class="passkey">
+			<button type="button" onclick={usePasskey} disabled={busy}><KeyRound size={18} />Sign in with a passkey</button>
+			{#if passkeyError}<p class="error" role="alert">{passkeyError}</p>{/if}
+		</div>
+	{/if}
 	<p class="note"><a href="/forgot">Forgot your password?</a></p>
 </div>
+
+<style>
+	.passkey {
+		display: grid;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+	}
+	.passkey button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+</style>

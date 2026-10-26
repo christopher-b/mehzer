@@ -37,7 +37,7 @@ test('changing your email address: the new one signs you in, the old one does no
 			await login.goto('/login');
 			await login.getByLabel('Email').fill(email);
 			await login.getByLabel('Password').fill(PASSWORD);
-			await login.getByRole('button', { name: 'Sign in' }).click();
+			await login.getByRole('button', { name: 'Sign in', exact: true }).click();
 			if (ok) await expect(login).toHaveURL('/');
 			else await expect(login.getByText('Incorrect email or password')).toBeVisible();
 			await other.close();

@@ -1,11 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { clearSessionCookie } from '#lib/server/auth.ts';
-import { SESSION_SECRET } from '$app/env/private';
+import { APP_URL, SESSION_SECRET } from '$app/env/private';
 import { users } from '#lib/server/db/schema.ts';
 import { appUrl, emailChangeEmail, emailConfigured, sendEmail } from '#lib/server/email.ts';
 import { createEmailChange, setEmail } from '#lib/server/emailChange.ts';
 import { formString } from '#lib/server/forms.ts';
+import { listPasskeys, parsePasskeyName, passkeySettings, removePasskey, renamePasskey } from '#lib/server/passkeys.ts';
 import { verifyPassword } from '#lib/server/password.ts';
 import { deleteUserSessions } from '#lib/server/sessions.ts';
 import {
@@ -21,8 +22,11 @@ import {
 } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = ({ locals }) => ({
+export const load: PageServerLoad = async ({ locals }) => ({
 	account: requireUser(locals),
+	// Passkeys need the public https address (`APP_URL`); without it the section is not shown.
+	passkeysAvailable: passkeySettings(APP_URL) !== null,
+	passkeys: await listPasskeys(locals.db, requireUser(locals).id),
 	// With email set up, a new address is confirmed by a link sent to it; without, it changes at once.
 	emailConfirmation: emailConfigured()
 });
@@ -80,6 +84,19 @@ export const actions: Actions = {
 		// Other devices are signed out; this one stays signed in.
 		await deleteUserSessions(locals.db, user.id, locals.sessionId ?? undefined);
 		return { passwordSaved: true };
+	},
+
+	renamePasskey: async ({ request, locals }) => {
+		const form = await request.formData();
+		const done = await renamePasskey(locals.db, requireUser(locals).id, formString(form, 'id'), parsePasskeyName(form.get('name')));
+		if (!done) return fail(404, { passkeyError: 'That passkey was not found.' });
+		return { passkeySaved: true };
+	},
+
+	removePasskey: async ({ request, locals }) => {
+		const done = await removePasskey(locals.db, requireUser(locals).id, formString(await request.formData(), 'id'));
+		if (!done) return fail(404, { passkeyError: 'That passkey was not found.' });
+		return { passkeyRemoved: true };
 	},
 
 	signOutOthers: async ({ locals }) => {

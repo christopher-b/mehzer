@@ -56,13 +56,22 @@ MAIL_FROM=Mehzur <mehzur@cbennell.com>
 
 Without email, everything still works: invite links are copied from the Users page, and "Forgot your password?" tells people to ask the administrator for a reset link. Email send failures are logged (without the link) and never shown to the person asking, so the form cannot be used to find out which addresses have accounts.
 
+### Passkeys
+
+Passkeys let people sign in with a fingerprint, face or device PIN. They switch on by themselves when `APP_URL` is an `https://` address (or `http://localhost` for development); without it the sign-in and account pages show nothing about passkeys.
+
+- **`APP_URL` must be exactly the address people type**, for example `https://mehzur.cbennell.com`. Passkeys are bound to its host, and the browser's answer is accepted only from that origin. It is never taken from the request's Host header. Behind Dokploy's proxy there is nothing else to set.
+- **Do not change the domain later.** A passkey belongs to one domain: if `APP_URL` changes host, every passkey stops working (passwords still do) and people add them again. Changing only the port or path of a `localhost` address is the same.
+- Passkeys live in the database (`passkey` table, public keys only), so the volume backup covers them. Each person manages theirs under **Account > Passkeys** (up to 10, each can be renamed or removed). The password always keeps working, so a lost phone locks nobody out.
+- A passkey sign-in counts toward the same 50-per-visitor-address limit as passwords, which needs `ADDRESS_HEADER=x-forwarded-for` behind a proxy.
+
 ### Settings (`.env`)
 
 | Variable | Default | Notes |
 |---|---|---|
 | `APP_PASSWORD` | required | The setup password: used once, at `/setup`, to create the administrator. It is not a login password |
 | `SESSION_SECRET` | required | Keys the hashes of session cookies and of invite and reset links. Changing it signs everyone out and voids every unused link |
-| `APP_URL` | empty | The public address (for example `https://mehzur.cbennell.com`), used for links in emails. Needed for email |
+| `APP_URL` | empty | The public address (for example `https://mehzur.cbennell.com`), used for links in emails and as the address passkeys are bound to. Needed for email and for passkeys |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | empty, `587` | Outgoing email (invites, password reset). Leave `SMTP_HOST` empty to turn email off |
 | `MAIL_FROM` | `Mehzur <mehzur@cbennell.com>` | Who emails come from |
 | `ADDRESS_HEADER` | empty | Behind a proxy, `x-forwarded-for`: lets failed sign-ins be counted per visitor address |

@@ -16,10 +16,7 @@ export async function startSession(
 	setSessionCookie(cookies, token, url.protocol === 'https:');
 }
 
-/** Only addresses inside the app are accepted as a place to go after signing in. */
-export function safeNext(value: string | null): string {
-	return value && value.startsWith('/') && !value.startsWith('//') ? value : '/';
-}
+export { safeNext } from '#lib/safeNext.ts';
 
 /** The client's address as far as the server can tell (the proxy's, unless ADDRESS_HEADER is set). */
 export function clientIp(getClientAddress: () => string): string | null {

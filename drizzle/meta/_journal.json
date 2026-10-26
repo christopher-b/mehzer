@@ -43,6 +43,13 @@
       "when": 1793032783478,
       "tag": "0005_email_change",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793037103917,
+      "tag": "0006_passkeys",
+      "breakpoints": true
     }
   ]
 }

@@ -16,8 +16,8 @@ const PUBLIC_PATHS = new Set([
 	'/apple-touch-icon.png'
 ]);
 
-// Links from emails: the token in the address is the credential.
-const PUBLIC_PREFIXES = ['/invite/', '/reset/'];
+// Links from emails (the token in the address is the credential) and the passkey sign-in steps.
+const PUBLIC_PREFIXES = ['/invite/', '/reset/', '/login/passkey/'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { db, storage } = await getServices();
