@@ -46,7 +46,7 @@
 				</a>
 			</h1>
 			{#if page.url.pathname === `/p/${page.data.project.id}`}
-				<ProjectMenu project={page.data.project} />
+				<ProjectMenu project={page.data.project} access={page.data.access} />
 			{/if}
 		{/if}
 		<span class="spacer"></span>

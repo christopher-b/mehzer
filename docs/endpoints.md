@@ -30,7 +30,7 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 |---|---|
 | `GET /p/<id>/export.csv` | CSV of the project: one row per measurement (room, room area, photo, measurement, value, value in mm) |
 | `GET /p/<id>/export.pdf` | PDF of the project: each room's photos with the measurement lines drawn on, and the measurements listed |
-| `GET /api/photos/<key>` | The photo file, only if the photo belongs to one of your projects (the key is looked up in the database; served with long-lived private caching; keys are never reused) |
+| `GET /api/photos/<key>` | The photo file, only if the photo belongs to a project you own or are a guest on (the key is looked up in the database; served with long-lived private caching; keys are never reused) |
 | `POST /api/projects/<id>/photos` | Upload one photo (multipart: `file` as JPEG, PNG or WebP up to 15 MB, `width`, `height`, optional `roomId`). Answers `201` with the new photo. Errors are JSON `{ message }` |
 | `GET /api/health` | Checks the database and photo storage; answers `{ db, storage }` |
 | `POST /logout` | Ends this session (removed from the database) and redirects to `/login` |
@@ -54,7 +54,7 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `?/profile` | `name` | Changes your name |
 | `?/password` | `current`, `password`, `confirm` | Changes your password (needs the current one); signs out your other devices |
 | `?/signOutOthers` | none | Signs out every other device |
-| `?/deleteAccount` | `confirmEmail`, `current` | Members only: deletes your account and all your projects, photos and measurements |
+| `?/deleteAccount` | `confirmEmail`, `current` | Members only: deletes your account and all the projects you own (even if shared), with their photos and measurements |
 
 ### `/admin/users` (administrator only)
 | Action | Fields | What it does |
@@ -63,7 +63,7 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `?/revoke` | `inviteId` | Cancels an unused invite |
 | `?/resetLink` | `userId` | Makes a one-hour reset link for that person (and emails it if email is set up) |
 | `?/disable`, `?/enable` | `userId` | Disabling signs the person out everywhere and blocks sign-in; not for yourself |
-| `?/delete` | `userId`, `confirmEmail` | Deletes the person and all their projects, photos and measurements; not for yourself |
+| `?/delete` | `userId`, `confirmEmail` | Deletes the person and all the projects they own, with their photos and measurements; not for yourself |
 
 ### `/` (home)
 | Action | Fields | What it does |
@@ -74,7 +74,11 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | Action | Fields | What it does |
 |---|---|---|
 | `?/update` | `name`, `unitSystem` | Renames the project or changes its units |
-| `?/delete` | none | Deletes the project, its rooms, photos (files too) and measurements; redirects to `/` |
+| `?/delete` | none | Owner only (a guest gets 403). Deletes the project, its rooms, photos (files too) and measurements; redirects to `/` |
+| `?/share` | `email` | Owner only. Adds a guest who already has an account; says so if there is none, if it is you, or if they are already on it |
+| `?/unshare` | `userId` | Owner only. Removes a guest |
+| `?/handOver` | `userId` | Owner only. Makes a guest the owner; you stay on it as a guest |
+| `?/leave` | none | A guest leaves the project; redirects to `/`. The owner cannot leave |
 | `?/createRoom` | `name` | Adds a room |
 | `?/renameRoom` | `roomId`, `name` | Renames a room |
 | `?/deleteRoom` | `roomId` | Deletes a room; its photos move to "No room" |

@@ -51,8 +51,9 @@
 	<section class="card danger-zone">
 		<h3>Delete your account</h3>
 		<p>
-			This permanently deletes your account and <strong>all your projects, photos and measurements</strong>. It cannot be
-			undone.
+			This permanently deletes your account and <strong>all your projects, photos and measurements</strong>, including
+			projects you have shared (other people lose access to them). Projects other people shared with you are not deleted. It
+			cannot be undone.
 		</p>
 		<form method="POST" action="?/deleteAccount" class="stack">
 			<label>Type your email address to confirm <input name="confirmEmail" autocomplete="off" required /></label>

@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { UNIT_SYSTEMS } from '../../units.ts';
-import { index, integer, real, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 const id = () =>
 	text('id')
@@ -104,6 +104,22 @@ export const projects = sqliteTable(
 		...authorship()
 	},
 	(t) => [index('project_owner_idx').on(t.ownerId)]
+);
+
+/** A guest on someone else's project (the owner stays in `project.owner_id`). */
+export const projectMembers = sqliteTable(
+	'project_member',
+	{
+		projectId: text('project_id')
+			.notNull()
+			.references(() => projects.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		addedAt: createdAt(),
+		addedBy: text('added_by').references((): AnySQLiteColumn => users.id, { onDelete: 'set null' })
+	},
+	(t) => [primaryKey({ columns: [t.projectId, t.userId] }), index('project_member_user_idx').on(t.userId)]
 );
 
 export const photos = sqliteTable(

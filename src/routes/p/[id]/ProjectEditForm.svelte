@@ -6,7 +6,7 @@
 	import { NAME_MAX_LENGTH } from '#lib/constants.ts';
 	import { UNIT_OPTIONS, type UnitSystem } from '#lib/units.ts';
 
-	let { project }: { project: { name: string; unitSystem: UnitSystem } } = $props();
+	let { project, canDelete }: { project: { name: string; unitSystem: UnitSystem }; canDelete: boolean } = $props();
 
 	// The form is opened from the header's project menu; leaving the page closes it.
 	onMount(() => () => (projectEdit.editing = false));
@@ -28,15 +28,17 @@
 		<button type="submit" class="primary">Save</button>
 		<button type="button" onclick={() => (projectEdit.editing = false)}>Cancel</button>
 	</form>
-	<form
-		method="POST"
-		action="?/delete"
-		use:enhance={submitWith({
-			confirm: () => confirm(`Delete "${project.name}" and all its photos and measurements?`)
-		})}
-	>
-		<button type="submit" class="danger">Delete project</button>
-	</form>
+	{#if canDelete}
+		<form
+			method="POST"
+			action="?/delete"
+			use:enhance={submitWith({
+				confirm: () => confirm(`Delete "${project.name}" and all its photos and measurements?`)
+			})}
+		>
+			<button type="submit" class="danger">Delete project</button>
+		</form>
+	{/if}
 {/if}
 
 <style>

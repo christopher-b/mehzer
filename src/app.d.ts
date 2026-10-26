@@ -24,6 +24,8 @@ declare global {
 			/** Set for signed-in pages; the header shows the account menu. */
 			user?: import('#lib/server/users.ts').SessionUser;
 			project?: { id: string; name: string; unitSystem: import('#lib/units.ts').UnitSystem };
+			/** Set by the project page: your role on it, and who owns it when you are a guest. */
+			access?: { role: 'owner' | 'guest'; ownerName: string | null };
 		}
 		// interface PageState {}
 		// interface Platform {}

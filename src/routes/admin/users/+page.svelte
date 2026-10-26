@@ -89,7 +89,7 @@
 			</li>
 		{/each}
 	</ul>
-	<p class="muted">Deleting a person also deletes all their projects, photos and measurements.</p>
+	<p class="muted">Deleting a person also deletes all the projects they own, with their photos and measurements, even if those are shared with others. Projects they were only a guest on are not deleted.</p>
 </section>
 
 <style>

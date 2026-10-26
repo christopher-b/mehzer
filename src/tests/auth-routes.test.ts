@@ -5,6 +5,7 @@ vi.mock('$app/env/private', () => ({ APP_PASSWORD: 'open-sesame', SESSION_SECRET
 const { actions, load } = await import('../routes/login/+page.server.ts');
 const { POST: logout } = await import('../routes/logout/+server.ts');
 const { GET: servePhoto } = await import('../routes/api/photos/[...key]/+server.ts');
+const { projectMembers, projects } = await import('#lib/server/db/schema.ts');
 const { SESSION_COOKIE } = await import('#lib/server/auth.ts');
 const { findSession, createSession } = await import('#lib/server/sessions.ts');
 const { createUser, LOGIN_LIMIT_PER_EMAIL } = await import('#lib/server/users.ts');
@@ -180,6 +181,16 @@ describe('GET /api/photos/[...key]', () => {
 		const other = await seedUser(ctx.db);
 		const theirs = asUser(ctx, { id: other.id, email: other.email, name: other.name, role: 'member' });
 		await expect(get(key, theirs.locals)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it("serves a guest the photos of a project that is shared with them, until they are removed", async () => {
+		const other = await seedUser(ctx.db);
+		const guest = asUser(ctx, { id: other.id, email: other.email, name: other.name, role: 'member' });
+		const [project] = await ctx.db.select().from(projects);
+		await ctx.db.insert(projectMembers).values({ projectId: project.id, userId: other.id });
+		expect((await get(key, guest.locals)).status).toBe(200);
+		await ctx.db.delete(projectMembers);
+		await expect(get(key, guest.locals)).rejects.toMatchObject({ status: 404 });
 	});
 
 	it('404s for a stored file that no photo row points to', async () => {

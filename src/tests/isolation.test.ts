@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { annotations, photos, projects, rooms } from '#lib/server/db/schema.ts';
+import { annotations, photos, projectMembers, projects, rooms } from '#lib/server/db/schema.ts';
 import { actions as homeActions, load as homeLoad } from '../routes/+page.server.ts';
 import { actions as projectActions, load as projectLoad } from '../routes/p/[id]/+page.server.ts';
 import { actions as photoActions, load as photoLoad } from '../routes/p/[id]/photo/[photoId]/+page.server.ts';
@@ -107,5 +107,131 @@ describe('who made what', () => {
 		const result = (await call(photoActions.create as Handler, { locals: w.ctx.locals, params: photoParams(w), form: formData({ x1: 0.1, y1: 0.2, x2: 0.8, y2: 0.2, value: "10'" }) })) as { id: string };
 		const [made] = await w.ctx.db.select().from(annotations).where(eq(annotations.id, result.id));
 		expect(made).toMatchObject({ createdBy: w.ctx.locals.user!.id, updatedBy: w.ctx.locals.user!.id });
+	});
+});
+
+describe('a guest on a shared project', () => {
+	/** Ben is a guest on Anna's project. */
+	async function shared() {
+		const w = await world();
+		await w.ctx.db.insert(projectMembers).values({ projectId: w.project.id, userId: w.ben.id, addedBy: w.ctx.locals.user!.id });
+		return w;
+	}
+
+	it('can open the project and its photos, and sees the project under "Shared with me"', async () => {
+		const w = await shared();
+		const page = await callLoad<{ access: { role: string; ownerName: string | null }; guests: unknown[]; rooms: unknown[]; photos: unknown[] }>(
+			projectLoad as Handler,
+			{ locals: w.asBen.locals, params: projectParams(w) }
+		);
+		expect(page.access).toEqual({ role: 'guest', ownerName: 'Test User' });
+		expect(page.guests).toEqual([]);
+		expect(page.rooms).toHaveLength(1);
+		expect(page.photos).toHaveLength(1);
+		await expect(callLoad(photoLoad as Handler, { locals: w.asBen.locals, params: photoParams(w) })).resolves.toBeTruthy();
+
+		const home = await callLoad<{ projects: { name: string }[]; shared: { name: string; ownerName: string; roomCount: number }[] }>(homeLoad as Handler, {
+			locals: w.asBen.locals
+		});
+		expect(home.projects).toEqual([]);
+		expect(home.shared).toMatchObject([{ name: "Anna's house", ownerName: 'Test User', roomCount: 1 }]);
+		const annas = await callLoad<{ projects: unknown[]; shared: unknown[] }>(homeLoad as Handler, { locals: w.ctx.locals });
+		expect(annas.projects).toHaveLength(1);
+		expect(annas.shared).toEqual([]);
+	});
+
+	it('can add, rename and change rooms, measurements and the project itself, and is recorded as the editor', async () => {
+		const w = await shared();
+		const as = (action: string, fields: Record<string, string>) =>
+			call((projectActions as Record<string, Handler>)[action], { locals: w.asBen.locals, params: projectParams(w), form: formData(fields) });
+
+		await as('createRoom', { name: 'Bath' });
+		await as('renameRoom', { roomId: w.room.id, name: 'Galley' });
+		await as('update', { name: 'Renamed', unitSystem: 'metric' });
+		await call(photoActions.update as Handler, { locals: w.asBen.locals, params: photoParams(w), form: formData({ id: w.note.id, value: '4m', name: 'Edited' }) });
+		await as('deletePhoto', { photoId: w.photo.id });
+		await as('deleteRoom', { roomId: w.room.id });
+
+		const [project] = await w.ctx.db.select().from(projects).where(eq(projects.id, w.project.id));
+		expect(project).toMatchObject({ name: 'Renamed', unitSystem: 'metric', updatedBy: w.ben.id, ownerId: w.ctx.locals.user!.id });
+		const remaining = await w.ctx.db.select().from(rooms).where(eq(rooms.projectId, w.project.id));
+		expect(remaining).toMatchObject([{ name: 'Bath', createdBy: w.ben.id }]);
+		expect(await w.ctx.db.select().from(photos).where(eq(photos.id, w.photo.id))).toHaveLength(0);
+	});
+
+	it('can upload photos and export', async () => {
+		const w = await shared();
+		for (const handler of [exportCsv, exportPdf]) {
+			await expect(call(handler as Handler, { locals: w.asBen.locals, params: projectParams(w) })).resolves.toBeInstanceOf(Response);
+		}
+		const file = new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' });
+		await expect(
+			call(upload as Handler, { locals: w.asBen.locals, params: projectParams(w), form: formData({ file, width: 10, height: 10 }) })
+		).resolves.toBeTruthy();
+		expect(await w.ctx.db.select().from(photos).where(eq(photos.projectId, w.project.id))).toHaveLength(2);
+	});
+
+	it('cannot delete, share or hand over the project, or manage who else is on it (403)', async () => {
+		const w = await shared();
+		const cleo = await seedUser(w.ctx.db, { email: 'cleo@example.com' });
+		for (const [action, fields] of [
+			['delete', {}],
+			['share', { email: cleo.email }],
+			['unshare', { userId: w.ben.id }],
+			['handOver', { userId: w.ben.id }]
+		] as const) {
+			await expect(
+				call((projectActions as Record<string, Handler>)[action], { locals: w.asBen.locals, params: projectParams(w), form: formData(fields) })
+			).rejects.toMatchObject({ status: 403 });
+		}
+		const [project] = await w.ctx.db.select().from(projects).where(eq(projects.id, w.project.id));
+		expect(project.ownerId).toBe(w.ctx.locals.user!.id);
+		expect(await w.ctx.db.select().from(projectMembers)).toHaveLength(1);
+	});
+
+	it('can leave, and then gets a 404 like any stranger', async () => {
+		const w = await shared();
+		await expect(call(projectActions.leave as Handler, { locals: w.asBen.locals, params: projectParams(w) })).rejects.toMatchObject({ status: 303, location: '/' });
+		expect(await w.ctx.db.select().from(projectMembers)).toHaveLength(0);
+		await expect(callLoad(projectLoad as Handler, { locals: w.asBen.locals, params: projectParams(w) })).rejects.toMatchObject({ status: 404 });
+		expect(await w.ctx.db.select().from(projects).where(eq(projects.id, w.project.id))).toHaveLength(1);
+	});
+
+	it('loses access the moment the owner removes them', async () => {
+		const w = await shared();
+		await call(projectActions.unshare as Handler, { locals: w.ctx.locals, params: projectParams(w), form: formData({ userId: w.ben.id }) });
+		await expect(callLoad(projectLoad as Handler, { locals: w.asBen.locals, params: projectParams(w) })).rejects.toMatchObject({ status: 404 });
+		await expect(callLoad(photoLoad as Handler, { locals: w.asBen.locals, params: photoParams(w) })).rejects.toMatchObject({ status: 404 });
+	});
+});
+
+describe('the owner of a shared project', () => {
+	it('shares by email, hands over, and reports a mistake without changing anything', async () => {
+		const w = await world();
+		const owner = (action: string, fields: Record<string, string>) =>
+			call((projectActions as Record<string, Handler>)[action], { locals: w.ctx.locals, params: projectParams(w), form: formData(fields) });
+
+		expect(await owner('share', { email: 'nobody@example.com' })).toMatchObject({ status: 400 });
+		expect(await owner('share', { email: w.ctx.locals.user!.email })).toMatchObject({ status: 400 });
+		expect(await owner('share', { email: w.ben.email })).toMatchObject({ shared: true });
+		expect(await owner('share', { email: w.ben.email })).toMatchObject({ status: 400 });
+
+		const page = await callLoad<{ guests: { email: string }[] }>(projectLoad as Handler, { locals: w.ctx.locals, params: projectParams(w) });
+		expect(page.guests.map((g) => g.email)).toEqual([w.ben.email]);
+
+		expect(await owner('handOver', { userId: 'someone-else' })).toMatchObject({ status: 404 });
+		await owner('handOver', { userId: w.ben.id });
+		const afterwards = await callLoad<{ access: { role: string } }>(projectLoad as Handler, { locals: w.ctx.locals, params: projectParams(w) });
+		expect(afterwards.access.role).toBe('guest');
+		// the new owner can delete it; the previous owner cannot any more
+		await expect(call(projectActions.delete as Handler, { locals: w.ctx.locals, params: projectParams(w) })).rejects.toMatchObject({ status: 403 });
+		await expect(call(projectActions.delete as Handler, { locals: w.asBen.locals, params: projectParams(w) })).rejects.toMatchObject({ status: 303 });
+		expect(await w.ctx.db.select().from(projects).where(eq(projects.id, w.project.id))).toHaveLength(0);
+	});
+
+	it('cannot "leave" its own project', async () => {
+		const w = await world();
+		expect(await call(projectActions.leave as Handler, { locals: w.ctx.locals, params: projectParams(w) })).toMatchObject({ status: 400 });
+		expect(await w.ctx.db.select().from(projects).where(eq(projects.id, w.project.id))).toHaveLength(1);
 	});
 });

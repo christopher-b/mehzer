@@ -2,7 +2,7 @@
 
 ## Product decisions
 
-- Accounts: email and password, created by invite link from the single administrator; each person's projects are private to them. (Until Oct 2026 the app had one shared password.) Online only (no offline mode).
+- Accounts: email and password, created by invite link from the single administrator; projects are private to their owner unless the owner shares them with other existing accounts (D48). (Until Oct 2026 the app had one shared password.) Online only (no offline mode).
 - Units are per project; measurements are stored in mm and shown as ft/in or m/cm.
 - Every photo belongs to one room or to "No room"; a measurement's room is always its photo's room.
 - A room's area is length × width from exactly two of its measurements: no L-shaped rooms and no manual entry.
@@ -56,13 +56,14 @@
 | D38 | Sessions are random tokens in the cookie; the database stores only an HMAC of the token (keyed with `SESSION_SECRET`). Same for invite and reset links | A copy of the database cannot be used to sign in; changing the secret voids everything |
 | D39 | `project.owner_id` is nullable in the database; every project lookup goes through `getProjectOr404(db, userId, id)`, which answers 404 for other people's projects. The administrator sees only their own projects | SQLite cannot add a NOT NULL column to a table that has rows; 404 rather than 403 so ids do not leak |
 | D40 | Existing projects have no owner after migration 0003; the first administrator (created at `/setup` with `APP_PASSWORD`) is given all of them | No placeholder user is needed |
-| D41 | `created_by` / `updated_by` on projects, rooms, photos and measurements are recorded but not shown; they become null when the user is deleted (to be shown as "deleted user") | Ready for sharing; no interface yet |
+| D41 | `created_by` / `updated_by` on projects, rooms, photos and measurements are recorded but not shown; they become null when the user is deleted (to be shown as "deleted user") | Ready for sharing; still not shown |
 | D42 | Deleting an account (own, or by the administrator) deletes that person's projects, photos and measurements | Chosen over keeping or transferring them |
 | D43 | One administrator; members cannot invite. Invites expire after 7 days, reset links after 1 hour; both are single use | Small known group |
 | D44 | Email is sent with `nodemailer` over SMTP on the Node build only (loaded dynamically, so the Cloudflare bundle does not contain it). Without SMTP settings, invites are shared by copying the link | Keeps the Cloudflare build compiling; email is optional |
 | D45 | Failed sign-ins are recorded in the database and limited per email (5) and per visitor address (50) per 15 minutes; "forgot password" requests are limited per address and always give the same answer | Guessing and email-flooding limits that work without extra services |
 | D46 | Multi-user is supported on Docker only for now; the Cloudflare build still compiles but is untested with accounts and cannot send email | Chosen scope |
 | D47 | Cloudflare deployment is not planned and its code was removed (PLAN.md, M3): `wrangler.jsonc`, the D1 and R2 code, `__DEPLOY_TARGET__`, the `:cf` scripts and the Cloudflare packages. Docker, run from the published image, is the only supported target. Supersedes D4, D12, D13, D15, D17 and D25 | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
+| D48 | Project sharing: a `project_member(project_id, user_id, added_at, added_by)` table lists guests; the owner stays in `project.owner_id`. `getProjectOr404(db, userId, id, need?)` returns the project with `role` (`owner` or `guest`): strangers get 404, a guest asking for an owner-only action (delete, share, unshare, hand over) gets 403. Guests can edit photos, rooms, measurements, rename the project and change its units, and can leave. Only people with an enabled account can be added (by email; nobody is invited). Hand over makes a guest the owner and the previous owner a guest, in one transaction. Deleting an account deletes the projects it owns (even if shared) and removes its guest rows. The home page lists shared projects under "Shared with me" | Small known group; one owner keeps deletion and sharing simple |
 
 ## Data model
 
@@ -71,6 +72,7 @@
 - invite(id, token_hash, email?, created_by?, expires_at, used_at?, used_by?, revoked_at?)
 - password_reset(id, user_id, token_hash, expires_at, used_at?)
 - login_attempt(id, key, at): failed sign-ins and password-reset requests, counted over a 15-minute window
+- project_member(project_id, user_id, added_at, added_by?): guests; primary key (project_id, user_id)
 - project(id, owner_id?, name, unit_system, created_at, created_by?, updated_by?)
 - photo(id, project_id, room_id?, blob_key, width, height, caption, created_at, created_by?, updated_by?)
 - room(id, project_id, name, area_a_annotation_id?, area_b_annotation_id?, created_at, created_by?, updated_by?)

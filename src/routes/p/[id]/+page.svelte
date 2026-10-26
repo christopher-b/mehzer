@@ -11,6 +11,7 @@
 	import MeasurementTable from './MeasurementTable.svelte';
 	import PhotoGrid from './PhotoGrid.svelte';
 	import ProjectEditForm from './ProjectEditForm.svelte';
+	import ProjectSharePanel from './ProjectSharePanel.svelte';
 	import RoomCard from './RoomCard.svelte';
 	import RoomMenu from './RoomMenu.svelte';
 	import RoomRenameForm from './RoomRenameForm.svelte';
@@ -52,7 +53,8 @@
 
 <svelte:head><title>{data.project.name} · Mehzur</title></svelte:head>
 
-<ProjectEditForm project={data.project} />
+<ProjectEditForm project={data.project} canDelete={data.access.role === 'owner'} />
+{#if data.access.role === 'owner'}<ProjectSharePanel guests={data.guests} />{/if}
 {#if form?.error}<p class="error">{form.error}</p>{/if}
 
 <section>
