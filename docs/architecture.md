@@ -16,15 +16,15 @@ src/lib/client/             Browser helpers: form-action calls, failure messages
                             online state, drafts kept across sign-in, photo upload, remembered collapsed cards
 src/lib/components/         AnnotationCanvas.svelte (draws and edits lines on a photo)
 src/lib/components/ui/      Shared building blocks: PopupMenu, Modal, AddTile, HamburgerIcon, Notifications, SessionExpired
-src/lib/server/db/          Drizzle schema, Node (SQLite) and D1 clients
-src/lib/server/storage/     Photo storage: filesystem and R2
-src/lib/server/             Platform selection, form parsing, messages, photo and room rules, and accounts:
+src/lib/server/db/          Drizzle schema and the SQLite client
+src/lib/server/storage/     Photo storage on the filesystem
+src/lib/server/             Database and storage setup (platform.ts), form parsing, messages, photo and room rules, and accounts:
                               password.ts (hashing), auth.ts (token hashing, cookie), sessions.ts, users.ts (accounts,
                               sign-in limits, deleting a user), invites.ts (invite and reset links), signin.ts,
-                              email.ts (SMTP, Node build only)
+                              email.ts (SMTP)
 src/routes/                 Pages and endpoints; each page's own components sit beside it
                             (for example src/routes/p/[id]/ for the project page and its photo page)
-drizzle/                    SQL migrations, used by both Docker and D1
+drizzle/                    SQL migrations, applied by the server on startup
 docker/server.js            Docker entry point
 src/tests/                  Route and database tests (unit tests sit next to the code)
 tests/e2e/                  Playwright browser tests; playwright.config.ts at the root

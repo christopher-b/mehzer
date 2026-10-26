@@ -13,9 +13,7 @@ const port = process.env.E2E_PORT ?? '4180';
 rmSync(dataDir, { recursive: true, force: true });
 mkdirSync(dataDir, { recursive: true });
 
-// Build for the Node target regardless of how the test run was started.
 const env = { ...process.env };
-delete env.DEPLOY_TARGET;
 
 if (!process.env.E2E_SKIP_BUILD) {
 	const build = spawnSync(process.execPath, [vite, 'build'], { cwd: root, stdio: 'inherit', env });

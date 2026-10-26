@@ -4,7 +4,7 @@ export interface StoredBlob {
 	size: number;
 }
 
-/** Binary object storage for photos: local filesystem (Node/Docker) or R2 (Cloudflare). */
+/** Binary object storage for photos: the local filesystem. */
 export interface BlobStorage {
 	put(key: string, data: ArrayBuffer | Uint8Array, contentType: string): Promise<void>;
 	get(key: string): Promise<StoredBlob | null>;

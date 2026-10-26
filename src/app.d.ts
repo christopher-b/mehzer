@@ -5,8 +5,6 @@ import type { Db } from '#lib/server/db/types.ts';
 import type { BlobStorage } from '#lib/server/storage/types.ts';
 
 declare global {
-	const __DEPLOY_TARGET__: 'node' | 'cloudflare';
-
 	namespace App {
 		interface Error {
 			status: number;

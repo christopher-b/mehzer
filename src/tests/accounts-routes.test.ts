@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 
+const smtp = vi.hoisted(() => ({ host: 'smtp.example.com' }));
+
 vi.mock('$app/env/private', () => ({
 	APP_PASSWORD: 'open-sesame',
 	SESSION_SECRET: 'unit-test-secret',
 	APP_URL: 'https://mehzur.example.com/',
-	SMTP_HOST: 'smtp.example.com',
+	get SMTP_HOST() {
+		return smtp.host;
+	},
 	SMTP_PORT: '587',
 	SMTP_USER: '',
 	SMTP_PASSWORD: '',
@@ -130,11 +134,11 @@ describe('forgot password', () => {
 
 	it('says so when email is not set up', async () => {
 		setMailerForTests(undefined);
-		vi.stubGlobal('__DEPLOY_TARGET__', 'cloudflare');
+		smtp.host = '';
 		try {
 			expect(await ask(createContext(), TEST_USER.email)).toMatchObject({ unavailable: true });
 		} finally {
-			vi.unstubAllGlobals();
+			smtp.host = 'smtp.example.com';
 		}
 	});
 

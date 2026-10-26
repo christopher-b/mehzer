@@ -4,7 +4,6 @@ node_modules
 .output
 .vercel
 .netlify
-.wrangler
 /.svelte-kit
 /build
 
@@ -24,7 +23,6 @@ vite.config.ts.timestamp-*
 
 # Local data
 /data
-.dev.vars
 
 # End-to-end test output
 /.e2e-data

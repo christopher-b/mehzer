@@ -14,9 +14,9 @@ export function setMailerForTests(mailer: Mailer | undefined) {
 	override = mailer;
 }
 
-/** Email works when SMTP is configured, there is a public address for the links, and this is the Node build. */
+/** Email works when SMTP is configured, and there is a public address for the links. */
 export function emailConfigured(): boolean {
-	return override !== undefined || (__DEPLOY_TARGET__ === 'node' && Boolean(SMTP_HOST && APP_URL));
+	return override !== undefined || Boolean(SMTP_HOST && APP_URL);
 }
 
 /** The public address of the app without a trailing slash, or '' when not configured. */
@@ -28,7 +28,6 @@ export async function sendEmail(email: Email): Promise<boolean> {
 	try {
 		if (override) await override(email);
 		else {
-			// Loaded only on the Node build, so the Cloudflare bundle never contains nodemailer.
 			const { createTransport } = await import('nodemailer');
 			const port = Number(SMTP_PORT) || 587;
 			await createTransport({

@@ -1,6 +1,5 @@
 /**
- * Password hashing with PBKDF2-SHA256 through Web Crypto: it needs no native module, so the same code
- * runs on Node and on Cloudflare Workers. The hash is stored as
+ * Password hashing with PBKDF2-SHA256 through Web Crypto: it needs no native module. The hash is stored as
  * `pbkdf2-sha256$<iterations>$<salt>$<hash>` (base64), so the cost can be raised later and old
  * hashes keep working.
  */

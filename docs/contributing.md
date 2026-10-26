@@ -20,16 +20,15 @@ npm run check:e2e      # type-check the browser tests
 npm run test:e2e       # browser tests, Chromium (about 2 minutes)
 ```
 
-Also: `npm run test:e2e:safari` after UI or style changes; `npm run build:cf` after server changes; `npm run db:generate` after a schema change (and commit the new migration in `drizzle/`).
+Also: `npm run test:e2e:safari` after UI or style changes; `npm run db:generate` after a schema change (and commit the new migration in `drizzle/`).
 
 ## Pitfalls
 
 - **Stray servers:** stop anything on port 4180 before browser tests (`lsof -tiTCP:4180 -sTCP:LISTEN | xargs kill`). Two servers on one port cause confusing failures.
-- **Build target:** `npm run build:cf` overwrites the Node build, and `E2E_SKIP_BUILD=1` reuses whatever build is there. After a Cloudflare build, run the e2e tests without that flag so the Node build is rebuilt.
 - **Accessible names are a contract:** the browser tests find things by role and name (`getByRole`, `getByLabel`; see `tests/e2e/helpers.ts`). Renaming a button, field or dialog means updating the tests in the same change. A few helpers still use CSS classes (`.annotation`, `.handle`, `.canvas`, `.room`, `.grid li`, ...); keep them or update the helpers.
 - **Hydration:** the app sets `data-hydrated` on `<html>` once its scripts run, and the test helpers wait for it; a click before then is lost.
 - **Timestamps:** `created_at` has whole-second resolution. Ties in ordering are broken by `rowid` (`photoOrder`, `roomOrder`, `annotationOrder` in `src/lib/server/photos.ts`).
-- **Platform differences:** better-sqlite3 (Docker) is synchronous and D1 is asynchronous, so server code goes through the shared `Db` type and `await`s everything. No interactive transactions.
+- **Database calls:** better-sqlite3 is synchronous, but server code still `await`s every call through the shared `Db` type (a leftover from when D1 was supported). Transactions are available but most multi-step writes are not wrapped in one yet.
 - **Shared pieces:** shared UI is in `src/lib/components/ui/`, shared styles and design tokens in `src/app.css`, failure messages in one table in `src/lib/client/errors.ts`. Prefer these over new one-off versions.
 
 Decisions and known limitations are in [decisions.md](decisions.md); the code layout is in [architecture.md](architecture.md).

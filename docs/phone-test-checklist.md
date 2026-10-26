@@ -6,7 +6,7 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 
 ## Before you start
 
-- [ ] The app is reachable from the phone. Docker on your network: `http://<computer's address>:3000`. Cloudflare: its `workers.dev` address or your own domain.
+- [ ] The app is reachable from the phone. The deployed address (`https://mehzur.cbennell.com`), or on your network: `http://<computer's address>:3000`.
 - [ ] Note the phone, operating system version and browser in the results table at the end.
 - [ ] Test both **light and dark mode** on the phone (the app should look the same in both: it is light-only). Do the main run in your usual setting, then repeat steps 4 and 6 in the other.
 - [ ] Have a way to see a few real photos: take new ones, and pick one large photo from the library (12 megapixels or more is ideal).

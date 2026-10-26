@@ -1,6 +1,6 @@
 # Deployment
 
-Mehzur runs in Docker (Node and a SQLite file). A Cloudflare build (Workers, D1 and R2) still exists but is not supported or planned, and is to be removed. Settings are in `.env` (see `.env.example`).
+Mehzur runs in Docker (Node and a SQLite file). Settings are in `.env` (see `.env.example`).
 
 ## Docker Compose
 
@@ -137,41 +137,6 @@ git pull && docker compose up -d --build
 
 The volume is named `mehzur_mehzur-data` (the compose file sets the project name to `mehzur`); run `docker volume ls` to check. Logs: `docker compose logs -f`.
 
-## Cloudflare
-
-> **Not supported.** Cloudflare deployment is not planned and its code is to be removed (D47). The Cloudflare build still compiles, but it has never been run with accounts (first-run setup, invites, sessions in D1, migration 0003) and it cannot send email. This section is kept only until the code goes; use Docker.
-
-Needs a Cloudflare account and Node. Everything runs on Workers (the app), D1 (database) and R2 (photos).
-
-```sh
-npx wrangler login
-
-# 1. Create the database, and note the database_id it prints
-npx wrangler d1 create mehzur
-# put that id in wrangler.jsonc ("database_id")
-
-# 2. Create the photo bucket (the name must match wrangler.jsonc)
-npx wrangler r2 bucket create mehzur-photos
-
-# 3. Create the tables
-npm run db:migrate:cf
-
-# 4. Set the secrets
-npx wrangler secret put APP_PASSWORD
-npx wrangler secret put SESSION_SECRET
-
-# 5. Build and deploy
-npm run deploy:cf
-```
-
-Wrangler prints the `*.workers.dev` address; you can attach your own domain in the Cloudflare dashboard. To deploy a new version later, run `npm run db:migrate:cf` (applies any new migrations) and then `npm run deploy:cf`.
-
-Notes:
-
-- `npm run deploy:cf` builds with `DEPLOY_TARGET=cloudflare`; a normal `npm run build` makes the Node/Docker build.
-- Accounts and sessions are described above (untested here). For stronger access control you can also put the site behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/); the shared password then acts as a second check.
-- Locally, `npm run dev:cf` runs the Cloudflare version against emulated D1 and R2. First copy `.dev.vars.example` to `.dev.vars` and apply the migrations to the local D1 with `npm run db:migrate:cf:local`.
-
 ## Troubleshooting: error ids and logs
 
 When something unexpected fails on the server, the page says "Something went wrong on our side" and shows an
@@ -184,5 +149,3 @@ When something unexpected fails on the server, the page says "Something went wro
 Request bodies, cookies and the password are never logged. Missing pages (404) are expected and are not logged as errors.
 
 - **Docker:** `docker compose logs mehzur | grep a1b2c3d4` (use your service name and the id).
-- **Cloudflare:** the Worker has observability enabled in `wrangler.jsonc`; open the Worker's **Logs** in the
-  dashboard (or run `npx wrangler tail`) and search for the id.

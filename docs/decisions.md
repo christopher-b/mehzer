@@ -17,9 +17,9 @@
 | # | Decision | Rationale |
 |---|----------|-----------|
 | D1 | SvelteKit (Svelte 5, TS) | User requirement |
-| D2 | SQLite via Drizzle ORM: D1 on Cloudflare, better-sqlite3 in Docker | Same schema/queries on both targets |
-| D3 | Blob storage interface: R2 on CF, local filesystem in Docker | Photos too large for DB |
-| D4 | Adapter selected at build: `adapter-cloudflare` vs `adapter-node` via env `DEPLOY_TARGET` | One codebase |
+| D2 | SQLite via Drizzle ORM, better-sqlite3 in Docker (it also ran on D1 on Cloudflare until D47) | Same schema/queries on both targets |
+| D3 | Blob storage interface; photos on the local filesystem in Docker (R2 on Cloudflare until D47) | Photos too large for DB |
+| D4 | ~~Adapter selected at build: `adapter-cloudflare` vs `adapter-node` via env `DEPLOY_TARGET`~~ (Cloudflare support removed, D47) | One codebase |
 | D5 | Platform services injected in `hooks.server.ts` into `event.locals` (`db`, `storage`) | Isolate platform differences |
 | D6 | Point coords stored normalized (0–1) relative to image | Resolution-independent rendering |
 | D7 | Overlay drawn as SVG over `<img>` with viewBox = natural size | Crisp, easy hit-testing, responsive |
@@ -27,12 +27,12 @@
 | D9 | Client-side image downscale (max ~2560px, JPEG) before upload | Mobile photos are large |
 | D10 | Auth: `APP_PASSWORD` env, HMAC-signed cookie (`SESSION_SECRET`) | Simple, works on both runtimes (Web Crypto) |
 | D11 | Node 24 pinned via `mise.toml` | SvelteKit 3 requires Node ≥ 22.17 |
-| D12 | SvelteKit 3: adapter configured in `vite.config.ts`; `__DEPLOY_TARGET__` compile-time constant | Lets M2 dynamically import only the right platform code (keeps better-sqlite3 out of the CF bundle) |
-| D13 | One migrations folder `drizzle/` used by both Node migrator (on startup) and `wrangler d1 migrations apply` | Single source of truth |
+| D12 | ~~SvelteKit 3: adapter configured in `vite.config.ts`; `__DEPLOY_TARGET__` compile-time constant~~ (Cloudflare support removed, D47) | Lets M2 dynamically import only the right platform code (keeps better-sqlite3 out of the CF bundle) |
+| D13 | ~~One migrations folder `drizzle/` used by both Node migrator (on startup) and `wrangler d1 migrations apply`~~ (Cloudflare support removed, D47) | Single source of truth |
 | D14 | IDs are UUID text (`crypto.randomUUID`), timestamps `timestamp_ms` | Works on both runtimes |
-| D15 | Cloudflare config in `wrangler.jsonc` (Workers + static assets) | Current Cloudflare recommendation over Pages |
+| D15 | ~~Cloudflare config in `wrangler.jsonc` (Workers + static assets)~~ (Cloudflare support removed, D47) | Current Cloudflare recommendation over Pages |
 | D16 | SvelteKit 3 conventions: `#lib/...ts` imports (explicit `.ts`), env vars declared in `src/env.ts` and read from `$app/env/private`, `Handle` from `@sveltejs/kit/hooks` | `$lib` and `$env/*` are removed/deprecated in Kit 3 |
-| D17 | CF bindings come from `import { env } from 'cloudflare:workers'` (not `event.platform`); runtime services live in `services-node.ts` / `services-cloudflare.ts`, loaded by `platform.ts` | Kit 3 adapter-cloudflare dropped `platform.env`; separate modules keep each runtime's imports out of the other's bundle |
+| D17 | ~~CF bindings come from `import { env } from 'cloudflare:workers'` (not `event.platform`); runtime services live in `services-node.ts` / `services-cloudflare.ts`, loaded by `platform.ts`~~ (Cloudflare support removed, D47) | Kit 3 adapter-cloudflare dropped `platform.env`; separate modules keep each runtime's imports out of the other's bundle |
 | D18 | Auth session token = `<expiry>.<HMAC-SHA256>` (30 days), password compared via HMAC digests | Stateless, no DB table, constant-time comparison |
 | D19 | `/api/*` returns 401 when signed out; pages redirect to `/login?next=` | API clients get a status code, browsers get a redirect |
 | D20 | Photos belong to at most one room (`photo.room_id`, null = "No room" group); deleting a room moves its photos to No room (`ON DELETE SET NULL`, migration `0001_photo_room.sql` edited by hand because drizzle-kit omitted the clause) | A room only shows its own photos; each room (and No room) has its own Take photo / Upload. A measurement's own room stays independently editable |
@@ -40,7 +40,7 @@
 | D22 | Docker image: multi-stage on `node:24-bookworm-slim`; the build stage installs python3/make/g++ because better-sqlite3 v13 compiles from source (no prebuilt binary); runtime stage has only production `node_modules`, `build/`, `drizzle/`, runs as the non-root `node` user, data in the `/data` volume (`DATABASE_PATH`, `PHOTOS_PATH`), migrations run on start, `BODY_SIZE_LIMIT=20M`, HEALTHCHECK on `/login` | Small runtime image (about 53 MB on top of the Node base), no secrets baked in |
 | D23 | `docker/server.js` wraps the adapter-node server; `PLAIN_HTTP=true` (default in compose) makes it treat every request as http by always overwriting `X-Forwarded-Proto` | Kit 3 adapter-node assumes https and rejects form posts otherwise ("Cross-site POST form submissions are forbidden"); the old `ORIGIN` variable is gone and `paths.origin` is build-time only. Behind an https proxy use `PLAIN_HTTP=false` + `PROTOCOL_HEADER=x-forwarded-proto` instead |
 | D24 | Session cookie `Secure` flag is set explicitly from the request protocol (`setSessionCookie(cookies, token, secure)`) | Kit forces `Secure` on every origin except http://localhost, and browsers drop Secure cookies on plain http, so login over a LAN address would silently fail |
-| D25 | Cloudflare deploy via `wrangler.jsonc` (D1 + R2 bindings), secrets via `wrangler secret put`, migrations via `wrangler d1 migrations apply` (same `drizzle/` folder as Docker); `database_id` in `wrangler.jsonc` is a placeholder to fill in | Documented in README |
+| D25 | ~~Cloudflare deploy via `wrangler.jsonc` (D1 + R2 bindings), secrets via `wrangler secret put`, migrations via `wrangler d1 migrations apply` (same `drizzle/` folder as Docker); `database_id` in `wrangler.jsonc` is a placeholder to fill in~~ (Cloudflare support removed, D47) | Documented in README |
 | D26 | one shared design-token stylesheet (`src/app.css`); components keep only layout styles | Keeps one way of doing it across the app |
 | D27 | shared UI building blocks live in `src/lib/components/ui/`; page-specific components sit next to their page | Keeps one way of doing it across the app |
 | D28 | "+ Room" and the photo "+" tile share one dashed-tile look (`AddTile`), so "+ Room" gained the tile's hover | Keeps one way of doing it across the app |
@@ -62,7 +62,7 @@
 | D44 | Email is sent with `nodemailer` over SMTP on the Node build only (loaded dynamically, so the Cloudflare bundle does not contain it). Without SMTP settings, invites are shared by copying the link | Keeps the Cloudflare build compiling; email is optional |
 | D45 | Failed sign-ins are recorded in the database and limited per email (5) and per visitor address (50) per 15 minutes; "forgot password" requests are limited per address and always give the same answer | Guessing and email-flooding limits that work without extra services |
 | D46 | Multi-user is supported on Docker only for now; the Cloudflare build still compiles but is untested with accounts and cannot send email | Chosen scope |
-| D47 | Cloudflare deployment is not planned and its code is to be removed (PLAN.md, M3). Docker, run from the published image, is the only supported target. This supersedes D2, D3, D4, D12, D13, D15, D17 and D25 once the code is gone | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
+| D47 | Cloudflare deployment is not planned and its code was removed (PLAN.md, M3): `wrangler.jsonc`, the D1 and R2 code, `__DEPLOY_TARGET__`, the `:cf` scripts and the Cloudflare packages. Docker, run from the published image, is the only supported target. Supersedes D4, D12, D13, D15, D17 and D25 | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
 
 ## Data model
 
@@ -88,11 +88,11 @@
 ## Left alone on purpose
 
 - **`AnnotationCanvas.svelte`**: one cohesive concept (drawing and editing lines on a photo); splitting it would scatter the pointer logic.
-- **`Db` type with `any`** (`src/lib/server/db/types.ts`): needed to accept both the synchronous (better-sqlite3) and asynchronous (D1) Drizzle databases.
-- **No database transactions**: D1 has no interactive transactions, so multi-step writes (delete project then files, move photo then clear areas) are ordered so a failure leaves a harmless state.
-- **Platform wiring** (`platform.ts`, `services-*.ts`, `db/d1.ts`): tiny, and proven by building and running both targets; not unit-tested on purpose.
+- **`Db` type with `any`** (`src/lib/server/db/types.ts`): the schema generic is `any`-typed; the type is now only the synchronous better-sqlite3 database.
+- **Few database transactions**: multi-step writes (delete project then files, move photo then clear areas) were written for D1, which has no interactive transactions, so they are ordered so that a failure leaves a harmless state. Transactions are possible now; wrap them if a new write needs it.
+- **Service wiring** (`platform.ts`): tiny, and proven by building and running the app; not unit-tested on purpose.
 - **Repeated project/photo lookups per action**: negligible cost for one user; keeps every action safe on its own.
-- **Dependency audit**: production dependencies have no known vulnerabilities. The reported advisories are in development tools only (Wrangler's emulator, drizzle-kit, esbuild's dev server); `npm audit fix --force` would downgrade them to old majors. Revisit when those tools update; do not force-fix.
+- **Dependency audit**: production dependencies have no known vulnerabilities. The reported advisories are in development tools only (drizzle-kit, esbuild's dev server); `npm audit fix --force` would downgrade them to old majors. Revisit when those tools update; do not force-fix.
 
 ## Known limitations
 
@@ -101,4 +101,4 @@
 - The "one of three uploads fails, then Retry" browser test is skipped in WebKit (D36); a test that fails all three uploads covers Retry there.
 - Real-phone behaviour (camera sheet, number pad, touch drag) is only covered by the manual list in `phone-test-checklist.md`; Playwright's WebKit is Safari's engine, not iOS Safari.
 - No Firefox. CI (GitHub Actions) runs the type check and unit tests, not the browser tests.
-- The PDF export is built in memory, so a project with very many large photos could hit the Workers memory limit.
+- The PDF export is built in memory, so a project with very many large photos uses a lot of server memory.

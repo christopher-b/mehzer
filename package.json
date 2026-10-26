@@ -11,13 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"build:node": "vite build",
-		"build:cf": "DEPLOY_TARGET=cloudflare vite build",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:cf:local": "wrangler d1 migrations apply mehzur --local",
-		"db:migrate:cf": "wrangler d1 migrations apply mehzur --remote",
-		"deploy:cf": "npm run build:cf && wrangler deploy",
 		"start": "node build",
-		"dev:cf": "DEPLOY_TARGET=cloudflare vite dev",
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"test:watch": "vitest",
@@ -28,9 +23,7 @@
 		"test:e2e:all": "playwright test"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^5.20261023.1",
 		"@playwright/test": "^1.64.1",
-		"@sveltejs/adapter-cloudflare": "^8.0.1",
 		"@sveltejs/adapter-node": "^6.0.0",
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
@@ -42,8 +35,7 @@
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
 		"vite": "^8.3.0",
-		"vitest": "^5.0.5",
-		"wrangler": "^4.152.0"
+		"vitest": "^5.0.5"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",

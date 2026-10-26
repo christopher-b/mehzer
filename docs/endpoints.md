@@ -32,7 +32,7 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `GET /p/<id>/export.pdf` | PDF of the project: each room's photos with the measurement lines drawn on, and the measurements listed |
 | `GET /api/photos/<key>` | The photo file, only if the photo belongs to one of your projects (the key is looked up in the database; served with long-lived private caching; keys are never reused) |
 | `POST /api/projects/<id>/photos` | Upload one photo (multipart: `file` as JPEG, PNG or WebP up to 15 MB, `width`, `height`, optional `roomId`). Answers `201` with the new photo. Errors are JSON `{ message }` |
-| `GET /api/health` | Checks the database and photo storage on the current platform; answers `{ target, db, storage }` |
+| `GET /api/health` | Checks the database and photo storage; answers `{ db, storage }` |
 | `POST /logout` | Ends this session (removed from the database) and redirects to `/login` |
 | `GET /manifest.webmanifest`, `/icon.svg`, `/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png` | Home-screen install files. Public (no session needed) |
 | `GET /robots.txt` | Crawler rules (allows everything; the pages are behind the sign-in anyway) |
