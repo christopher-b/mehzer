@@ -90,7 +90,8 @@
 		align-items: center;
 		min-height: calc(2.25rem + 1.5rem + 1px);
 		gap: 0.6rem;
-		padding: 0.75rem 1rem;
+		/* The bar spans the window, but its content lines up with the main area (64rem wide, 1rem padding). */
+		padding: 0.75rem max(1rem, calc((100% - 64rem) / 2 + 1rem));
 		background: var(--surface);
 		border-bottom: 1px solid var(--border);
 	}
