@@ -62,6 +62,7 @@
 | D44 | Email is sent with `nodemailer` over SMTP on the Node build only (loaded dynamically, so the Cloudflare bundle does not contain it). Without SMTP settings, invites are shared by copying the link | Keeps the Cloudflare build compiling; email is optional |
 | D45 | Failed sign-ins are recorded in the database and limited per email (5) and per visitor address (50) per 15 minutes; "forgot password" requests are limited per address and always give the same answer | Guessing and email-flooding limits that work without extra services |
 | D46 | Multi-user is supported on Docker only for now; the Cloudflare build still compiles but is untested with accounts and cannot send email | Chosen scope |
+| D47 | Cloudflare deployment is not planned and its code is to be removed (PLAN.md, M3). Docker, run from the published image, is the only supported target. This supersedes D2, D3, D4, D12, D13, D15, D17 and D25 once the code is gone | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
 
 ## Data model
 
@@ -96,7 +97,7 @@
 ## Known limitations
 
 - The 500 error page is tested end to end with a faked failed page-data answer (a real server fault cannot be made on demand); the error id itself is made by `handleError`, covered by its unit tests.
-- Passkeys and sharing a project between people are not built yet; accounts are untested on Cloudflare.
+- Passkeys and sharing a project between people are not built yet; Cloudflare support is not planned (D47).
 - The "one of three uploads fails, then Retry" browser test is skipped in WebKit (D36); a test that fails all three uploads covers Retry there.
 - Real-phone behaviour (camera sheet, number pad, touch drag) is only covered by the manual list in `phone-test-checklist.md`; Playwright's WebKit is Safari's engine, not iOS Safari.
 - No Firefox. CI (GitHub Actions) runs the type check and unit tests, not the browser tests.

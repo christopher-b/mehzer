@@ -1,6 +1,6 @@
 # Deployment
 
-The same code deploys two ways: Docker Compose (Node and a SQLite file) or Cloudflare (Workers, D1 and R2). Settings are in `.env` (see `.env.example`).
+Mehzur runs in Docker (Node and a SQLite file). A Cloudflare build (Workers, D1 and R2) still exists but is not supported or planned, and is to be removed. Settings are in `.env` (see `.env.example`).
 
 ## Docker Compose
 
@@ -139,7 +139,7 @@ The volume is named `mehzur_mehzur-data` (the compose file sets the project name
 
 ## Cloudflare
 
-> **Accounts are Docker-only for now.** The Cloudflare build still compiles, but it has not been run with accounts (first-run setup, invites, sessions in D1, migration 0003) and it cannot send email. Treat this section as out of date until that is tested.
+> **Not supported.** Cloudflare deployment is not planned and its code is to be removed (D47). The Cloudflare build still compiles, but it has never been run with accounts (first-run setup, invites, sessions in D1, migration 0003) and it cannot send email. This section is kept only until the code goes; use Docker.
 
 Needs a Cloudflare account and Node. Everything runs on Workers (the app), D1 (database) and R2 (photos).
 

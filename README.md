@@ -9,13 +9,7 @@ Photograph a room, tap two points on a photo to draw a line, and type the real-w
 - **Export** a project as CSV or as a PDF with the annotated photos. **Add to home screen** on a phone.
 - **Accounts**: sign in with an email and password. The administrator invites people by link; each person sees only their own projects. Passwords can be reset by email. Online only (no offline mode).
 
-Built with SvelteKit 3 (Svelte 5), SQLite (Drizzle ORM) and photos on disk or in Cloudflare R2. It deploys two ways:
-
-| | Docker Compose | Cloudflare |
-|---|---|---|
-| Runtime | Node 24 container | Workers |
-| Database | SQLite file | D1 |
-| Photos | Files on a volume | R2 bucket |
+Built with SvelteKit 3 (Svelte 5), SQLite (Drizzle ORM) and photos on a disk volume. It runs in Docker (a Node 24 container); an image is published to `ghcr.io/christopher-b/mehzur`. Cloudflare deployment is not supported and is to be removed (see [PLAN.md](PLAN.md)).
 
 ## Quick start
 
@@ -57,7 +51,7 @@ On a phone on the same Wi-Fi: `npm run dev -- --host`, then open the Network add
 
 | | |
 |---|---|
-| [docs/deployment.md](docs/deployment.md) | Docker settings, HTTPS behind a proxy (including Traefik), backup and restore, Cloudflare setup, error ids and logs |
+| [docs/deployment.md](docs/deployment.md) | Docker settings, HTTPS behind a proxy (including Traefik), backup and restore, error ids and logs |
 | [docs/endpoints.md](docs/endpoints.md) | Every server address and what it does |
 | [docs/architecture.md](docs/architecture.md) | Code layout, export, home-screen install, error handling, limits |
 | [docs/testing.md](docs/testing.md) | Unit and browser tests, running them, Safari |

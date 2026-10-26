@@ -296,7 +296,7 @@ Cloudflare builds compile.
 | U6 User management | yes | `/admin/users`: invite (copy link or email), revoke, reset link, disable/enable, delete with typed confirmation |
 | U7 Tests | yes | Unit, route, isolation, migration and browser tests; every old test updated for accounts |
 | U8 Docs | yes | README, `docs/decisions.md` (D37 to D46), `docs/endpoints.md`, `docs/architecture.md`, `docs/deployment.md`, phone checklist |
-| U9 Email | yes | `src/lib/server/email.ts`; TLS required for remote SMTP; Proton settings in the deployment doc. **Not tried against real Proton SMTP** |
+| U9 Email | yes | `src/lib/server/email.ts`; TLS required for remote SMTP; Proton settings in the deployment doc. Invite email and account creation tried against real Proton SMTP (25 Oct 2026); the reset email is not yet |
 | U10 Passkeys | no | Phase 2 |
 | Sharing | no | Phase 2 |
 
@@ -309,5 +309,5 @@ Cloudflare builds compile.
 
 ### Left for later
 
-Sharing a project between people (roles, a Share option, "Shared with me"); passkeys; accounts on Cloudflare;
+Sharing a project between people (roles, a Share option, "Shared with me"); passkeys;
 changing your email address; an admin-visible list of who made what (the data is recorded already).
