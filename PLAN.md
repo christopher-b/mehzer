@@ -14,12 +14,12 @@ The app is built: house photo measurement for a small group of invited people, w
 - M3: removed the Cloudflare support (D1 and R2 code, `wrangler.jsonc`, `__DEPLOY_TARGET__`, the `:cf` scripts and packages). The `Db` type is now synchronous only; existing code still `await`s database calls and mostly avoids transactions (see `docs/decisions.md`).
 
 ## Left to do
-- [ ] M4 Passkeys in production: check `APP_URL=https://mehzur.cbennell.com` is set in Dokploy, deploy, then add and use a passkey on a phone (the e2e tests use a virtual authenticator)
-- [ ] M2b Send a real password-reset email through Proton SMTP, and run migration 0003 on a copy of the real database (the invite email and account creation are done)
+- [ ] Try the email-change link through Proton SMTP (Account > Email address); password reset, passkeys and migration 0003 are confirmed in production
 
 ## Not planned
 - Cloudflare deployment (Workers, D1, R2). Docker is the only supported target (D46, D47).
 
 ## Future ideas (not scheduled)
+- Migrate email provider: move outgoing email from Proton SMTP to another provider (only the `SMTP_*` and `MAIL_FROM` settings should need to change; check the TLS rules in `src/lib/server/email.ts` and `docs/deployment.md`)
 - Drop the leftover `await`s on database calls and wrap multi-step writes in transactions, now that only better-sqlite3 is supported
 - Rearrange rooms: let the user change the order of rooms on the project page (for example drag to reorder, or move up/down in the room menu). Rooms are shown in creation order everywhere today (a product decision in `docs/decisions.md`); this would need a stored position per room (a schema change and migration) and the same order used in the room filter and the photo page's "Change room" list
