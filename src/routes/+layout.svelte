@@ -51,7 +51,7 @@
 		{/if}
 		<span class="spacer"></span>
 		{#if page.data.user}
-			<PopupMenu label="Account menu">
+			<PopupMenu label="Account menu" wide>
 				{#snippet trigger(props)}
 					<button type="button" class="icon-button" aria-label="Account menu" title={page.data.user?.name} {...props}>
 						<CircleUser size={22} />
