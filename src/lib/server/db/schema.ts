@@ -72,6 +72,22 @@ export const passwordResets = sqliteTable(
 	(t) => [index('password_reset_user_idx').on(t.userId)]
 );
 
+export const emailChanges = sqliteTable(
+	'email_change',
+	{
+		id: id(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		newEmail: text('new_email').notNull(),
+		tokenHash: text('token_hash').notNull().unique(),
+		createdAt: createdAt(),
+		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+		usedAt: integer('used_at', { mode: 'timestamp_ms' })
+	},
+	(t) => [index('email_change_user_idx').on(t.userId)]
+);
+
 /** Failed sign-ins, kept to limit guessing. `key` is `email:<address>` or `ip:<address>`. */
 export const loginAttempts = sqliteTable(
 	'login_attempt',

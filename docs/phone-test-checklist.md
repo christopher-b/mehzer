@@ -22,6 +22,7 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 - [ ] **Invite** (administrator): Users > Create invite link. Send the link to yourself (or open it in a private tab): the Join page asks for a name and a password, signs you in, and shows no projects from the administrator. Opening the same link again says it is no longer valid.
 - [ ] **Sharing** (two accounts): Project menu > Share, enter the other person's email: they appear in the list, and the project shows under **Shared with me** on their home page with "Shared by ...". As a guest they can add photos and rooms but the menu has no Share and Edit project has no Delete; **Leave project** works. **Hand over** swaps the roles; **Remove** takes the project away from them at once.
 - [ ] **Forgot your password?** (needs email set up): the email arrives from mehzur@cbennell.com within a minute, the link opens the new-password page, and the old password stops working afterwards. Asking for an address that has no account shows the same "we have sent it a link" message and sends nothing.
+- [ ] **Account > Email address** (needs email set up): enter a new address and your password; a link arrives at the new address, and your email does not change until you open it and tap the button. The old address gets a notice, other devices are signed out, and signing in works with the new address only.
 - [ ] **Account > Change password** signs out your other devices; **Sign out everywhere else** does too.
 
 ## 2. Project, header and rooms

@@ -61,3 +61,19 @@ export function resetEmail(to: string, link: string): Email {
 		text: `Someone asked to reset the password for your Mehzur account.\n\nOpen this link to choose a new password (it works once and expires in 1 hour):\n\n${link}\n\nIf this was not you, ignore this email: your password has not changed.\n`
 	};
 }
+
+export function emailChangeEmail(to: string, link: string): Email {
+	return {
+		to,
+		subject: 'Confirm your new Mehzur email address',
+		text: `Someone asked to change the email address of a Mehzur account to this one.\n\nSign in, then open this link to confirm (it works once and expires in 1 hour):\n\n${link}\n\nIf this was not you, ignore this email: nothing will change.\n`
+	};
+}
+
+export function emailChangedNotice(to: string, newEmail: string): Email {
+	return {
+		to,
+		subject: 'Your Mehzur email address was changed',
+		text: `The email address of your Mehzur account was changed to ${newEmail}. You now sign in with the new address.\n\nIf this was not you, contact the person who runs Mehzur at once.\n`
+	};
+}

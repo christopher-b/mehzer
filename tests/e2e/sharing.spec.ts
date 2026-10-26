@@ -1,27 +1,7 @@
-import type { Browser, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { PORT } from './constants';
-import { addRoom, createProject, roomCard, uniqueName, visit } from './helpers';
-
-/** The administrator (this test's own page) invites someone, who joins in a separate browser. */
-async function inviteAndJoin(admin: Page, browser: Browser, name: string) {
-	const email = `${name.toLowerCase().replace(/\W+/g, '-')}@example.com`;
-	await visit(admin, '/admin/users');
-	await admin.getByLabel(/^Email address/).fill(email);
-	await admin.getByRole('button', { name: 'Create invite link' }).click();
-	const link = await admin.getByLabel('Invite link').inputValue();
-
-	const context = await browser.newContext({ baseURL: `http://localhost:${PORT}` });
-	const page = await context.newPage();
-	page.on('dialog', (dialog) => dialog.accept());
-	await page.goto(new URL(link).pathname);
-	await page.getByLabel('Your name').fill(name);
-	await page.getByLabel('Password', { exact: true }).fill('a long enough password');
-	await page.getByLabel('Repeat the password').fill('a long enough password');
-	await page.getByRole('button', { name: 'Create account' }).click();
-	await expect(page).toHaveURL('/');
-	return { context, page, email, name };
-}
+import { addRoom, createProject, inviteAndJoin, roomCard, uniqueName, visit } from './helpers';
 
 async function projectMenu(page: Page) {
 	await page.getByRole('button', { name: 'Project menu' }).click();

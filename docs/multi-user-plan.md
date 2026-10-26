@@ -298,6 +298,7 @@ Cloudflare builds compile.
 | U8 Docs | yes | README, `docs/decisions.md` (D37 to D46), `docs/endpoints.md`, `docs/architecture.md`, `docs/deployment.md`, phone checklist |
 | U9 Email | yes | `src/lib/server/email.ts`; TLS required for remote SMTP; Proton settings in the deployment doc. Invite email and account creation tried against real Proton SMTP (25 Oct 2026); the reset email is not yet |
 | U10 Passkeys | no | Phase 2 |
+| U12 Change email | yes (26 Oct 2026) | `drizzle/0005_email_change.sql`, `src/lib/server/emailChange.ts`, `/account/email/<token>`; D49. Tests: `src/tests/email-change.test.ts`, `tests/e2e/account.spec.ts`. The emailed-link path is covered with a fake mailer only; try it once through real Proton SMTP |
 | U11 Sharing | yes (26 Oct 2026) | `drizzle/0004_sharing.sql`, `src/lib/server/sharing.ts`, `ProjectSharePanel.svelte`; decisions as in the table above (D48). Tests: `sharing.test.ts`, a guest section in `isolation.test.ts`, `tests/e2e/sharing.spec.ts` |
 | Sharing | no | Phase 2 |
 

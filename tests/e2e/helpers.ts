@@ -1,5 +1,5 @@
-import type { BrowserContext, Locator, Page } from '@playwright/test';
-import { ADMIN } from './constants';
+import type { Browser, BrowserContext, Locator, Page } from '@playwright/test';
+import { ADMIN, PORT } from './constants';
 import { expect, test } from './fixtures';
 
 export const isTouch = () => !!test.info().project.use.hasTouch;
@@ -375,4 +375,26 @@ export async function unlabeledControls(page: Page): Promise<string[]> {
 
 export async function expectAllControlsNamed(page: Page) {
 	expect(await unlabeledControls(page), 'controls with no accessible name').toEqual([]);
+}
+
+// ---------------------------------------------------------------- people
+
+/** The administrator (this test's own page) invites someone, who joins in a separate browser. */
+export async function inviteAndJoin(admin: Page, browser: Browser, name: string) {
+	const email = `${name.toLowerCase().replace(/\W+/g, '-')}@example.com`;
+	await visit(admin, '/admin/users');
+	await admin.getByLabel(/^Email address/).fill(email);
+	await admin.getByRole('button', { name: 'Create invite link' }).click();
+	const link = await admin.getByLabel('Invite link').inputValue();
+
+	const context = await browser.newContext({ baseURL: `http://localhost:${PORT}`, storageState: { cookies: [], origins: [] } });
+	const page = await context.newPage();
+	page.on('dialog', (dialog) => dialog.accept());
+	await page.goto(new URL(link).pathname);
+	await page.getByLabel('Your name').fill(name);
+	await page.getByLabel('Password', { exact: true }).fill('a long enough password');
+	await page.getByLabel('Repeat the password').fill('a long enough password');
+	await page.getByRole('button', { name: 'Create account' }).click();
+	await expect(page).toHaveURL('/');
+	return { context, page, email, name };
 }

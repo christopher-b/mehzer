@@ -18,7 +18,8 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `GET /forgot` | Ask for a password-reset email. Public |
 | `GET /reset/<token>` | Choose a new password from an emailed (or administrator-made) link. Public |
 | `GET /invite/<token>` | Create an account from an invite link. Public |
-| `GET /account` | Your name, password, other devices, and (members only) deleting your account |
+| `GET /account/email/<token>` | Confirm a new email address from the emailed link: shows the new address and a button; works only while signed in as that account |
+| `GET /account` | Your name, email address, password, other devices, and (members only) deleting your account |
 | `GET /admin/users` | The administrator's page: invite people, see who is waiting, disable, delete, make reset links |
 | `GET /p/<id>` | Project page: rooms, photos, measurements and areas |
 | `GET /p/<id>/photo/<photoId>` | Photo page: draw and edit measurements; previous and next photo in the same room |
@@ -48,10 +49,16 @@ Signed-in addresses need a session (a random token in the `mehzur_session` cooki
 | `POST /reset/<token>` | `password`, `confirm` | Sets the new password (single-use link, valid 1 hour), signs out every other session, signs in |
 | `POST /invite/<token>` | `name`, `email` (fixed if the invite names one), `password`, `confirm` | Creates a member account (single-use link, valid 7 days) and signs in |
 
+### `/account/email/<token>`
+| Action | Fields | What it does |
+|---|---|---|
+| `default` | none | Applies the pending change (single use), signs out your other devices, and emails a notice to the old address |
+
 ### `/account`
 | Action | Fields | What it does |
 |---|---|---|
 | `?/profile` | `name` | Changes your name |
+| `?/email` | `email`, `current` | Changes your email address. With email set up it sends a one-hour link to the new address and changes nothing until it is used (limited to 5 requests per 15 minutes); without email it changes at once. Needs your current password; refuses an address that already has an account |
 | `?/password` | `current`, `password`, `confirm` | Changes your password (needs the current one); signs out your other devices |
 | `?/signOutOthers` | none | Signs out every other device |
 | `?/deleteAccount` | `confirmEmail`, `current` | Members only: deletes your account and all the projects you own (even if shared), with their photos and measurements |

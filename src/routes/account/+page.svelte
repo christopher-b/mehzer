@@ -12,6 +12,21 @@
 <p class="muted">{data.account.email}</p>
 
 <section class="card">
+	<h3>Email address</h3>
+	<form method="POST" action="?/email" use:enhance={() => async ({ update }) => update({ reset: true })} class="stack">
+		<label>New email address <input type="email" name="email" autocomplete="email" required /></label>
+		<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
+		<button type="submit">{data.emailConfirmation ? 'Send a confirmation link' : 'Change email address'}</button>
+	</form>
+	{#if data.emailConfirmation}
+		<p class="muted">We email a link to the new address; the change happens when you open it. Your email stays as it is until then.</p>
+	{/if}
+	{#if form?.emailError}<p class="error">{form.emailError}</p>{/if}
+	{#if form?.emailSentTo}<p class="ok" role="status">We sent a link to {form.emailSentTo}. Open it to finish (it works for 1 hour).</p>{/if}
+	{#if form?.emailChanged}<p class="ok" role="status">Your email address is now {form.emailChanged}. Your other devices were signed out.</p>{/if}
+</section>
+
+<section class="card">
 	<h3>Name</h3>
 	<form method="POST" action="?/profile" use:enhance class="row">
 		<input name="name" value={data.account.name} maxlength={NAME_MAX_LENGTH} aria-label="Name" required />

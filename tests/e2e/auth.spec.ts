@@ -170,7 +170,10 @@ test('an account page lets you change your password, and the old one stops worki
 		await expect(person.page).toHaveURL('/');
 
 		await person.page.goto('/account');
-		await person.page.getByLabel('Current password').first().fill('first long password');
+		await person.page
+			.locator('section', { has: person.page.getByRole('heading', { name: 'Password' }) })
+			.getByLabel('Current password')
+			.fill('first long password');
 		await person.page.getByLabel('New password', { exact: true }).fill('second long password');
 		await person.page.getByLabel('Repeat the new password').fill('second long password');
 		await person.page.getByRole('button', { name: 'Change password' }).click();

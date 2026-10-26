@@ -64,6 +64,7 @@
 | D46 | Multi-user is supported on Docker only for now; the Cloudflare build still compiles but is untested with accounts and cannot send email | Chosen scope |
 | D47 | Cloudflare deployment is not planned and its code was removed (PLAN.md, M3): `wrangler.jsonc`, the D1 and R2 code, `__DEPLOY_TARGET__`, the `:cf` scripts and the Cloudflare packages. Docker, run from the published image, is the only supported target. Supersedes D4, D12, D13, D15, D17 and D25 | Accounts, email and later passkeys use Node-only libraries; one target is simpler to test |
 | D48 | Project sharing: a `project_member(project_id, user_id, added_at, added_by)` table lists guests; the owner stays in `project.owner_id`. `getProjectOr404(db, userId, id, need?)` returns the project with `role` (`owner` or `guest`): strangers get 404, a guest asking for an owner-only action (delete, share, unshare, hand over) gets 403. Guests can edit photos, rooms, measurements, rename the project and change its units, and can leave. Only people with an enabled account can be added (by email; nobody is invited). Hand over makes a guest the owner and the previous owner a guest, in one transaction. Deleting an account deletes the projects it owns (even if shared) and removes its guest rows. The home page lists shared projects under "Shared with me" | Small known group; one owner keeps deletion and sharing simple |
+| D49 | Changing your email address needs your current password. With email set up, a one-hour single-use link goes to the new address (stored in `email_change`, token hashed) and the address changes only when the link is confirmed while signed in as that account; the confirmation is a button (POST), so mail scanners opening the link change nothing. The old address gets a notice and other devices are signed out. Without email set up, the address changes at once. An address that already has an account is refused | Catches typos and addresses you do not own without locking anyone out; works on a plain install |
 
 ## Data model
 
@@ -71,6 +72,7 @@
 - session(id, user_id, token_hash, user_agent?, created_at, last_seen_at, expires_at)
 - invite(id, token_hash, email?, created_by?, expires_at, used_at?, used_by?, revoked_at?)
 - password_reset(id, user_id, token_hash, expires_at, used_at?)
+- email_change(id, user_id, new_email, token_hash, created_at, expires_at, used_at?)
 - login_attempt(id, key, at): failed sign-ins and password-reset requests, counted over a 15-minute window
 - project_member(project_id, user_id, added_at, added_by?): guests; primary key (project_id, user_id)
 - project(id, owner_id?, name, unit_system, created_at, created_by?, updated_by?)
