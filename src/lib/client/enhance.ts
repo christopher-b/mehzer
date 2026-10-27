@@ -24,7 +24,12 @@ export interface SubmitOptions {
 	navigate?: boolean;
 	/** Return false to cancel the submit (delete forms that ask first). */
 	confirm?: () => boolean;
+	/** Called with true when the request starts and false when it is done, for `disabled` and `aria-busy` on the submit button. */
+	pending?: (pending: boolean) => void;
 }
+
+/** Forms with a request in flight: a second submit (a double tap) is dropped, not sent twice. */
+const inFlight = new WeakSet<HTMLFormElement>();
 
 /**
  * Why an `error` result happened. A request that got no response arrives tagged by `hooks.client.ts`;
@@ -45,38 +50,49 @@ function classifyErrorResult(result: { status?: number; error?: unknown }): Acti
 export function submitWith(opts: SubmitOptions = {}): SubmitFunction {
 	const report =
 		opts.onError ?? ((message: string) => void notify({ kind: 'error', message }));
-	return ({ cancel }) => {
+	return ({ cancel, formElement }) => {
+		if (inFlight.has(formElement)) {
+			cancel();
+			return;
+		}
 		opts.before?.();
 		if (opts.confirm && !opts.confirm()) {
 			cancel();
 			return;
 		}
+		inFlight.add(formElement);
+		opts.pending?.(true);
 		return async ({ result, update }) => {
-			let error: ActionError | null = null;
-			if (result.type === 'error') error = classifyErrorResult(result);
-			else if (result.type === 'redirect') error = classifyResponse({ status: 200 }, result);
-			// Deleted elsewhere: say so, and show what is really there now.
-			if (result.type === 'failure' && result.status === 404) {
-				error = new ActionError('not-found');
-				await invalidateAll().catch(() => {});
+			try {
+				let error: ActionError | null = null;
+				if (result.type === 'error') error = classifyErrorResult(result);
+				else if (result.type === 'redirect') error = classifyResponse({ status: 200 }, result);
+				// Deleted elsewhere: say so, and show what is really there now.
+				if (result.type === 'failure' && result.status === 404) {
+					error = new ActionError('not-found');
+					await invalidateAll().catch(() => {});
+				}
+				if (error?.kind === 'session') {
+					opts.onSession?.();
+					showSessionExpired();
+					// forms that show errors inline keep their own message too
+					if (opts.onError) opts.onError(messageFor(error), error);
+					return;
+				}
+				if (error) {
+					report(messageFor(error), error);
+					return;
+				}
+				if (result.type === 'failure' && opts.onFailure) {
+					opts.onFailure(result);
+					return;
+				}
+				await update({ reset: opts.reset, navigate: opts.navigate });
+				if (result.type === 'success') opts.onSuccess?.();
+			} finally {
+				inFlight.delete(formElement);
+				opts.pending?.(false);
 			}
-			if (error?.kind === 'session') {
-				opts.onSession?.();
-				showSessionExpired();
-				// forms that show errors inline keep their own message too
-				if (opts.onError) opts.onError(messageFor(error), error);
-				return;
-			}
-			if (error) {
-				report(messageFor(error), error);
-				return;
-			}
-			if (result.type === 'failure' && opts.onFailure) {
-				opts.onFailure(result);
-				return;
-			}
-			await update({ reset: opts.reset, navigate: opts.navigate });
-			if (result.type === 'success') opts.onSuccess?.();
 		};
 	};
 }

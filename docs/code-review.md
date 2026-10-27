@@ -67,13 +67,13 @@ Priority key:
 - **Change:** Only accept `,` as a feet/inches separator when the part after it is at most two digits, optionally followed by an inch mark. Otherwise return `null`.
 - **Done when:** `1,000` → `null`, and `12',6"` and `12, 6` behave as they do now (check the current tests first; keep whatever they assert).
 
-### A4. Keyboard shortcuts on the photo page fire on focused buttons and links
+### A4. Keyboard shortcuts on the photo page fire on focused buttons and links (done; Delete, Backspace and the arrows still work from a focused button, only Enter is skipped)
 - **Files:** `src/routes/p/[id]/photo/[photoId]/PhotoView.svelte` (`onKeydown`, around line 168).
 - **Problem:** While a measurement is selected, the window `keydown` handler ignores only `input, textarea, select`. Pressing Enter on a focused button or link therefore *also* opens the edit dialog. On a list "Delete" button, keydown opens the dialog and the click that follows deletes the measurement. Enter on the "Back" link both navigates and opens the dialog.
 - **Change:** Ignore the event when `target.closest('input, textarea, select, button, a, [contenteditable], [role="menuitem"], dialog')` matches. Do the same in the ArrowLeft/ArrowRight branch above it, which uses the same check.
 - **Done when:** a new e2e test selects a measurement, focuses the list's Edit button with the keyboard and presses Enter. Exactly one dialog opens: the Edit dialog, opened once by the button's click and not twice. Existing keyboard tests still pass.
 
-### A5. Prevent double submits on enhanced forms
+### A5. Prevent double submits on enhanced forms (done for the forms that use `submitWith` in dialogs and popovers; the account and admin forms are still B9)
 - **Files:** `src/lib/client/enhance.ts` (`submitWith`).
 - **Problem:** `submitWith` has no in-flight guard, and no submit button is disabled while a request is pending. A double tap on "Create" (project), "Add room" or "Create invite link" creates two rows. Only `postAction` paths with a `busy` flag are protected today.
 - **Change:**

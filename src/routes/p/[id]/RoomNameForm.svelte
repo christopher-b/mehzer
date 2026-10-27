@@ -32,12 +32,15 @@
 		ondone: () => void;
 		oncancel: () => void;
 	} = $props();
+
+	let busy = $state(false);
 </script>
 
 <form
 	method="POST"
 	{action}
 	use:enhance={submitWith({
+		pending: (p) => (busy = p),
 		reset: false,
 		before: () => (error = ''),
 		onSession: onsession,
@@ -55,7 +58,7 @@
 	<div class="buttons">
 		<span class="spacer"></span>
 		<button type="button" onclick={oncancel}>Cancel</button>
-		<button type="submit" class="primary">{submitLabel}</button>
+		<button type="submit" class="primary" disabled={busy} aria-busy={busy}>{submitLabel}</button>
 	</div>
 </form>
 

@@ -117,6 +117,17 @@ test('the "+ Project" tile opens a dialog; Cancel closes it without creating any
 	await expect(page.getByRole('link', { name: /Never made/ })).toHaveCount(0);
 });
 
+test('a double click on Create makes one project', async ({ page }) => {
+	const name = uniqueName('Twice');
+	await visit(page, '/');
+	const dialog = await openAddProject(page);
+	await dialog.getByLabel('Project name').fill(name);
+	await dialog.getByRole('button', { name: 'Create' }).dblclick();
+	await expect(page).toHaveURL(/\/p\/[0-9a-f-]+$/);
+	await visit(page, '/');
+	await expect(page.getByRole('link', { name: new RegExp(name) })).toHaveCount(1);
+});
+
 test('deleting a project can be cancelled at the confirmation', async ({ page, confirmations }) => {
 	const name = uniqueName('Keep me');
 	await createProject(page, name);

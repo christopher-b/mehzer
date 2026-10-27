@@ -19,6 +19,7 @@
 	let unitSystem = $state<UnitSystem>('imperial');
 	let error = $state('');
 	let deleteError = $state('');
+	let deleting = $state(false);
 </script>
 
 <Dialog
@@ -48,12 +49,13 @@
 				class="delete"
 				use:enhance={submitWith({
 					navigate: false,
+					pending: (p) => (deleting = p),
 					before: () => (error = deleteError = ''),
 					onError: (message) => (deleteError = message),
 					confirm: () => confirm(`Delete "${project.name}" and all its photos and measurements?`)
 				})}
 			>
-				<button type="submit" class="danger">Delete project</button>
+				<button type="submit" class="danger" disabled={deleting} aria-busy={deleting}>Delete project</button>
 				{#if deleteError}<p class="error">{deleteError}</p>{/if}
 			</form>
 		{/if}

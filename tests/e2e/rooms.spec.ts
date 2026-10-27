@@ -161,3 +161,14 @@ test('deleting a room moves its photos to No room', async ({ page }) => {
 	await expect(roomCard(page, 'Kitchen')).toHaveCount(0);
 	await expect(roomCard(page, 'No room').locator('.grid li:not(.add-photo)')).toHaveCount(1);
 });
+
+test('a double click on Add room makes one room', async ({ page }) => {
+	await createProject(page, uniqueName('Twice'));
+	await page.getByRole('button', { name: 'Room', exact: true }).click();
+	const dialog = page.getByRole('dialog', { name: 'Add a room' });
+	await dialog.getByLabel('Room name').fill('Kitchen');
+	await dialog.getByRole('button', { name: 'Add room' }).dblclick();
+	await expect(roomCard(page, 'Kitchen')).toBeVisible();
+	await expect(dialog).toBeHidden();
+	await expect(roomCard(page, 'Kitchen')).toHaveCount(1);
+});

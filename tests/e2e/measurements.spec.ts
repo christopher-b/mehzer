@@ -285,3 +285,22 @@ test('Enter on a photo-menu item opens its action, not the measurement editor', 
 	await expect(page.getByRole('dialog').getByRole('heading', { name: 'Change room' })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Edit measurement' })).toHaveCount(0);
 });
+
+test('Enter on a focused list button only presses that button', async ({ page, confirmations }) => {
+	test.skip(isTouch(), 'keyboard shortcuts');
+	await createProject(page, uniqueName('Enter button'));
+	await addRoom(page, 'Kitchen');
+	await addAndOpenPhoto(page, 'Kitchen');
+	await drawMeasurement(page, `12'`); // stays selected
+
+	await aside(page).getByRole('button', { name: 'Edit' }).focus();
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('dialog').getByRole('heading', { name: 'Edit measurement' })).toBeVisible();
+	await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+
+	confirmations.answer = true;
+	await aside(page).getByRole('button', { name: 'Delete' }).focus();
+	await page.keyboard.press('Enter');
+	await expect(page.locator('.annotation')).toHaveCount(0);
+	await expect(page.getByRole('heading', { name: 'Edit measurement' })).toHaveCount(0);
+});

@@ -33,6 +33,8 @@
 		ondone?: () => void;
 		oncancel: () => void;
 	} = $props();
+
+	let busy = $state(false);
 </script>
 
 <form
@@ -42,6 +44,7 @@
 		reset: false,
 		// The action may belong to another page (the project list posts to a project's page); stay put.
 		navigate: false,
+		pending: (p) => (busy = p),
 		before: () => {
 			error = '';
 			before?.();
@@ -67,7 +70,7 @@
 	<div class="buttons">
 		<span class="spacer"></span>
 		<button type="button" onclick={oncancel}>Cancel</button>
-		<button type="submit" class="primary">{submitLabel}</button>
+		<button type="submit" class="primary" disabled={busy} aria-busy={busy}>{submitLabel}</button>
 	</div>
 </form>
 

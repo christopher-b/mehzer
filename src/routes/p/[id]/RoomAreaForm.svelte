@@ -18,6 +18,7 @@
 	} = $props();
 
 	let error = $state('');
+	let busy = $state(false);
 </script>
 
 <form
@@ -25,6 +26,7 @@
 	action="?/setRoomArea"
 	class="area-form"
 	use:enhance={submitWith({
+		pending: (p) => (busy = p),
 		reset: false,
 		before: () => (error = ''),
 		onFailure: (result) => (error = failureMessage(result, 'Could not calculate')),
@@ -48,7 +50,7 @@
 		{/each}
 	</select>
 	{#if error}<p class="error">{error}</p>{/if}
-	<button type="submit" class="calc">Calculate</button>
+	<button type="submit" class="calc" disabled={busy} aria-busy={busy}>Calculate</button>
 </form>
 
 <style>

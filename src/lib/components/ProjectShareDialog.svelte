@@ -17,6 +17,7 @@
 
 	let error = $state('');
 	let email = $state('');
+	let sharing = $state(false);
 	const action = (name: string) => `/p/${project.id}?/${name}`;
 </script>
 
@@ -69,6 +70,7 @@
 			class="add"
 			use:enhance={submitWith({
 				navigate: false,
+				pending: (p) => (sharing = p),
 				before: () => (error = ''),
 				onFailure: (result) => (error = failureMessage(result, 'Could not share the project')),
 				onError: (message) => (error = message)
@@ -83,7 +85,7 @@
 				autocomplete="off"
 				required
 			/>
-			<button type="submit" class="primary">Share</button>
+			<button type="submit" class="primary" disabled={sharing} aria-busy={sharing}>Share</button>
 			<button type="button" onclick={close}>Done</button>
 		</form>
 		{#if error}<p class="error">{error}</p>{/if}

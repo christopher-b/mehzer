@@ -152,12 +152,16 @@
 		if (dialogState) dialogInitial = { name: draft.name, value: draft.value };
 	});
 
+	const TEXT_FIELD = 'input, textarea, select, [contenteditable]';
+	// Enter on these already activates them (a click follows), so it must not also open the dialog.
+	const ACTIVATED_BY_ENTER = `${TEXT_FIELD}, button, a, [role="menuitem"], dialog`;
+
 	function onKeydown(e: KeyboardEvent) {
 		if (e.defaultPrevented) return;
 		const modalOpen = dialogState || roomDialogOpen || anyPopupOpen();
 		if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !(e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
 			if (modalOpen || pendingPoint) return;
-			if ((e.target as HTMLElement).closest('input, textarea, select')) return;
+			if ((e.target as HTMLElement).closest(TEXT_FIELD)) return;
 			const neighbour = e.key === 'ArrowLeft' ? data.neighbours.previous : data.neighbours.next;
 			if (neighbour) {
 				e.preventDefault();
@@ -167,11 +171,12 @@
 		}
 		if (modalOpen || !selectedId) return;
 		const target = e.target as HTMLElement;
-		if (target.closest('input, textarea, select')) return;
+		if (target.closest(TEXT_FIELD)) return;
 		if (e.key === 'Delete' || e.key === 'Backspace') {
 			e.preventDefault();
 			deleteAnnotation(selectedId);
 		} else if (e.key === 'Enter') {
+			if (target.closest(ACTIVATED_BY_ENTER)) return;
 			openDialog({ mode: 'edit', id: selectedId });
 		} else if (e.key === 'Escape') {
 			selectedId = null;
