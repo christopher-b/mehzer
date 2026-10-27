@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { failureMessage } from '#lib/client/actions.ts';
 	import { submitWith } from '#lib/client/enhance.ts';
@@ -54,7 +55,7 @@
 		Room name
 		<input name="name" bind:value={name} {placeholder} maxlength={NAME_MAX_LENGTH} autocomplete="off" required />
 	</label>
-	{#if error}<p class="error">{error}</p>{/if}
+	<FormError message={error} style="margin: 0" />
 	<div class="buttons">
 		<span class="spacer"></span>
 		<button type="button" onclick={oncancel}>Cancel</button>
@@ -71,8 +72,5 @@
 		display: grid;
 		gap: 0.3rem;
 		font-weight: 600;
-	}
-	.error {
-		margin: 0;
 	}
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { failureMessage } from '#lib/client/actions.ts';
 	import { submitWith } from '#lib/client/enhance.ts';
@@ -88,7 +89,7 @@
 			<button type="submit" class="primary" disabled={sharing} aria-busy={sharing}>Share</button>
 			<button type="button" onclick={close}>Done</button>
 		</form>
-		{#if error}<p class="error">{error}</p>{/if}
+		<FormError message={error} style="margin: 0.6rem 0 0" />
 	{/snippet}
 </Dialog>
 
@@ -127,8 +128,5 @@
 	}
 	.add input {
 		flex: 1 1 14rem;
-	}
-	.error {
-		margin: 0.6rem 0 0;
 	}
 </style>

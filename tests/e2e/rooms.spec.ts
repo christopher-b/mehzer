@@ -105,8 +105,8 @@ test('rename and delete a room from its menu', async ({ page, confirmations }) =
 	await roomMenuButton(page, 'Bedroom').click();
 	await roomMenu(page, 'Bedroom').getByRole('button', { name: 'Delete room' }).click();
 	await expect(roomCard(page, 'Bedroom')).toBeVisible();
+	await expect(roomMenu(page, 'Bedroom')).toBeVisible(); // declining leaves the menu as it was
 	confirmations.answer = true;
-	await roomMenuButton(page, 'Bedroom').click();
 	await roomMenu(page, 'Bedroom').getByRole('button', { name: 'Delete room' }).click();
 	await expect(roomCard(page, 'Bedroom')).toHaveCount(0);
 	await reload(page);
@@ -171,4 +171,17 @@ test('a double click on Add room makes one room', async ({ page }) => {
 	await expect(roomCard(page, 'Kitchen')).toBeVisible();
 	await expect(dialog).toBeHidden();
 	await expect(roomCard(page, 'Kitchen')).toHaveCount(1);
+});
+
+test('Rename focuses the name field; Escape then returns focus to the room menu button', async ({ page }) => {
+	await createProject(page, uniqueName('Focus'));
+	await addRoom(page, 'Kitchen');
+
+	await roomMenuButton(page, 'Kitchen').click();
+	await roomMenu(page, 'Kitchen').getByRole('button', { name: 'Rename' }).click();
+	const rename = page.getByRole('dialog', { name: 'Rename room' });
+	await expect(rename.getByLabel('Room name')).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(rename).toBeHidden();
+	await expect(roomMenuButton(page, 'Kitchen')).toBeFocused();
 });

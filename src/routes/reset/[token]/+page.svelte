@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { PASSWORD_MIN_LENGTH } from '#lib/constants.ts';
 	import type { PageProps } from './$types';
 
@@ -19,7 +20,7 @@
 				Repeat the password
 				<input type="password" name="confirm" minlength={PASSWORD_MIN_LENGTH} autocomplete="new-password" required />
 			</label>
-			{#if form?.error}<p class="error">{form.error}</p>{/if}
+			<FormError message={form?.error} />
 			<button type="submit" class="primary">Set the password</button>
 		</form>
 	{:else}

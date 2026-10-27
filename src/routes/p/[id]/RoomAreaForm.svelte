@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { failureMessage } from '#lib/client/actions.ts';
 	import { submitWith } from '#lib/client/enhance.ts';
@@ -49,7 +50,7 @@
 			<option value={a.id}>{optionLabel(a, unitSystem)}</option>
 		{/each}
 	</select>
-	{#if error}<p class="error">{error}</p>{/if}
+	<FormError message={error} style="margin: 0; font-size: 0.9rem" />
 	<button type="submit" class="calc" disabled={busy} aria-busy={busy}>Calculate</button>
 </form>
 
@@ -74,10 +75,6 @@
 	.times {
 		text-align: center;
 		color: var(--text-muted);
-	}
-	.error {
-		margin: 0;
-		font-size: 0.9rem;
 	}
 	.calc {
 		border: 1px solid var(--border-strong);

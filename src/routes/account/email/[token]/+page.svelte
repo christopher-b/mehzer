@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { submitWith } from '#lib/client/enhance.ts';
 	import type { PageProps } from './$types';
@@ -10,13 +11,13 @@
 
 <div class="auth">
 	<h1>Change your email address</h1>
+	<p role="status">{#if form?.changed}Your email address is now <strong>{form.changed}</strong>. Use it to sign in. Your other devices were signed out.{/if}</p>
 	{#if form?.changed}
-		<p role="status">Your email address is now <strong>{form.changed}</strong>. Use it to sign in. Your other devices were signed out.</p>
 		<p><a href="/account">Back to your account</a></p>
 	{:else if data.newEmail}
 		<p>Change the email address of your account to <strong>{data.newEmail}</strong>?</p>
 		<form method="POST" use:enhance={submitWith()}>
-			{#if form?.error}<p class="error">{form.error}</p>{/if}
+			<FormError message={form?.error} />
 			<button type="submit" class="primary">Change my email address</button>
 		</form>
 	{:else}

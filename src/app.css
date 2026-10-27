@@ -87,6 +87,17 @@ select {
 .error {
 	color: var(--danger);
 }
+/* A live region must exist before its text does, or screen readers may not announce it; while empty it takes no room. */
+html [role='status']:empty {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+}
 /* Hamburger menus and popovers, shared by the project and photo pages. */
 .popup-root {
 	position: relative;

@@ -72,9 +72,7 @@
 	</header>
 {/if}
 
-{#if !online.value}
-	<div class="offline" role="status">You're offline. Changes won't be saved until you reconnect.</div>
-{/if}
+<div class="offline" role="status">{#if !online.value}You're offline. Changes won't be saved until you reconnect.{/if}</div>
 
 <main>
 	{@render children()}

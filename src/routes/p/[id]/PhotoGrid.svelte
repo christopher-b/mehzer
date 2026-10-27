@@ -40,7 +40,7 @@
 				use:enhance={submitWith({ confirm: () => confirm('Delete this photo and its measurements?') })}
 			>
 				<input type="hidden" name="photoId" value={photo.id} />
-				<button type="submit" class="remove" aria-label="Delete photo">✕</button>
+				<button type="submit" class="remove" aria-label="Delete photo {photoNumbers.get(photo.id)}">✕</button>
 			</form>
 		</li>
 	{/each}

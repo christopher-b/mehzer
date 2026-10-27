@@ -45,16 +45,20 @@ test('drawing a measurement: number pad, helper keys, preview, optional name, sa
 
 	// the helper keys type feet and inches at the cursor without taking focus away
 	await field.fill('12');
-	await dialog.getByRole('button', { name: "'", exact: true }).click();
+	await dialog.getByRole('button', { name: 'feet', exact: true }).click();
 	await expect(field).toBeFocused();
 	await page.keyboard.type('6');
-	await dialog.getByRole('button', { name: '"', exact: true }).click();
+	await dialog.getByRole('button', { name: 'inches', exact: true }).click();
 	await expect(field).toHaveValue(`12'6"`);
 	await expect(dialog.getByText(`= 12' 6"`)).toBeVisible();
+	// the hint describes the field; it is not part of the field's name
+	await expect(field).toHaveAccessibleName('Measurement');
+	await expect(field).toHaveAccessibleDescription(`= 12' 6"`);
 
 	// ABC / 123 switches to the full keyboard and back
 	await dialog.getByRole('button', { name: 'ABC' }).click();
 	await expect(field).toHaveAttribute('inputmode', 'text');
+	await expect(dialog.getByRole('button', { name: '123', pressed: true })).toBeVisible();
 	await dialog.getByRole('button', { name: '123' }).click();
 	await expect(field).toHaveAttribute('inputmode', 'decimal');
 
@@ -94,6 +98,7 @@ test('an unreadable value is flagged and not saved; a name alone is fine', async
 	const dialog = measurementDialog(page);
 	await measurementField(page).fill('banana');
 	await expect(dialog.getByText('Not recognised')).toBeVisible();
+	await expect(measurementField(page)).toHaveAttribute('aria-invalid', 'true');
 	await dialog.getByRole('button', { name: 'Save' }).click();
 	await expect(dialog.getByText(/Couldn't understand/)).toBeVisible();
 	await expect(dialog).toBeVisible();
@@ -114,7 +119,10 @@ test('edit a measurement from the list, then delete it (cancel first)', async ({
 	await addAndOpenPhoto(page, 'Kitchen');
 	await drawMeasurement(page, `12'`, { name: 'Wall' });
 
-	await aside(page).getByRole('button', { name: 'Edit' }).click();
+	// each row's buttons say which measurement they act on, and the row says whether it is selected
+	await expect(aside(page).getByRole('button', { name: 'Delete Wall', exact: true })).toBeVisible();
+	await expect(aside(page).getByRole('button', { name: /^Wall/, pressed: true })).toBeVisible();
+	await aside(page).getByRole('button', { name: 'Edit Wall', exact: true }).click();
 	const dialog = measurementDialog(page);
 	await expect(dialog.getByRole('heading', { name: 'Edit measurement' })).toBeVisible();
 	await expect(measurementField(page)).toHaveValue(`12'`);
@@ -193,7 +201,7 @@ test('a metric project reads a bare number as metres and offers metric unit keys
 	await startMeasurement(page, 0.6);
 	const dialog = measurementDialog(page);
 	await expect(dialog.getByRole('button', { name: /^(m|cm|mm)$/ })).toHaveText(['m', 'cm', 'mm']);
-	await expect(dialog.getByRole('button', { name: "'", exact: true })).toHaveCount(0);
+	await expect(dialog.getByRole('button', { name: 'feet', exact: true })).toHaveCount(0);
 	await measurementField(page).fill('320');
 	await dialog.getByRole('button', { name: 'cm', exact: true }).click();
 	await expect(dialog.getByText('= 3.2 m')).toBeVisible();

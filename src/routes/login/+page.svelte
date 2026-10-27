@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -41,13 +42,13 @@
 			Password
 			<input type="password" name="password" autocomplete="current-password" required />
 		</label>
-		{#if form?.error}<p class="error">{form.error}</p>{/if}
+		<FormError message={form?.error} />
 		<button type="submit" class="primary">Sign in</button>
 	</form>
 	{#if data.passkeys && supported}
 		<div class="passkey">
 			<button type="button" onclick={usePasskey} disabled={busy}><KeyRound size={18} />Sign in with a passkey</button>
-			{#if passkeyError}<p class="error" role="alert">{passkeyError}</p>{/if}
+			<FormError message={passkeyError} />
 		</div>
 	{/if}
 	<p class="note"><a href="/forgot">Forgot your password?</a></p>

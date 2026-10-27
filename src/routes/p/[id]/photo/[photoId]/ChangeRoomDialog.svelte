@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import Modal from '#lib/components/ui/Modal.svelte';
 
 	let {
@@ -38,7 +39,7 @@
 			This photo's measurements move with it. Any room area calculated from them is cleared.
 		</small>
 	</label>
-	{#if error}<p class="error">{error}</p>{/if}
+	<FormError message={error} />
 	{#snippet footer(close)}
 		<span class="spacer"></span>
 		<button type="button" onclick={close}>Cancel</button>

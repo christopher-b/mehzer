@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { beforeNavigate, goto, invalidateAll } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 	import { CollapsedState } from '#lib/client/collapsed.svelte.ts';
@@ -54,7 +55,7 @@
 
 <svelte:head><title>{data.project.name} · Mehzur</title></svelte:head>
 
-{#if form?.error}<p class="error">{form.error}</p>{/if}
+<FormError message={form?.error} />
 
 <section>
 	<UploadList {uploads} />

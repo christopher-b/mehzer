@@ -40,7 +40,7 @@
 			method="POST"
 			action="?/deleteRoom"
 			use:enhance={submitWith({
-				before: close,
+				onSuccess: close,
 				confirm: () =>
 					confirm(`Delete room "${room.name}"? Its photos move to No room and its measurements are kept.`)
 			})}

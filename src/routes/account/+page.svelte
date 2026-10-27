@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -45,9 +46,9 @@
 	{#if data.emailConfirmation}
 		<p class="muted">We email a link to the new address; the change happens when you open it. Your email stays as it is until then.</p>
 	{/if}
-	{#if form?.emailError}<p class="error">{form.emailError}</p>{/if}
-	{#if form?.emailSentTo}<p class="ok" role="status">We sent a link to {form.emailSentTo}. Open it to finish (it works for 1 hour).</p>{/if}
-	{#if form?.emailChanged}<p class="ok" role="status">Your email address is now {form.emailChanged}. Your other devices were signed out.</p>{/if}
+	<FormError message={form?.emailError} />
+	<p class="ok" role="status">{#if form?.emailSentTo}We sent a link to {form.emailSentTo}. Open it to finish (it works for 1 hour).{/if}</p>
+	<p class="ok" role="status">{#if form?.emailChanged}Your email address is now {form.emailChanged}. Your other devices were signed out.{/if}</p>
 </section>
 
 <section class="card">
@@ -56,8 +57,8 @@
 		<input name="name" value={data.account.name} maxlength={NAME_MAX_LENGTH} aria-label="Name" required />
 		<button type="submit">Save name</button>
 	</form>
-	{#if form?.profileError}<p class="error">{form.profileError}</p>{/if}
-	{#if form?.profileSaved}<p class="ok" role="status">Saved.</p>{/if}
+	<FormError message={form?.profileError} />
+	<p class="ok" role="status">{#if form?.profileSaved}Saved.{/if}</p>
 </section>
 
 <section class="card">
@@ -74,8 +75,8 @@
 		</label>
 		<button type="submit">Change password</button>
 	</form>
-	{#if form?.passwordError}<p class="error">{form.passwordError}</p>{/if}
-	{#if form?.passwordSaved}<p class="ok" role="status">Password changed. Your other devices were signed out.</p>{/if}
+	<FormError message={form?.passwordError} />
+	<p class="ok" role="status">{#if form?.passwordSaved}Password changed. Your other devices were signed out.{/if}</p>
 </section>
 
 {#if data.passkeysAvailable}
@@ -126,10 +127,10 @@
 		{:else}
 			<p class="muted">This browser cannot create passkeys.</p>
 		{/if}
-		{#if passkeyMessage}<p class="ok" role="status">{passkeyMessage}</p>{/if}
-		{#if form?.passkeyError}<p class="error">{form.passkeyError}</p>{/if}
-		{#if form?.passkeyRemoved}<p class="ok" role="status">Passkey removed.</p>{/if}
-		{#if form?.passkeySaved}<p class="ok" role="status">Saved.</p>{/if}
+		<p class="ok" role="status">{#if passkeyMessage}{passkeyMessage}{/if}</p>
+		<FormError message={form?.passkeyError} />
+		<p class="ok" role="status">{#if form?.passkeyRemoved}Passkey removed.{/if}</p>
+		<p class="ok" role="status">{#if form?.passkeySaved}Saved.{/if}</p>
 	</section>
 {/if}
 
@@ -138,7 +139,7 @@
 	<form method="POST" action="?/signOutOthers" use:enhance={submitWith()}>
 		<button type="submit">Sign out everywhere else</button>
 	</form>
-	{#if form?.signedOutOthers}<p class="ok" role="status">Signed out of your other devices.</p>{/if}
+	<p class="ok" role="status">{#if form?.signedOutOthers}Signed out of your other devices.{/if}</p>
 </section>
 
 {#if data.account.role !== 'admin'}
@@ -154,7 +155,7 @@
 			<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
 			<button type="submit" class="danger">Delete my account and everything in it</button>
 		</form>
-		{#if form?.deleteError}<p class="error">{form.deleteError}</p>{/if}
+		<FormError message={form?.deleteError} />
 	</section>
 {/if}
 

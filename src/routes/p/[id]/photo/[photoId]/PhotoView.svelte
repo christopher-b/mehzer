@@ -230,7 +230,7 @@
 						role="menuitem"
 						class="item"
 						onclick={() => {
-							close();
+							close(true);
 							roomError = '';
 							roomDialogOpen = true;
 						}}
@@ -241,7 +241,7 @@
 						method="POST"
 						action="?/deletePhoto"
 						use:enhance={submitWith({
-							before: close,
+							onSuccess: close,
 							confirm: () => confirm('Delete this photo and its measurements?')
 						})}
 					>

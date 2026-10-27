@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { tick } from 'svelte';
 	import Modal from '#lib/components/ui/Modal.svelte';
 	import { NAME_MAX_LENGTH } from '#lib/constants.ts';
@@ -34,6 +35,18 @@
 	let fullKeyboard = $state(false);
 
 	const parsedValue = $derived(fieldValue.trim() ? parseLength(fieldValue, unitSystem) : null);
+	const unreadable = $derived(fieldValue.trim() !== '' && parsedValue === null);
+	/** The symbols have no sensible spoken name, so those keys are labelled. */
+	const keys = $derived<{ text: string; label?: string }[]>(
+		unitSystem === 'imperial'
+			? [
+					{ text: "'", label: 'feet' },
+					{ text: '"', label: 'inches' }
+				]
+			: [{ text: 'm' }, { text: 'cm' }, { text: 'mm' }]
+	);
+	const uid = $props.id();
+	const hintId = `${uid}-hint`;
 
 	async function onopen() {
 		fieldName = initial.name;
@@ -72,16 +85,20 @@
 	{onopen}
 	{onclose}
 >
-	<label>
-		Measurement
-		<input
-			bind:this={valueInput}
-			bind:value={fieldValue}
-			placeholder={lengthPlaceholder(unitSystem)}
-			autocomplete="off"
-			inputmode={fullKeyboard ? 'text' : 'decimal'}
-		/>
-		<small class:error={fieldValue.trim() && parsedValue === null}>
+	<div class="field">
+		<label>
+			Measurement
+			<input
+				bind:this={valueInput}
+				bind:value={fieldValue}
+				placeholder={lengthPlaceholder(unitSystem)}
+				autocomplete="off"
+				inputmode={fullKeyboard ? 'text' : 'decimal'}
+				aria-describedby={hintId}
+				aria-invalid={unreadable}
+			/>
+		</label>
+		<small id={hintId} class:error={unreadable} aria-live="polite">
 			{#if !fieldValue.trim()}
 				Optional. Leave blank to fill in later.
 			{:else if parsedValue === null}
@@ -90,16 +107,17 @@
 				= {formatLength(parsedValue, unitSystem)}
 			{/if}
 		</small>
-	</label>
+	</div>
 	<div class="keys">
-		{#each unitSystem === 'imperial' ? ["'", '"'] : ['m', 'cm', 'mm'] as key (key)}
-			<button type="button" onpointerdown={(e) => e.preventDefault()} onclick={() => insertText(key)}>
-				{key}
+		{#each keys as { text, label } (text)}
+			<button type="button" aria-label={label} onpointerdown={(e) => e.preventDefault()} onclick={() => insertText(text)}>
+				{text}
 			</button>
 		{/each}
 		<span class="spacer"></span>
 		<button
 			type="button"
+			aria-pressed={fullKeyboard}
 			onpointerdown={(e) => e.preventDefault()}
 			onclick={() => {
 				fullKeyboard = !fullKeyboard;
@@ -113,7 +131,7 @@
 		<span>Name <span class="optional">(optional)</span></span>
 		<input bind:value={fieldName} maxlength={NAME_MAX_LENGTH} placeholder="e.g. Kitchen length" autocomplete="off" />
 	</label>
-	{#if localError || error}<p class="error">{localError || error}</p>{/if}
+	<FormError message={localError || error} />
 	{#snippet footer(close)}
 		{#if mode === 'edit'}
 			<button type="button" class="danger" disabled={busy} onclick={ondelete}>Delete</button>
@@ -125,6 +143,10 @@
 </Modal>
 
 <style>
+	.field {
+		display: grid;
+		gap: 0.3rem;
+	}
 	.keys {
 		display: flex;
 		flex-wrap: wrap;

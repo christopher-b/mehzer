@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import {
+	createProject,
 	deselect,
 	expectAllControlsNamed,
 	expectReadable,
@@ -8,6 +9,7 @@ import {
 	roomMenuButton,
 	seedKitchenWithMeasurements,
 	startMeasurement,
+	uniqueName,
 	visit
 } from './helpers';
 
@@ -76,4 +78,43 @@ test('every control has an accessible name (home, project and photo pages, and d
 	await page.keyboard.press('Escape');
 	await page.getByRole('button', { name: 'Room', exact: true }).click();
 	await expectAllControlsNamed(page);
+});
+
+test('a status message is written into a region that was already on the page', async ({ page }) => {
+	await visit(page, '/account');
+	const section = page.locator('section', { has: page.getByRole('heading', { name: 'Name', exact: true }) });
+	const status = section.locator('[role=status]');
+	await expect(status).toBeAttached();
+	await expect(status).toHaveText('');
+	const handle = await status.elementHandle();
+	await section.getByRole('button', { name: 'Save name' }).click();
+	await expect(status).toHaveText('Saved.');
+	expect(await handle!.evaluate((node) => node.isConnected)).toBe(true);
+});
+
+test('menu keys: Home and End jump to the ends, and tabbing out closes the menu', async ({ page }) => {
+	await createProject(page, uniqueName('Menu keys'));
+	await page.getByRole('button', { name: 'Project menu' }).click();
+	const items = page.getByRole('menuitem');
+	const count = await items.count();
+	await page.keyboard.press('End');
+	await expect(items.nth(count - 1)).toBeFocused();
+	await page.keyboard.press('Home');
+	await expect(items.first()).toBeFocused();
+
+	await page.keyboard.press('End');
+	await page.keyboard.press('Tab');
+	await expect(items.first()).toBeHidden();
+});
+
+test.describe('signed out', () => {
+	test.use({ storageState: { cookies: [], origins: [] } });
+
+	test('a wrong sign-in is announced as an alert', async ({ page }) => {
+		await page.goto('/login');
+		await page.getByLabel('Email').fill('nobody@example.com');
+		await page.getByLabel('Password').fill('not the password');
+		await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+		await expect(page.getByRole('alert').getByText('Incorrect email or password')).toBeVisible();
+	});
 });

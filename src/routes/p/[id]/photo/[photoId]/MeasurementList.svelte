@@ -29,13 +29,15 @@
 		<ul>
 			{#each annotations as a (a.id)}
 				<li class:selected={a.id === selectedId}>
-					<button type="button" class="row" onclick={() => onselect(a.id)}>
+					<button type="button" class="row" aria-pressed={a.id === selectedId} onclick={() => onselect(a.id)}>
 						<span class="name">{measurementName(a)}</span>
 						<span class="value">{formatValue(a.valueMm, unitSystem, '—')}</span>
 					</button>
 					<div class="actions">
-						<button type="button" onclick={() => onedit(a.id)}>Edit</button>
-						<button type="button" class="danger" disabled={busy} onclick={() => ondelete(a.id)}>Delete</button>
+						<button type="button" disabled={busy} aria-label="Edit {measurementName(a)}" onclick={() => onedit(a.id)}>Edit</button>
+						<button type="button" class="danger" disabled={busy} aria-label="Delete {measurementName(a)}" onclick={() => ondelete(a.id)}>
+							Delete
+						</button>
 					</div>
 				</li>
 			{/each}

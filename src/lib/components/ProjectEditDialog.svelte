@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { submitWith } from '#lib/client/enhance.ts';
 	import ProjectForm from '#lib/components/ProjectForm.svelte';
@@ -56,7 +57,7 @@
 				})}
 			>
 				<button type="submit" class="danger" disabled={deleting} aria-busy={deleting}>Delete project</button>
-				{#if deleteError}<p class="error">{deleteError}</p>{/if}
+				<FormError message={deleteError} style="margin: 0.6rem 0 0" />
 			</form>
 		{/if}
 	{/snippet}
@@ -67,8 +68,5 @@
 		margin-top: 1.25rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--border);
-	}
-	.error {
-		margin: 0.6rem 0 0;
 	}
 </style>

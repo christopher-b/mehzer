@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
 	import { submitWith } from '#lib/client/enhance.ts';
 	import type { PageProps } from './$types';
@@ -24,16 +25,14 @@
 		{/if}
 		<button type="submit" class="primary">Create invite link</button>
 	</form>
-	{#if form?.inviteError}<p class="error">{form.inviteError}</p>{/if}
-	{#if form?.inviteLink}
-		<div class="link" role="status">
+	<FormError message={form?.inviteError} />
+	<div class="link" role="status">{#if form?.inviteLink}
 			<p>
 				Invite link{form.inviteEmail ? ` for ${form.inviteEmail}` : ''}
 				{#if form.emailed}(emailed){/if}. It works once and expires in 7 days. Copy it now: it will not be shown again.
 			</p>
 			<input readonly value={form.inviteLink} aria-label="Invite link" onfocus={(e) => e.currentTarget.select()} />
-		</div>
-	{/if}
+		{/if}</div>
 </section>
 
 {#if data.invites.length > 0}
@@ -55,13 +54,11 @@
 
 <section class="card wide">
 	<h3>People</h3>
-	{#if form?.userError}<p class="error">{form.userError}</p>{/if}
-	{#if form?.resetLink}
-		<div class="link" role="status">
+	<FormError message={form?.userError} />
+	<div class="link" role="status">{#if form?.resetLink}
 			<p>Reset link for {form.resetFor}{#if form.emailed} (emailed){/if}. It works once and expires in 1 hour.</p>
 			<input readonly value={form.resetLink} aria-label="Reset link" onfocus={(e) => e.currentTarget.select()} />
-		</div>
-	{/if}
+		{/if}</div>
 	<ul class="list">
 		{#each data.users as user (user.id)}
 			<li>

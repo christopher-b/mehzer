@@ -79,12 +79,19 @@
 		}
 	}
 
+	/** Tabbing out closes the popup. A focus change with no target (Safari does not focus a clicked button) does not. */
+	function onFocusOut(e: FocusEvent) {
+		const to = e.relatedTarget as Node | null;
+		if (open && to && !root.contains(to)) close();
+	}
+
 	function onPanelKeydown(e: KeyboardEvent) {
-		if (kind !== 'menu' || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+		if (kind === 'menu' && e.key === 'Tab') return close();
+		if (kind !== 'menu' || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
 		e.preventDefault();
 		const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitem"]')];
 		const at = items.indexOf(document.activeElement as HTMLElement);
-		const next = e.key === 'ArrowDown' ? at + 1 : at - 1;
+		const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : at + (e.key === 'ArrowDown' ? 1 : -1);
 		items[(next + items.length) % items.length]?.focus();
 	}
 
@@ -98,7 +105,7 @@
 
 <svelte:window onclick={onWindowClick} onkeydown={onWindowKeydown} />
 
-<div class="popup-root" bind:this={root}>
+<div class="popup-root" bind:this={root} onfocusout={onFocusOut}>
 	{#if trigger}
 		{@render trigger(triggerProps)}
 	{:else}

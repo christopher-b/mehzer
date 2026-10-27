@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FormError from '#lib/components/ui/FormError.svelte';
 	import type { PageProps } from './$types';
 
 	let { form }: PageProps = $props();
@@ -20,7 +21,7 @@
 				<!-- svelte-ignore a11y_autofocus -->
 				<input type="email" name="email" value={form?.email ?? ''} autocomplete="username" required autofocus />
 			</label>
-			{#if form?.error}<p class="error">{form.error}</p>{/if}
+			<FormError message={form?.error} />
 			<button type="submit" class="primary">Send the link</button>
 		</form>
 	{/if}

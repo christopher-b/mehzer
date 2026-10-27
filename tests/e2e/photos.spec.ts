@@ -188,8 +188,7 @@ test('deleting a photo from its menu: cancel keeps it, OK removes it, its measur
 	await expect(page).toHaveURL(photoUrl);
 	await expect(page.getByText('Doomed').first()).toBeVisible();
 
-	confirmations.answer = true;
-	await photoMenuButton(page).click();
+	confirmations.answer = true; // the menu is still open after declining
 	await page.getByRole('menuitem', { name: 'Delete photo' }).click();
 	await expect(page).toHaveURL(projectUrl);
 	await expect(gridPhotos(page, 'Kitchen')).toHaveCount(0);
