@@ -22,6 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run check:e2e
       - run: npm test
 
   publish:

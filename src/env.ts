@@ -11,7 +11,7 @@ const withDefault = (fallback: string) => (value: string | undefined) => value |
 
 export const variables = defineEnvVars({
 	APP_PASSWORD: {
-		description: 'Password for the single app user',
+		description: 'Setup password: used once at /setup to create the administrator',
 		schema: required('APP_PASSWORD')
 	},
 	SESSION_SECRET: {

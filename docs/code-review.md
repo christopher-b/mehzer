@@ -381,26 +381,26 @@ Priority key:
 
 ## P4: tooling, tests and docs
 
-### E1. Catch unused code in the type check
+### E1. Catch unused code in the type check (done)
 - Add `"noUnusedLocals": true` and `"noUnusedParameters": true` to `tsconfig.json`'s `compilerOptions`. Fix what `npm run check` then reports. At review time this was only the unused `and` in `src/routes/+page.server.ts`, which D4 also removes.
 
-### E2. CI
+### E2. CI (done)
 - `.github/workflows/docker.yml`: add `- run: npm run check:e2e` after `npm test`. Running the Chromium browser suite in CI is a separate decision for the owner: it needs `npx playwright install --with-deps chromium` and takes about 2 minutes.
 - **Owner decision, not for the implementer:** there is no linter or formatter, yet `src/lib/server/db/types.ts` carries an `eslint-disable` comment. Either add ESLint (with `eslint-plugin-svelte`) and Prettier, or remove the comment.
 
-### E3. Missing tests
+### E3. Missing tests (done)
 Add these where the tasks above have not already added them:
 - `src/lib/client/enhance.test.ts` for `submitWith`: success, `fail` with and without `onFailure`, 401 → session prompt, network error, 404 → `invalidateAll`.
 - `src/lib/client/upload.test.ts` for `sendPhoto` with a fake XHR: 201, 401, redirect to `/login`, 4xx with and without a JSON message, 5xx with an id, network error, timeout.
 - An e2e test that uploads a JPEG with EXIF Orientation 6 (add a small fixture under `tests/e2e/fixtures/`) and checks the stored photo is portrait. `image.ts` says orientation is applied, but nothing tests it.
 
-### E4. Docs
+### E4. Docs (done)
 - `src/env.ts`: the `APP_PASSWORD` description says "Password for the single app user". Change it to "Setup password: used once at /setup to create the administrator".
 - `docs/decisions.md`: mark D10 and D18 as superseded by D37 and D38, using strikethrough as for the Cloudflare entries.
 - `docs/testing.md`: note that `test:e2e:safari` also needs Chromium installed, because `setup-safari` depends on the Chromium `setup` project (`playwright.config.ts`).
 - When B1, B4, B14 and C7 are done, add short entries to `docs/decisions.md` (upload queue cancelled on leave, security headers and CSP, current-password limit, keyboard handles).
 
-### E5. Already planned: leftover `await`s
+### E5. Already planned: leftover `await`s (left to PLAN.md)
 `PLAN.md` already lists dropping the leftover `await`s on synchronous database calls and wrapping multi-step writes in transactions. B3 does the writes where this matters most. Leave the rest to that plan item. Do not mix it into the tasks above, because it touches nearly every server file.
 
 ---

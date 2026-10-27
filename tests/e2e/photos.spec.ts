@@ -16,7 +16,8 @@ import {
 	tapAt,
 	uniqueName,
 	visit,
-	waitForPhoto
+	waitForPhoto,
+	withExifOrientation
 } from './helpers';
 
 const gridPhotos = (page: import('@playwright/test').Page, room: string) => roomCard(page, room).locator('.grid li:not(.add-photo)');
@@ -253,4 +254,14 @@ test('answering Cancel to the prompt keeps you on the project page, and the uplo
 	await expect(page).toHaveURL(/\/p\/[0-9a-f-]+$/);
 	// WebKit hands the server an empty body for an upload held by `page.route`, so only Chromium can finish it
 	if (browserName === 'chromium') await expect(page).toHaveURL(/\/photo\//, { timeout: 15_000 });
+});
+
+test('a photo taken with the phone upright (EXIF orientation 6) is stored upright', async ({ page }) => {
+	await createProject(page, uniqueName('Orientation'));
+	await addRoom(page, 'Kitchen');
+	await addPhotos(page, 'Kitchen', withExifOrientation(await makeImage(page, 640, 480), 6));
+	await expect(page).toHaveURL(/\/photo\//);
+	await waitForPhoto(page);
+	expect(await shownPhotoWidth(page)).toBe('480');
+	expect(await page.locator('.canvas img').getAttribute('height')).toBe('640');
 });

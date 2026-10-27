@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/navigation', () => ({ invalidateAll: vi.fn(async () => {}) }));
 vi.mock('./session.svelte.ts', () => ({ showSessionExpired: vi.fn() }));
 vi.mock('./notify.svelte.ts', () => ({ notify: vi.fn() }));
 
+import { invalidateAll } from '$app/navigation';
 import { inlineErrors, submitWith } from './enhance.ts';
+import { notify } from './notify.svelte.ts';
+import { showSessionExpired } from './session.svelte.ts';
 
 function start(handler: ReturnType<typeof submitWith>, formElement: object) {
 	const cancel = vi.fn();
@@ -59,6 +62,57 @@ describe('submitWith', () => {
 		expect(cancel).toHaveBeenCalledOnce();
 		expect(pending).not.toHaveBeenCalled();
 		expect(start(submitWith(), form).cancel).not.toHaveBeenCalled();
+	});
+});
+
+describe('submitWith results', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	const run = async (options: Parameters<typeof submitWith>[0], result: object) => {
+		vi.stubGlobal('navigator', { onLine: true });
+		const update = vi.fn(async () => {});
+		await start(submitWith(options), {}).callback!({ result, update });
+		return update;
+	};
+
+	it('updates the page on success and calls onSuccess', async () => {
+		const onSuccess = vi.fn();
+		const update = await run({ onSuccess }, { type: 'success', status: 200 });
+		expect(update).toHaveBeenCalledOnce();
+		expect(onSuccess).toHaveBeenCalledOnce();
+	});
+
+	it('hands a fail(...) result to onFailure when there is one, and to SvelteKit otherwise', async () => {
+		const onFailure = vi.fn();
+		const failure = { type: 'failure', status: 400, data: { error: 'No' } };
+		expect(await run({ onFailure }, failure)).not.toHaveBeenCalled();
+		expect(onFailure).toHaveBeenCalledOnce();
+		expect(await run({}, failure)).toHaveBeenCalledOnce();
+	});
+
+	it('opens the sign-in prompt for a 401, keeping the form\'s own message too', async () => {
+		vi.mocked(showSessionExpired).mockClear();
+		const onSession = vi.fn();
+		const onError = vi.fn();
+		const update = await run({ onSession, onError }, { type: 'error', status: 401, error: {} });
+		expect(showSessionExpired).toHaveBeenCalledOnce();
+		expect(onSession).toHaveBeenCalledOnce();
+		expect(onError).toHaveBeenCalledOnce();
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('reports a request that never got an answer, without updating the page', async () => {
+		vi.mocked(notify).mockClear();
+		const update = await run({}, { type: 'error', status: 500, error: { code: 'network' } });
+		expect(notify).toHaveBeenCalledOnce();
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('reloads the page data when what the form acts on was deleted (a fail or an error result)', async () => {
+		vi.mocked(invalidateAll).mockClear();
+		await run({}, { type: 'failure', status: 404, data: {} });
+		await run({}, { type: 'error', status: 404, error: {} });
+		expect(invalidateAll).toHaveBeenCalledTimes(2);
 	});
 });
 

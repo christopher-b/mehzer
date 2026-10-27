@@ -128,6 +128,19 @@ export async function makeImage(page: Page, width: number, height: number, label
 	return { name: `${text}.jpg`, mimeType: 'image/jpeg', buffer: Buffer.from(base64, 'base64') };
 }
 
+/** The same JPEG with an EXIF Orientation tag, as phones write it (6: the camera was held upright, so the pixels are rotated). */
+export function withExifOrientation(image: TestImage, orientation: number): TestImage {
+	const exif = Buffer.concat([
+		Buffer.from('Exif\0\0', 'latin1'),
+		Buffer.from([0x4d, 0x4d, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x08]), // big-endian TIFF header, first IFD at 8
+		Buffer.from([0x00, 0x01]), // one entry
+		Buffer.from([0x01, 0x12, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, orientation, 0x00, 0x00]), // Orientation, SHORT
+		Buffer.from([0x00, 0x00, 0x00, 0x00]) // no next IFD
+	]);
+	const segment = Buffer.concat([Buffer.from([0xff, 0xe1, 0x00, exif.length + 2]), exif]);
+	return { ...image, buffer: Buffer.concat([image.buffer.subarray(0, 2), segment, image.buffer.subarray(2)]) };
+}
+
 /** Add photos to a room (or "No room") with its "+" tile. Does not wait for any navigation. */
 export async function addPhotos(page: Page, room: string, images: TestImage | TestImage[]) {
 	await roomCard(page, room).getByLabel(`Add photos to ${room}`).setInputFiles(images);
