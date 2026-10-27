@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { annotations, rooms } from '#lib/server/db/schema.ts';
-import { parseAnnotationFields, parseCoords } from '#lib/server/annotations.ts';
+import { defaultMeasurementName, parseAnnotationFields, parseCoords } from '#lib/server/annotations.ts';
 import { formId, formString } from '#lib/server/forms.ts';
 import { messages } from '#lib/server/messages.ts';
 import {
@@ -48,7 +48,7 @@ export const actions: Actions = {
 		if (!coords) return fail(400, { error: 'Invalid line endpoints' });
 		const parsed = parseAnnotationFields(project, form);
 		if (!parsed.ok) return parsed.failure;
-		const { fields } = parsed;
+		const fields = { ...parsed.fields, name: parsed.fields.name ?? (await defaultMeasurementName(locals.db, project.id, photo)) };
 
 		const [created] = await locals.db
 			.insert(annotations)
@@ -63,12 +63,15 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const parsed = parseAnnotationFields(project, form);
 		if (!parsed.ok) return parsed.failure;
-		const { fields } = parsed;
+		const id = formString(form, 'id');
+		// A cleared name gets a generated one again, never a blank.
+		const name = parsed.fields.name ?? (await defaultMeasurementName(locals.db, project.id, photo, id));
+		const fields = { ...parsed.fields, name };
 
 		const updated = await locals.db
 			.update(annotations)
 			.set({ ...fields, updatedBy: user.id })
-			.where(annotationWhere(formString(form, 'id'), photo.id))
+			.where(annotationWhere(id, photo.id))
 			.returning({ id: annotations.id });
 		if (!updated.length) return fail(404, { error: messages.annotationNotFound });
 		return { id: updated[0].id };

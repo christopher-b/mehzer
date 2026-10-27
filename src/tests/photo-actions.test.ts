@@ -96,6 +96,59 @@ describe('photo page load', () => {
 	});
 });
 
+describe('default measurement names', () => {
+	const names = async (s: Awaited<ReturnType<typeof setup>>) => (await all(s)).map((a) => a.name);
+
+	it('uses the room, the photo\'s place in that room and the next free letter', async () => {
+		const s = await setup();
+		const room = await seedRoom(s.db, s.project.id, 'Living Room');
+		await seedPhoto(s.db, s.project.id, { roomId: room.id });
+		const second = await seedPhoto(s.db, s.project.id, { roomId: room.id });
+		const params = { id: s.project.id, photoId: second.id };
+		await run('create', s, line, params);
+		await run('create', s, line, params);
+		await run('create', s, { ...line, name: 'Typed' }, params);
+		expect(await names(s)).toEqual(['Living Room 2-A', 'Living Room 2-B', 'Typed']);
+	});
+
+	it('keeps names unique in the project after a measurement is deleted', async () => {
+		const s = await setup();
+		await run('create', s, line);
+		await run('create', s, line);
+		const [first] = await all(s);
+		await run('delete', s, { id: first.id });
+		await run('create', s, line);
+		expect(await names(s)).toEqual(['Other 1-B', 'Other 1-A']);
+	});
+
+	it('does not count a measurement\'s own name when it is cleared', async () => {
+		const s = await setup();
+		await run('create', s, line);
+		const [a] = await all(s);
+		await run('update', s, { id: a.id, name: '', value: '' });
+		expect(await names(s)).toEqual(['Other 1-A']);
+	});
+
+	it('shortens a very long room name so the default name still fits', async () => {
+		const s = await setup();
+		const room = await seedRoom(s.db, s.project.id, 'R'.repeat(100));
+		await run('setRoom', s, { roomId: room.id });
+		await run('create', s, line);
+		const [name] = await names(s);
+		expect(name!.length).toBeLessThanOrEqual(100);
+		expect(name).toMatch(/ 1-A$/);
+	});
+
+	it('keeps the stored name when the room is renamed or the photo moves', async () => {
+		const s = await setup();
+		const room = await seedRoom(s.db, s.project.id, 'Kitchen');
+		await run('setRoom', s, { roomId: room.id });
+		await run('create', s, line);
+		await run('setRoom', s, { roomId: '' });
+		expect(await names(s)).toEqual(['Kitchen 1-A']);
+	});
+});
+
 describe('photo actions: create', () => {
 	it('creates a measurement using the project units', async () => {
 		const s = await setup('imperial');
@@ -112,10 +165,10 @@ describe('photo actions: create', () => {
 		expect((await all(s))[0].valueMm).toBe(3200);
 	});
 
-	it('allows no value and no name', async () => {
+	it('allows no value, and gives a nameless measurement a default name', async () => {
 		const s = await setup();
 		await run('create', s, { ...line });
-		expect((await all(s))[0]).toMatchObject({ name: null, valueMm: null });
+		expect((await all(s))[0]).toMatchObject({ name: 'Other 1-A', valueMm: null });
 	});
 
 	it.each([
@@ -157,11 +210,11 @@ describe('photo actions: update / move / delete', () => {
 		expect((await all(s))[0]).toMatchObject({ name: 'Renamed', valueMm: 1000.05 });
 	});
 
-	it('can clear a value and a name', async () => {
+	it('can clear a value, and a cleared name becomes a default one again', async () => {
 		const s = await setup();
 		const a = await seedAnnotation(s.db, s.photo.id, { name: 'Old', valueMm: 1000 });
 		await run('update', s, { id: a.id, name: '', value: '' });
-		expect((await all(s))[0]).toMatchObject({ name: null, valueMm: null });
+		expect((await all(s))[0]).toMatchObject({ name: 'Other 1-A', valueMm: null });
 	});
 
 	it('keeps the old value when the new one is unreadable', async () => {

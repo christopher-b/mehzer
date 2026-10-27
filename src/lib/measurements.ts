@@ -16,7 +16,7 @@ export function canvasLabel(m: Measured, units: UnitSystem): string {
 	return m.name ? `${m.name}: ${value}` : value;
 }
 
-/** A measurement's name; unnamed ones are "Measurement x" (x = position on its photo). */
+/** A measurement's name; ones saved before default names existed are "Measurement x" (x = position on its photo). */
 export function measurementName(m: { name: string | null; number: number }): string {
 	return m.name ?? `Measurement ${m.number}`;
 }

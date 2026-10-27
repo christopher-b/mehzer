@@ -129,7 +129,7 @@
 	</div>
 	<label>
 		<span>Name <span class="optional">(optional)</span></span>
-		<input bind:value={fieldName} maxlength={NAME_MAX_LENGTH} placeholder="e.g. Kitchen length" autocomplete="off" />
+		<input bind:value={fieldName} maxlength={NAME_MAX_LENGTH} placeholder="Blank for an automatic name" autocomplete="off" />
 	</label>
 	<FormError message={localError || error} />
 	{#snippet footer(close)}

@@ -6,7 +6,7 @@
 - Units are per project; measurements are stored in mm and shown as ft/in or m/cm.
 - Every photo belongs to one room or to "No room"; a measurement's room is always its photo's room.
 - A room's area is length × width from exactly two of its measurements: no L-shaped rooms and no manual entry.
-- Unnamed measurements are called "Measurement x", where x is the position within its own photo (creation order).
+- A measurement saved with no name is given one, such as "Living Room 1-A": the room's name (or "Other" with no room), the photo's place in that room (the "1 of N" on the photo page), and a letter (A to Z, then AA, AB ...). The name is stored, so it does not change when the room is renamed or the photo moves; the letter is the first one no measurement in the project uses for that prefix, so a name is never reused. A name the user typed always wins, and clearing a name on edit gives a new default. Measurements saved before this have no name and show as "Measurement x" (x is the position within the photo).
 - Photo numbers are the photo's position among the project's photos (oldest first); rooms are shown in creation order everywhere.
 - Wording: lowercase "No room"; "ft/in" and "m/cm".
 - Dropped on purpose: zoom and pan, bigger phone tap targets, in-app delete confirmations (the browser's `confirm()` stays), photo names and captions (the `caption` column is kept but unused).

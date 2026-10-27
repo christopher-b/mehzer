@@ -1,9 +1,12 @@
 import { fail } from '@sveltejs/kit';
+import { and, eq, ne } from 'drizzle-orm';
 import { NAME_MAX_LENGTH } from '#lib/constants.ts';
 import { parseLength } from '#lib/units.ts';
-import type { Project } from './db/schema.ts';
+import { annotations, photos, rooms, type Project } from './db/schema.ts';
+import type { Db } from './db/types.ts';
 import { formString } from './forms.ts';
 import { messages } from './messages.ts';
+import { getPhotoNeighbours } from './photos.ts';
 
 export interface Coords {
 	x1: number;
@@ -50,4 +53,48 @@ export function parseAnnotationFields(project: Project, form: FormData): ParseRe
 	}
 
 	return { ok: true, fields: { name: name || null, valueMm } };
+}
+
+
+/** A, B ... Z, AA, AB ...: the letter for the 0-based `index`. */
+export function letterName(index: number): string {
+	let name = '';
+	for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) name = String.fromCharCode(65 + ((n - 1) % 26)) + name;
+	return name;
+}
+
+/** Room names are cut so that prefix, photo number and letters always fit in `NAME_MAX_LENGTH`. */
+const ROOM_NAME_ROOM = 16;
+
+/** `<prefix>-<letter>` with the first letter no name in `taken` already uses. */
+export function nextDefaultName(prefix: string, taken: ReadonlySet<string>): string {
+	for (let i = 0; ; i++) {
+		const name = `${prefix}-${letterName(i)}`;
+		if (!taken.has(name)) return name;
+	}
+}
+
+/**
+ * The name for a measurement on `photo` that was given none, like "Living Room 1-A": the room's name
+ * (or "Other" with no room), the photo's place in that room, and the next letter unused in the
+ * project. `exceptId` leaves a measurement's own current name out, for a rename that clears it.
+ */
+export async function defaultMeasurementName(
+	db: Db,
+	projectId: string,
+	photo: { id: string; roomId: string | null },
+	exceptId?: string
+): Promise<string> {
+	const [room, neighbours, existing] = await Promise.all([
+		photo.roomId ? db.query.rooms.findFirst({ where: eq(rooms.id, photo.roomId) }) : undefined,
+		getPhotoNeighbours(db, projectId, photo),
+		db
+			.select({ name: annotations.name })
+			.from(annotations)
+			.innerJoin(photos, eq(annotations.photoId, photos.id))
+			.where(and(eq(photos.projectId, projectId), exceptId ? ne(annotations.id, exceptId) : undefined))
+	]);
+	const roomName = (room?.name ?? 'Other').slice(0, NAME_MAX_LENGTH - ROOM_NAME_ROOM);
+	const taken = new Set(existing.flatMap((a) => (a.name ? [a.name] : [])));
+	return nextDefaultName(`${roomName} ${neighbours.position}`, taken);
 }

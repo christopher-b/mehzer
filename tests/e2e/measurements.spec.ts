@@ -211,13 +211,34 @@ test('dragging a line twice quickly: a slow first save does not undo the second 
 	await expectAtSecondDrag();
 });
 
+test('a measurement given no name is named after its room, photo and a letter', async ({ page }) => {
+	await createProject(page, uniqueName('Default names'));
+	await addRoom(page, 'Living Room');
+	await addAndOpenPhoto(page, 'Living Room');
+
+	await drawMeasurement(page, `10'`);
+	await deselect(page);
+	await drawMeasurement(page, `12'`, { y: 0.6 });
+	await expect(aside(page).getByRole('listitem')).toContainText(['Living Room 1-A', 'Living Room 1-B']);
+
+	// a name that is cleared on edit gets a default again
+	await aside(page).getByRole('button', { name: 'Edit Living Room 1-B', exact: true }).click();
+	await measurementDialog(page).getByLabel(/^Name/).fill('Window');
+	await measurementDialog(page).getByRole('button', { name: 'Save' }).click();
+	await expect(aside(page).getByRole('listitem')).toContainText(['Living Room 1-A', 'Window']);
+	await aside(page).getByRole('button', { name: 'Edit Window', exact: true }).click();
+	await measurementDialog(page).getByLabel(/^Name/).fill('');
+	await measurementDialog(page).getByRole('button', { name: 'Save' }).click();
+	await expect(aside(page).getByRole('listitem')).toContainText(['Living Room 1-A', 'Living Room 1-B']);
+});
+
 test('a metric project reads a bare number as metres and offers metric unit keys', async ({ page }) => {
 	await createProject(page, uniqueName('Metric'), 'metric');
 	await addRoom(page, 'Kitchen');
 	await addAndOpenPhoto(page, 'Kitchen');
 
 	await drawMeasurement(page, '3.25');
-	await expect(page.locator('.annotation text')).toHaveText('3.25 m');
+	await expect(page.locator('.annotation text')).toHaveText('Kitchen 1-A: 3.25 m');
 	await deselect(page);
 
 	await startMeasurement(page, 0.6);

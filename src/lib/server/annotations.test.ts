@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from './db/schema.ts';
-import { parseAnnotationFields, parseCoords } from './annotations.ts';
+import { letterName, nextDefaultName, parseAnnotationFields, parseCoords } from './annotations.ts';
 
 const coords = (o: Record<string, string>) => {
 	const form = new FormData();
@@ -101,5 +101,32 @@ describe('parseAnnotationFields', () => {
 			ok: true,
 			fields: { name: 'Wall', valueMm: undefined }
 		});
+	});
+});
+
+describe('letterName', () => {
+	it.each([
+		[0, 'A'],
+		[25, 'Z'],
+		[26, 'AA'],
+		[27, 'AB'],
+		[51, 'AZ'],
+		[52, 'BA'],
+		[701, 'ZZ'],
+		[702, 'AAA']
+	])('%d is %s', (index, letters) => {
+		expect(letterName(index)).toBe(letters);
+	});
+});
+
+describe('nextDefaultName', () => {
+	it('starts at A and takes the first letter nobody uses', () => {
+		expect(nextDefaultName('Kitchen 1', new Set())).toBe('Kitchen 1-A');
+		expect(nextDefaultName('Kitchen 1', new Set(['Kitchen 1-A', 'Kitchen 1-C', 'Kitchen 2-B']))).toBe('Kitchen 1-B');
+	});
+
+	it('runs on to AA after Z', () => {
+		const taken = new Set(Array.from({ length: 26 }, (_, i) => `Other 1-${letterName(i)}`));
+		expect(nextDefaultName('Other 1', taken)).toBe('Other 1-AA');
 	});
 });
