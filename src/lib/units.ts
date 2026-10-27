@@ -17,6 +17,11 @@ const UNICODE_FRACTIONS: Record<string, string> = {
 };
 
 const METRIC = /^(\d+(?:\.\d+)?|\.\d+)\s*(mm|cm|m)$/i;
+const BARE_METRIC = /^(\d+(?:\.\d+)?|\.\d+)$/;
+/** A decimal comma (`3,5`, `3,25 m`), normal in most metric countries. */
+const DECIMAL_COMMA = /^(\d+),(\d+)(?=\s*(?:mm|cm|m)?$)/i;
+/** Something only imperial lengths have; without one, a metric project does not guess feet and inches. */
+const IMPERIAL_MARKER = /['"′″’‘`]|\d\s*(?:ft|feet|foot|in|inch|inches)(?![a-z])|\/|[½¼¾⅛⅜⅝⅞]/i;
 
 interface Token {
 	value: number;
@@ -25,13 +30,16 @@ interface Token {
 }
 
 function parseImperial(input: string, bareIsFeet: boolean): number | null {
+	// `12,6` is 12 feet 6 inches, but `1,000` is a thousands separator, not a length.
+	if (/,\s*\d{3}/.test(input)) return null;
+
 	let s = input
 		.toLowerCase()
 		.replace(/[½¼¾⅛⅜⅝⅞]/g, (c) => UNICODE_FRACTIONS[c])
 		.replace(/[′’‘`]/g, "'")
 		.replace(/[″”“]|''/g, '"')
-		.replace(/\s*(feet|foot|ft)\b\.?/g, "'")
-		.replace(/\s*(inches|inch|in)\b\.?/g, '"');
+		.replace(/\s*(feet|foot|ft)(?![a-z])\.?/g, "'")
+		.replace(/\s*(inches|inch|in)(?![a-z])\.?/g, '"');
 
 	const tokens: Token[] = [];
 	const re = /\s*(\d+(?:\.\d+)?|\.\d+)(?:\s*\/\s*(\d+))?\s*(['"])?\s*[-,]?/y;
@@ -84,16 +92,18 @@ function parseImperial(input: string, bareIsFeet: boolean): number | null {
  * notation work in either project; a bare number means feet (imperial) or metres (metric).
  */
 export function parseLength(input: string, system: UnitSystem): number | null {
-	const s = input.trim();
+	let s = input.trim();
 	if (!s) return null;
+	if (system === 'metric') s = s.replace(DECIMAL_COMMA, '$1.$2');
 
 	let mm: number | null;
 	const metric = METRIC.exec(s);
 	if (metric) {
 		const factor = { mm: 1, cm: 10, m: 1000 }[metric[2].toLowerCase() as 'mm' | 'cm' | 'm'];
 		mm = Number(metric[1]) * factor;
-	} else if (system === 'metric' && /^(\d+(?:\.\d+)?|\.\d+)$/.test(s)) {
-		mm = Number(s) * 1000;
+	} else if (system === 'metric') {
+		if (BARE_METRIC.test(s)) mm = Number(s) * 1000;
+		else mm = IMPERIAL_MARKER.test(s) ? parseImperial(s, true) : null;
 	} else {
 		mm = parseImperial(s, true);
 	}

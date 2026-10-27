@@ -53,7 +53,7 @@ Priority key:
   ```
 - **Done when:** unit tests cover each of these, all of which must return `/`: `null`, `''`, `'//evil.com'`, `'/\\evil.com'`, `'/\\/evil.com'`, `'/\t/evil.com'`, `'/\n/evil.com'`, `'https://evil.com'`, `'javascript:alert(1)'`, `'p/1'`. They also check that `'/p/abc?x=1#y'` comes back unchanged.
 
-### A2. Stop metric inputs with a comma being read as feet and inches
+### A2. Stop metric inputs with a comma being read as feet and inches (done)
 - **Files:** `src/lib/units.ts` (the comma separator around line 37 and the metric fallback around lines 91–98), `src/lib/units.test.ts`.
 - **Problem:** In a metric project, `3,5` is saved as 1041.4 mm (3′ 5″) instead of 3.5 m. Likewise `0,5` becomes 127 mm and `5 6` becomes 1676.4 mm. This happens because anything that is not a plain metric number falls back to `parseImperial`. Comma decimals are normal in most metric countries, and the server accepts these values.
 - **Change:**
@@ -61,7 +61,7 @@ Priority key:
   2. In metric mode, only fall back to `parseImperial` when the text contains an explicit imperial marker: `'`, `"`, `′`, `″`, `ft`, `feet`, `foot`, `in`, `inch` or a fraction. Otherwise return `null`.
 - **Done when:** these new metric tests pass: `3,5` → 3500, `0,5` → 500, `3,25m` → 3250, `5 6` → `null`, and `5' 6"` → 1676.4 (still accepted). All existing tests still pass.
 
-### A3. Stop `1,000` being read as 1′ 0″ in imperial
+### A3. Stop `1,000` being read as 1′ 0″ in imperial (done; also fixed `5ft6in`, which the `\b` unit match rejected)
 - **Files:** `src/lib/units.ts` (feet/inches separator `[-,]?`), `src/lib/units.test.ts`.
 - **Problem:** `parseLength('1,000', 'imperial')` returns 304.8 mm, because the comma is taken as the separator between feet and inches.
 - **Change:** Only accept `,` as a feet/inches separator when the part after it is at most two digits, optionally followed by an inch mark. Otherwise return `null`.

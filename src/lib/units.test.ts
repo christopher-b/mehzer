@@ -23,13 +23,18 @@ describe('parseLength (imperial)', () => {
 		[`6½"`, 6.5 * IN],
 		[`3/4"`, 0.75 * IN],
 		[`10' 6 1/2"`, 10 * FT + 6.5 * IN],
+		[`12,6`, 12 * FT + 6 * IN],
+		[`12, 6`, 12 * FT + 6 * IN],
+		[`5ft6in`, 5 * FT + 6 * IN],
+		[`5' 6"`, 5 * FT + 6 * IN],
+		[`12',6"`, 12 * FT + 6 * IN],
 		[`3.2m`, 3200],
 		[`320 cm`, 3200]
 	])('%s', (input, mm) => {
 		expect(parseLength(input, 'imperial')).toBeCloseTo(mm, 6);
 	});
 
-	it.each([``, `abc`, `6" 12'`, `1' 2' 3'`, `0`, `5/0"`, `12 6 3`, `-3`])('rejects %j', (input) => {
+	it.each([``, `abc`, `6" 12'`, `1' 2' 3'`, `0`, `5/0"`, `12 6 3`, `-3`, `1,000`, `1,000'`, `12,600`])('rejects %j', (input) => {
 		expect(parseLength(input, 'imperial')).toBeNull();
 	});
 });
@@ -41,9 +46,20 @@ describe('parseLength (metric)', () => {
 		[`320cm`, 3200],
 		[`3200 mm`, 3200],
 		[`.5m`, 500],
-		[`12' 6"`, 12 * FT + 6 * IN]
+		[`3,5`, 3500],
+		[`0,5`, 500],
+		[`3,25m`, 3250],
+		[`3,25 m`, 3250],
+		[`12' 6"`, 12 * FT + 6 * IN],
+		[`12ft 6in`, 12 * FT + 6 * IN],
+		[`5ft6in`, 5 * FT + 6 * IN],
+		[`6 1/2"`, 6.5 * IN]
 	])('%s', (input, mm) => {
 		expect(parseLength(input, 'metric')).toBeCloseTo(mm, 6);
+	});
+
+	it.each([`5 6`, `5,6,7`, `abc`])('does not guess feet and inches from %j', (input) => {
+		expect(parseLength(input, 'metric')).toBeNull();
 	});
 
 	it('rejects absurd values', () => {
