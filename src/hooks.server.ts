@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { SESSION_SECRET } from '$app/env/private';
+import { GENERIC_MESSAGE } from '#lib/constants.ts';
 import { SESSION_COOKIE } from '#lib/server/auth.ts';
 import { findSession } from '#lib/server/sessions.ts';
 import { getServices } from '#lib/server/platform.ts';
@@ -19,7 +20,22 @@ const PUBLIC_PATHS = new Set([
 // Links from emails (the token in the address is the credential) and the passkey sign-in steps.
 const PUBLIC_PREFIXES = ['/invite/', '/reset/', '/login/passkey/'];
 
-export const handle: Handle = async ({ event, resolve }) => {
+// Reset and invite links carry their token in the address, so a referrer must never leave the site.
+const SECURITY_HEADERS = {
+	'x-content-type-options': 'nosniff',
+	'referrer-policy': 'same-origin',
+	'x-frame-options': 'DENY'
+};
+
+export const handle: Handle = async (input) => {
+	const response = await handleRequest(input);
+	for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+		if (!response.headers.has(name)) response.headers.set(name, value);
+	}
+	return response;
+};
+
+const handleRequest: Handle = async ({ event, resolve }) => {
 	const { db, storage } = await getServices();
 	event.locals.db = db;
 	event.locals.storage = storage;
@@ -47,7 +63,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const GENERIC_MESSAGE = 'Something went wrong on our side.';
+export { GENERIC_MESSAGE };
 
 /**
  * Unexpected errors (a bug, a database failure, any 5xx) get an id, are logged as one JSON line and reach

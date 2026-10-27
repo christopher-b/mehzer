@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { photos } from '#lib/server/db/schema.ts';
 import { POST } from '../routes/api/projects/[id]/photos/+server.ts';
-import { createContext, formData, seedProject, seedRoom } from './helpers.ts';
+import { createContext, formData, imageFile, seedProject, seedRoom } from './helpers.ts';
 
 async function setup() {
 	const ctx = createContext();
@@ -10,8 +10,7 @@ async function setup() {
 	return { ...ctx, project };
 }
 
-const jpeg = (size = 10, type = 'image/jpeg') =>
-	new File([new Uint8Array(size).fill(7)], 'photo.jpg', { type });
+const jpeg = (size = 16, type = 'image/jpeg') => imageFile(type, size);
 
 async function upload(
 	s: Awaited<ReturnType<typeof setup>>,
@@ -37,7 +36,7 @@ describe('POST /api/projects/[id]/photos', () => {
 		expect(body).toMatchObject({ projectId: s.project.id, width: 640, height: 480, roomId: null });
 		expect(body.blobKey).toMatch(new RegExp(`^projects/${s.project.id}/[0-9a-f-]{36}\\.jpg$`));
 		expect(s.blobs.get(body.blobKey)?.contentType).toBe('image/jpeg');
-		expect(s.blobs.get(body.blobKey)?.data.byteLength).toBe(10);
+		expect(s.blobs.get(body.blobKey)?.data.byteLength).toBe(16);
 		expect(await s.db.select().from(photos)).toHaveLength(1);
 	});
 
@@ -53,8 +52,14 @@ describe('POST /api/projects/[id]/photos', () => {
 		['image/webp', 'webp']
 	])('accepts %s and uses the .%s extension', async (type, ext) => {
 		const s = await setup();
-		const body = await json(await upload(s, { ...valid(), file: jpeg(10, type) }));
+		const body = await json(await upload(s, { ...valid(), file: jpeg(16, type) }));
 		expect(body.blobKey.endsWith(`.${ext}`)).toBe(true);
+	});
+
+	it('rejects a file whose bytes are not the type it claims', async () => {
+		const s = await setup();
+		await expect(upload(s, { ...valid(), file: new File([await imageFile('image/jpeg').arrayBuffer()], 'p.png', { type: 'image/png' }) })).rejects.toMatchObject({ status: 415 });
+		expect(s.blobs.size).toBe(0);
 	});
 
 	it('rejects a room from another project with 400, storing nothing', async () => {

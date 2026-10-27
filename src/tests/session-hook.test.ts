@@ -22,6 +22,25 @@ function signedOut(url: string, init: RequestInit = {}, token?: string) {
 	return { run, resolve };
 }
 
+describe('security headers', () => {
+	it('are set on a page response', async () => {
+		const { run } = signedOut('http://localhost/login');
+		const res = await run();
+		expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+		expect(res.headers.get('referrer-policy')).toBe('same-origin');
+		expect(res.headers.get('x-frame-options')).toBe('DENY');
+	});
+
+	it('are also on the 401 answer to a scripted call, and do not replace a header the page set', async () => {
+		const signedOutCall = signedOut('http://localhost/p/1?/createRoom', { method: 'POST', headers: { 'x-sveltekit-action': 'true' } });
+		expect((await signedOutCall.run()).headers.get('x-content-type-options')).toBe('nosniff');
+
+		const { run, resolve } = signedOut('http://localhost/login');
+		resolve.mockResolvedValue(new Response('page', { headers: { 'referrer-policy': 'no-referrer' } }));
+		expect((await run()).headers.get('referrer-policy')).toBe('no-referrer');
+	});
+});
+
 describe('signed-out requests', () => {
 	it('answer a scripted action call with a 401 action result, not a redirect', async () => {
 		const { run, resolve } = signedOut('http://localhost/p/1?/createRoom', {

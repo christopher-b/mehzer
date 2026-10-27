@@ -14,6 +14,14 @@ const EXTENSIONS: Record<string, string> = {
 	'image/webp': 'webp'
 };
 
+/** The first bytes of each type, so a file cannot claim to be an image and be something else. */
+function looksLike(type: string, b: Uint8Array): boolean {
+	const at = (offset: number, text: string) => [...text].every((c, i) => b[offset + i] === c.charCodeAt(0));
+	if (type === 'image/jpeg') return b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+	if (type === 'image/png') return b[0] === 0x89 && at(1, 'PNG');
+	return at(0, 'RIFF') && at(8, 'WEBP');
+}
+
 function parseDimension(value: FormDataEntryValue | null): number {
 	const n = Number(value);
 	if (!Number.isInteger(n) || n < 1 || n > MAX_DIMENSION) error(400, 'Invalid image dimensions');
@@ -41,8 +49,13 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 	const width = parseDimension(form.get('width'));
 	const height = parseDimension(form.get('height'));
 
+	const bytes = await file.arrayBuffer();
+	if (!looksLike(file.type, new Uint8Array(bytes, 0, Math.min(12, bytes.byteLength)))) {
+		error(415, 'Only JPEG, PNG or WebP images are supported');
+	}
+
 	const blobKey = `projects/${project.id}/${crypto.randomUUID()}.${ext}`;
-	await locals.storage.put(blobKey, await file.arrayBuffer(), file.type);
+	await locals.storage.put(blobKey, bytes, file.type);
 
 	try {
 		const [photo] = await locals.db

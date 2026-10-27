@@ -147,3 +147,16 @@ export function failure(result: unknown): { status: number; error: string } | nu
 	const { status, data } = result as { status: number; data?: { error?: string } };
 	return { status, error: data?.error ?? '' };
 }
+
+const MAGIC: Record<string, number[]> = {
+	'image/jpeg': [0xff, 0xd8, 0xff],
+	'image/png': [0x89, 0x50, 0x4e, 0x47],
+	'image/webp': [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]
+};
+
+/** A file that starts with the real signature of its type (the upload endpoint checks it), padded to `size` bytes. */
+export function imageFile(type = 'image/jpeg', size = 16): File {
+	const bytes = new Uint8Array(size).fill(7);
+	bytes.set((MAGIC[type] ?? []).slice(0, size));
+	return new File([bytes], 'photo', { type });
+}

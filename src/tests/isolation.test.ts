@@ -7,7 +7,7 @@ import { actions as photoActions, load as photoLoad } from '../routes/p/[id]/pho
 import { GET as exportCsv } from '../routes/p/[id]/export.csv/+server.ts';
 import { GET as exportPdf } from '../routes/p/[id]/export.pdf/+server.ts';
 import { POST as upload } from '../routes/api/projects/[id]/photos/+server.ts';
-import { asUser, call, callLoad, createContext, formData, seedAnnotation, seedPhoto, seedProject, seedRoom, seedUser } from './helpers.ts';
+import { asUser, call, callLoad, createContext, formData, imageFile, seedAnnotation, seedPhoto, seedProject, seedRoom, seedUser } from './helpers.ts';
 
 type Handler = (event: never) => unknown;
 
@@ -60,7 +60,7 @@ describe("another user cannot reach someone else's project (every route answers 
 
 	it('uploads, exports and photo files', async () => {
 		const w = await world();
-		const file = new File([new Uint8Array([1, 2, 3])], 'a.jpg', { type: 'image/jpeg' });
+		const file = imageFile('image/jpeg');
 		await expect(
 			call(upload as Handler, { locals: w.asBen.locals, params: projectParams(w), form: formData({ file, width: 10, height: 10 }) })
 		).rejects.toMatchObject({ status: 404 });
@@ -164,7 +164,7 @@ describe('a guest on a shared project', () => {
 		for (const handler of [exportCsv, exportPdf]) {
 			await expect(call(handler as Handler, { locals: w.asBen.locals, params: projectParams(w) })).resolves.toBeInstanceOf(Response);
 		}
-		const file = new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' });
+		const file = imageFile('image/png');
 		await expect(
 			call(upload as Handler, { locals: w.asBen.locals, params: projectParams(w), form: formData({ file, width: 10, height: 10 }) })
 		).resolves.toBeTruthy();
