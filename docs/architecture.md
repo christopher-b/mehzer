@@ -14,8 +14,9 @@ src/lib/rooms.ts            Room area calculation
 src/lib/image.ts            Browser-side photo resizing
 src/lib/client/             Browser helpers: form-action calls, failure messages (errors.ts), notifications,
                             online state, drafts kept across sign-in, photo upload, remembered collapsed cards
-src/lib/components/         AnnotationCanvas.svelte (draws and edits lines on a photo)
-src/lib/components/ui/      Shared building blocks: PopupMenu, Modal, AddTile, HamburgerIcon, Notifications, SessionExpired
+src/lib/components/         AnnotationCanvas.svelte (draws and edits lines on a photo); ProjectMenu (the project menu button, on the
+                            project page and the project list) with its ProjectEditDialog and ProjectShareDialog; ProjectForm
+src/lib/components/ui/      Shared building blocks: Dialog, Modal, PopupMenu, AddTile, HamburgerIcon, Notifications, SessionExpired
 src/lib/server/db/          Drizzle schema and the SQLite client
 src/lib/server/storage/     Photo storage on the filesystem
 src/lib/server/             Database and storage setup (platform.ts), form parsing, messages, photo and room rules, and accounts:

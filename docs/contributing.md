@@ -31,4 +31,6 @@ Also: `npm run test:e2e:safari` after UI or style changes; `npm run db:generate`
 - **Database calls:** better-sqlite3 is synchronous, but server code still `await`s every call through the shared `Db` type (a leftover from when D1 was supported). Transactions are available but most multi-step writes are not wrapped in one yet.
 - **Shared pieces:** shared UI is in `src/lib/components/ui/`, shared styles and design tokens in `src/app.css`, failure messages in one table in `src/lib/client/errors.ts`. Prefer these over new one-off versions.
 
+AI coding agents: see also [AGENTS.md](../AGENTS.md).
+
 Decisions and known limitations are in [decisions.md](decisions.md); the code layout is in [architecture.md](architecture.md).
