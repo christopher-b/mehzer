@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ProjectMenu from '#lib/components/ProjectMenu.svelte';
 	import { formatArea, unitLabel } from '#lib/units.ts';
 	import AddProject from './AddProject.svelte';
 	import type { PageProps } from './$types';
@@ -28,6 +29,13 @@
 			· {unitLabel(project.unitSystem)}
 		</span>
 	</a>
+	<ProjectMenu
+		{project}
+		access={{ role: project.owned ? 'owner' : 'guest', ownerName: project.ownerName }}
+		guests={project.guests}
+		label="Menu for {project.name}"
+		align="right"
+	/>
 {/snippet}
 
 {#if data.projects.length === 0}
@@ -59,19 +67,30 @@
 		display: grid;
 		gap: 0.5rem;
 	}
-	.projects a {
+	.projects li {
 		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.9rem 1rem;
+		align-items: center;
+		gap: 0.5rem;
+		padding-right: 0.5rem;
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
+	}
+	.projects li:hover {
+		border-color: var(--accent);
+	}
+	.projects a {
+		display: flex;
+		flex: 1;
+		min-width: 0;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.9rem 0 0.9rem 1rem;
 		color: inherit;
 		text-decoration: none;
 	}
-	.projects a:hover {
-		border-color: var(--accent);
+	.projects li :global(.popup-root) {
+		flex: none;
 	}
 	h2 {
 		margin: 1.75rem 0 0;

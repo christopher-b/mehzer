@@ -4,9 +4,11 @@ import { expect, test } from './fixtures';
 import {
 	createProject,
 	deleteCurrentProject,
+	editProjectDialog,
 	expectNoHorizontalOverflow,
 	openAddProject,
 	seedKitchenWithMeasurements,
+	shareProjectDialog,
 	uniqueName,
 	visit,
 	projectMenuItem
@@ -41,8 +43,8 @@ test('create a project, see it listed, rename it and change its units, then dele
 
 	// rename and switch to metric: the header follows
 	await projectMenuItem(page, 'Edit project');
-	const form = page.locator('form.edit');
-	await form.getByLabel('Name', { exact: true }).fill(`${name} (renamed)`);
+	const form = editProjectDialog(page);
+	await form.getByLabel('Project name').fill(`${name} (renamed)`);
 	await form.getByLabel('Units').selectOption('metric');
 	await form.getByRole('button', { name: 'Save' }).click();
 	await expect(headerTitle(page)).toHaveText(`${name} (renamed)`);
@@ -57,12 +59,55 @@ test('Cancel leaves the project unchanged', async ({ page }) => {
 	const name = uniqueName('Cancel');
 	await createProject(page, name);
 	await projectMenuItem(page, 'Edit project');
-	await page.locator('form.edit').getByLabel('Name', { exact: true }).fill('something else');
-	await page.locator('form.edit').getByRole('button', { name: 'Cancel' }).click();
+	const dialog = editProjectDialog(page);
+	await dialog.getByLabel('Project name').fill('something else');
+	await dialog.getByRole('button', { name: 'Cancel' }).click();
+	await expect(dialog).toBeHidden();
 	await expect(headerTitle(page)).toHaveText(name);
+
+	// reopening shows the project's own name again, not the abandoned edit
+	await projectMenuItem(page, 'Edit project');
+	await expect(dialog.getByLabel('Project name')).toHaveValue(name);
 });
 
-test('the "+ Project" tile opens a popover; Cancel closes it without creating anything', async ({ page }) => {
+test('each project on the list has the same menu as the project page: edit, export, share, delete', async ({ page }) => {
+	const name = uniqueName('Listed');
+	await createProject(page, name);
+	await visit(page, '/');
+
+	const row = page.getByRole('listitem').filter({ hasText: name });
+	const menu = async () => {
+		await row.getByRole('button', { name: `Menu for ${name}` }).click();
+		return page.getByRole('menu');
+	};
+	await expect(await menu()).toContainText('Units: ft/in');
+	await expect(page.getByRole('menuitem', { name: 'Export CSV' })).toHaveAttribute('href', /\/p\/[0-9a-f-]+\/export\.csv$/);
+	await page.keyboard.press('Escape');
+
+	// edit it without opening it
+	await (await menu()).getByRole('menuitem', { name: 'Edit project' }).click();
+	const edit = editProjectDialog(page);
+	await edit.getByLabel('Project name').fill(`${name} (renamed)`);
+	await edit.getByLabel('Units').selectOption('metric');
+	await edit.getByRole('button', { name: 'Save' }).click();
+	await expect(edit).toBeHidden();
+	const renamed = page.getByRole('listitem').filter({ hasText: `${name} (renamed)` });
+	await expect(renamed).toContainText('m/cm');
+
+	// the share dialog is there too
+	await renamed.getByRole('button', { name: `Menu for ${name} (renamed)` }).click();
+	await page.getByRole('menuitem', { name: 'Share' }).click();
+	await expect(shareProjectDialog(page).getByText('Not shared with anyone yet.')).toBeVisible();
+	await page.keyboard.press('Escape');
+
+	// and so is delete
+	await renamed.getByRole('button', { name: `Menu for ${name} (renamed)` }).click();
+	await page.getByRole('menuitem', { name: 'Edit project' }).click();
+	await editProjectDialog(page).getByRole('button', { name: 'Delete project' }).click();
+	await expect(page.getByRole('listitem').filter({ hasText: name })).toHaveCount(0);
+});
+
+test('the "+ Project" tile opens a dialog; Cancel closes it without creating anything', async ({ page }) => {
 	await visit(page, '/');
 	const popover = await openAddProject(page);
 	await expect(popover.getByLabel('Units')).toHaveValue('imperial');
@@ -77,10 +122,11 @@ test('deleting a project can be cancelled at the confirmation', async ({ page, c
 	await createProject(page, name);
 	confirmations.answer = false;
 	await projectMenuItem(page, 'Edit project');
-	await page.getByRole('button', { name: 'Delete project' }).click();
+	const dialog = editProjectDialog(page);
+	await dialog.getByRole('button', { name: 'Delete project' }).click();
 	await expect(headerTitle(page)).toHaveText(name); // still here
 	confirmations.answer = true;
-	await page.getByRole('button', { name: 'Delete project' }).click();
+	await dialog.getByRole('button', { name: 'Delete project' }).click();
 	await expect(page).toHaveURL('/');
 });
 

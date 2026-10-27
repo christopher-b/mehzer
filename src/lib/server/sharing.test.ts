@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { projectMembers, projects, users } from './db/schema.ts';
 import { getProjectOr404 } from './projects.ts';
-import { handOver, listGuests, removeGuest, shareProject } from './sharing.ts';
+import { handOver, listGuests, listGuestsOfOwned, removeGuest, shareProject } from './sharing.ts';
 import { deleteUserAndContent } from './users.ts';
 import { TEST_USER, createContext, seedProject, seedUser } from '../../tests/helpers.ts';
 
@@ -58,6 +58,23 @@ describe('shareProject', () => {
 		expect(await shareProject(w.db, w.project, TEST_USER.id, w.ben.email)).toBe('shared');
 		expect(await shareProject(w.db, w.project, TEST_USER.id, w.ben.email)).toBe('already');
 		expect(await listGuests(w.db, w.project.id)).toHaveLength(1);
+	});
+});
+
+describe('listGuestsOfOwned', () => {
+	it('lists the guests of each owned project, and nothing for projects owned by others', async () => {
+		const w = await world();
+		const second = await seedProject(w.db);
+		await shareProject(w.db, w.project, TEST_USER.id, w.ben.email);
+		await shareProject(w.db, w.project, TEST_USER.id, w.cleo.email);
+		expect(await listGuestsOfOwned(w.db, TEST_USER.id)).toEqual({
+			[w.project.id]: [
+				{ userId: w.ben.id, name: 'Ben', email: 'ben@example.com' },
+				{ userId: w.cleo.id, name: 'Cleo', email: 'cleo@example.com' }
+			]
+		});
+		expect(second.id).not.toBe(w.project.id);
+		expect(await listGuestsOfOwned(w.db, w.ben.id)).toEqual({});
 	});
 });
 

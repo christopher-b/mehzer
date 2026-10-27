@@ -17,6 +17,11 @@ export interface SubmitOptions {
 	before?: () => void;
 	/** Passed to `update()`. */
 	reset?: boolean;
+	/**
+	 * Passed to `update()`. SvelteKit follows a successful action to the page it belongs to; set this
+	 * to false for a form that posts to another page's action but should stay where it is.
+	 */
+	navigate?: boolean;
 	/** Return false to cancel the submit (delete forms that ask first). */
 	confirm?: () => boolean;
 }
@@ -70,7 +75,7 @@ export function submitWith(opts: SubmitOptions = {}): SubmitFunction {
 				opts.onFailure(result);
 				return;
 			}
-			await update(opts.reset === undefined ? undefined : { reset: opts.reset });
+			await update({ reset: opts.reset, navigate: opts.navigate });
 			if (result.type === 'success') opts.onSuccess?.();
 		};
 	};

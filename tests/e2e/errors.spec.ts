@@ -8,6 +8,7 @@ import {
 	shownPhotoWidth,
 	waitForPhoto,
 	createProject,
+	editProjectDialog,
 	photoCanvas,
 	photoMenuButton,
 	roomCard,
@@ -239,7 +240,7 @@ for (const how of ['offline', 'server'] as const) {
 		const noErrorPage = (page: Page) => expect(page.getByRole('heading', { name: FAILURE_PAGE })).toHaveCount(0);
 		const alert = (page: Page) => page.getByRole('alert').getByText(messages[how]);
 
-		test('create project shows the message inside the popover and keeps the name; works again afterwards', async ({ page }) => {
+		test('create project shows the message inside the dialog and keeps the name; works again afterwards', async ({ page }) => {
 			const name = uniqueName('E4 home');
 			await visit(page, '/');
 			await failAction(page, 'create', how);
@@ -254,7 +255,7 @@ for (const how of ['offline', 'server'] as const) {
 			await expect(page).toHaveURL(/\/p\//);
 		});
 
-		test('add room shows the message inside the popover and keeps the name', async ({ page }) => {
+		test('add room shows the message inside the dialog and keeps the name', async ({ page }) => {
 			await createProject(page, uniqueName('E4 add room'));
 			await failAction(page, 'createRoom', how);
 			await page.getByRole('button', { name: 'Room', exact: true }).click();
@@ -269,20 +270,20 @@ for (const how of ['offline', 'server'] as const) {
 			await expect(roomCard(page, 'Kitchen')).toBeVisible();
 		});
 
-		test('rename room keeps the field open with the typed name', async ({ page }) => {
+		test('rename room keeps the dialog open with the typed name', async ({ page }) => {
 			await createProject(page, uniqueName('E4 rename'));
 			await addRoom(page, 'Kitchen');
 			await failAction(page, 'renameRoom', how);
 			await roomMenuButton(page, 'Kitchen').click();
 			await roomMenu(page, 'Kitchen').getByRole('button', { name: 'Rename' }).click();
-			const card = page.getByRole('article').filter({ has: page.getByLabel('Room name') });
-			await card.getByLabel('Room name').fill('Galley');
-			await card.getByRole('button', { name: 'Save' }).click();
-			await expect(card.getByText(messages[how])).toBeVisible();
+			const dialog = page.getByRole('dialog', { name: 'Rename room' });
+			await dialog.getByLabel('Room name').fill('Galley');
+			await dialog.getByRole('button', { name: 'Save' }).click();
+			await expect(dialog.getByText(messages[how])).toBeVisible();
 			await noErrorPage(page);
-			await expect(card.getByLabel('Room name')).toHaveValue('Galley');
+			await expect(dialog.getByLabel('Room name')).toHaveValue('Galley');
 			await page.unroute('**/*?/renameRoom');
-			await card.getByRole('button', { name: 'Save' }).click();
+			await dialog.getByRole('button', { name: 'Save' }).click();
 			await expect(roomCard(page, 'Galley')).toBeVisible();
 		});
 
@@ -323,21 +324,20 @@ for (const how of ['offline', 'server'] as const) {
 			await createProject(page, name);
 			await failAction(page, 'update', how);
 			await projectMenuItem(page, 'Edit project');
-			await page.getByLabel('Name', { exact: true }).fill(name + ' 2');
-			await page.getByRole('button', { name: 'Save' }).click();
-			await expect(alert(page)).toBeVisible();
+			const dialog = editProjectDialog(page);
+			await dialog.getByLabel('Project name').fill(name + ' 2');
+			await dialog.getByRole('button', { name: 'Save' }).click();
+			await expect(dialog.getByText(messages[how])).toBeVisible();
 			await noErrorPage(page);
-			await expect(page.getByLabel('Name', { exact: true })).toHaveValue(name + ' 2');
+			await expect(dialog.getByLabel('Project name')).toHaveValue(name + ' 2');
 			await page.unroute('**/*?/update');
-			await page.getByRole('button', { name: 'Dismiss' }).click();
 
 			await failAction(page, 'delete', how);
-			await page.getByRole('button', { name: 'Delete project' }).click();
-			await expect(alert(page)).toBeVisible();
+			await dialog.getByRole('button', { name: 'Delete project' }).click();
+			await expect(dialog.getByText(messages[how])).toBeVisible();
 			await noErrorPage(page);
 			await page.unroute('**/*?/delete');
-			await page.getByRole('button', { name: 'Dismiss' }).click();
-			await page.getByRole('button', { name: 'Delete project' }).click();
+			await dialog.getByRole('button', { name: 'Delete project' }).click();
 			await expect(page).toHaveURL('/');
 		});
 

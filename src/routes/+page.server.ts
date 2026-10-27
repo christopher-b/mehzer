@@ -4,6 +4,7 @@ import { computeRoomArea } from '#lib/rooms.ts';
 import { annotations, photos, projects, rooms, users } from '#lib/server/db/schema.ts';
 import { messages } from '#lib/server/messages.ts';
 import { accessibleTo, parseName, parseUnitSystem } from '#lib/server/projects.ts';
+import { listGuestsOfOwned } from '#lib/server/sharing.ts';
 import { requireUser } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -43,6 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(projects, eq(projects.id, photos.projectId))
 		.where(accessibleTo(locals.db, userId));
 
+	const guests = await listGuestsOfOwned(locals.db, userId);
 	const summaries = rows.map(({ ownerId, ...project }) => {
 		const projectRooms = allRooms.filter((r) => r.projectId === project.id);
 		const projectAnnotations = allAnnotations.filter((a) => a.projectId === project.id);
@@ -52,6 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			...project,
 			owned: ownerId === userId,
+			guests: guests[project.id] ?? [],
 			roomCount: projectRooms.length,
 			measuredRoomCount: areas.length,
 			totalAreaMm2: areas.length > 0 ? areas.reduce((sum, a) => sum + a, 0) : null

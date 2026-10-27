@@ -29,11 +29,12 @@ export function uniqueName(label: string) {
 
 // ---------------------------------------------------------------- projects and rooms
 
-/** On the home page: open the "+ Project" popover. */
+/** The "Add a project" dialog on the home page. */
 export function addProjectPopover(page: Page) {
 	return page.getByRole('dialog', { name: 'Add a project' });
 }
 
+/** On the home page: open the "+ Project" dialog. */
 export async function openAddProject(page: Page) {
 	await page.getByRole('button', { name: 'Project', exact: true }).click();
 	const popover = addProjectPopover(page);
@@ -58,9 +59,19 @@ export async function projectMenuItem(page: Page, name: 'Edit project' | 'Export
 	await page.getByRole('menuitem', { name }).click();
 }
 
+/** The "Edit project" dialog (open it with `projectMenuItem(page, 'Edit project')`). */
+export function editProjectDialog(page: Page): Locator {
+	return page.getByRole('dialog', { name: 'Edit project' });
+}
+
+/** The "Share this project" dialog (open it with the menu's Share item). */
+export function shareProjectDialog(page: Page): Locator {
+	return page.getByRole('dialog', { name: 'Share this project' });
+}
+
 export async function deleteCurrentProject(page: Page) {
 	await projectMenuItem(page, 'Edit project');
-	await page.getByRole('button', { name: 'Delete project' }).click();
+	await editProjectDialog(page).getByRole('button', { name: 'Delete project' }).click();
 	await expect(page).toHaveURL('/');
 }
 

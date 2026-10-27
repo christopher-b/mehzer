@@ -44,12 +44,10 @@ test('the + Room button is centred and large, below the room cards (including No
 	expect(box.y).toBeGreaterThanOrEqual(kitchen.y + kitchen.height);
 	expect(box.y).toBeGreaterThanOrEqual(noRoom.y + noRoom.height);
 
-	// its popover is centred under it and fits the screen
+	// its dialog fits the screen
 	await button.click();
 	const popover = page.getByRole('dialog', { name: 'Add a room' });
 	await expectFitsViewport(page, popover);
-	const p = (await popover.boundingBox())!;
-	expect(Math.abs(p.x + p.width / 2 - (box.x + box.width / 2))).toBeLessThanOrEqual(2);
 });
 
 test('the "+" photo tiles are big, and match the thumbnails\' height', async ({ page }) => {

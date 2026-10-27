@@ -27,6 +27,20 @@ export async function listGuests(db: Db, projectId: string): Promise<Guest[]> {
 		.orderBy(asc(projectMembers.addedAt), asc(users.name));
 }
 
+/** The guests of every project this user owns, by project id (a project nobody shares has no entry). */
+export async function listGuestsOfOwned(db: Db, ownerId: string): Promise<Record<string, Guest[]>> {
+	const rows = await db
+		.select({ projectId: projectMembers.projectId, userId: users.id, name: users.name, email: users.email })
+		.from(projectMembers)
+		.innerJoin(projects, eq(projects.id, projectMembers.projectId))
+		.innerJoin(users, eq(users.id, projectMembers.userId))
+		.where(eq(projects.ownerId, ownerId))
+		.orderBy(asc(projectMembers.addedAt), asc(users.name));
+	const byProject: Record<string, Guest[]> = {};
+	for (const { projectId, ...guest } of rows) (byProject[projectId] ??= []).push(guest);
+	return byProject;
+}
+
 export type ShareResult = 'shared' | 'invalid-email' | 'no-account' | 'self' | 'already';
 
 /** Adds a guest by email address. Only people who already have an (enabled) account can be added. */

@@ -7,6 +7,7 @@ import {
 	deselect,
 	dragHandle,
 	drawMeasurement,
+	editProjectDialog,
 	isTouch,
 	makeImage,
 	measurementDialog,
@@ -208,12 +209,12 @@ test('a room\'s area comes from two of its measurements, shown in the card and s
 
 	// units are a display choice: the same area in a metric project
 	await projectMenuItem(page, 'Edit project');
-	await page.locator('form.edit').getByLabel('Units').selectOption('metric');
-	await page.locator('form.edit').getByRole('button', { name: 'Save' }).click();
+	await editProjectDialog(page).getByLabel('Units').selectOption('metric');
+	await editProjectDialog(page).getByRole('button', { name: 'Save' }).click();
 	await expect(roomCard(page, 'Kitchen').locator('.area')).toHaveText('11.15 m²');
 	await projectMenuItem(page, 'Edit project');
-	await page.locator('form.edit').getByLabel('Units').selectOption('imperial');
-	await page.locator('form.edit').getByRole('button', { name: 'Save' }).click();
+	await editProjectDialog(page).getByLabel('Units').selectOption('imperial');
+	await editProjectDialog(page).getByRole('button', { name: 'Save' }).click();
 	await expect(roomCard(page, 'Kitchen').locator('.area')).toHaveText('120.0 ft²');
 
 	// moving the photo to another room clears the area, and moving it back does not resurrect it

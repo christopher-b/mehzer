@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { PORT } from './constants';
-import { addRoom, createProject, inviteAndJoin, roomCard, uniqueName, visit } from './helpers';
+import { addRoom, createProject, editProjectDialog, inviteAndJoin, roomCard, shareProjectDialog, uniqueName, visit } from './helpers';
 
 async function projectMenu(page: Page) {
 	await page.getByRole('button', { name: 'Project menu' }).click();
@@ -17,7 +17,7 @@ test('sharing a project: a guest edits it but cannot delete or share it; handing
 
 		// share it: a mistake is explained in the panel, then it works
 		await (await projectMenu(page)).getByRole('menuitem', { name: 'Share' }).click();
-		const panel = page.getByRole('region', { name: 'Sharing' });
+		const panel = shareProjectDialog(page);
 		await expect(panel.getByText('Not shared with anyone yet.')).toBeVisible();
 		await panel.getByLabel('Email address').fill('nobody-has-this@example.com');
 		await panel.getByRole('button', { name: 'Share', exact: true }).click();
@@ -39,9 +39,10 @@ test('sharing a project: a guest edits it but cannot delete or share it; handing
 		await expect(guestMenu.getByText('Shared by E2E Admin')).toBeVisible();
 		await expect(guestMenu.getByRole('menuitem', { name: 'Share' })).toHaveCount(0);
 		await guestMenu.getByRole('menuitem', { name: 'Edit project' }).click();
-		await expect(ben.page.locator('form.edit')).toBeVisible();
-		await expect(ben.page.getByRole('button', { name: 'Delete project' })).toHaveCount(0);
-		await ben.page.locator('form.edit').getByRole('button', { name: 'Cancel' }).click();
+		const benEdit = editProjectDialog(ben.page);
+		await expect(benEdit).toBeVisible();
+		await expect(benEdit.getByRole('button', { name: 'Delete project' })).toHaveCount(0);
+		await benEdit.getByRole('button', { name: 'Cancel' }).click();
 		await addRoom(ben.page, 'Bath');
 		await visit(page, new URL(url).pathname);
 		await expect(roomCard(page, 'Bath')).toBeVisible();
@@ -51,14 +52,14 @@ test('sharing a project: a guest edits it but cannot delete or share it; handing
 
 		// hand the project over: the roles swap
 		await (await projectMenu(page)).getByRole('menuitem', { name: 'Share' }).click();
-		await page.getByRole('region', { name: 'Sharing' }).getByRole('button', { name: `Hand over to ${ben.name}` }).click();
+		await shareProjectDialog(page).getByRole('button', { name: `Hand over to ${ben.name}` }).click();
 		await expect.poll(async () => (await projectMenu(page)).getByRole('menuitem', { name: 'Leave project' }).count()).toBe(1);
-		await expect(page.getByRole('region', { name: 'Sharing' })).toHaveCount(0);
+		await expect(shareProjectDialog(page)).toHaveCount(0);
 		await page.keyboard.press('Escape');
 
 		await visit(ben.page, new URL(url).pathname);
 		await (await projectMenu(ben.page)).getByRole('menuitem', { name: 'Share' }).click();
-		const benPanel = ben.page.getByRole('region', { name: 'Sharing' });
+		const benPanel = shareProjectDialog(ben.page);
 		await expect(benPanel.getByText('E2E Admin')).toBeVisible();
 
 		// the new owner removes the previous one, who is then a stranger
@@ -76,9 +77,9 @@ test('a guest can leave a shared project; the owner keeps it', async ({ page, br
 		const projectName = uniqueName('Leave me');
 		const url = await createProject(page, projectName);
 		await (await projectMenu(page)).getByRole('menuitem', { name: 'Share' }).click();
-		await page.getByRole('region', { name: 'Sharing' }).getByLabel('Email address').fill(ben.email);
-		await page.getByRole('region', { name: 'Sharing' }).getByRole('button', { name: 'Share', exact: true }).click();
-		await expect(page.getByRole('region', { name: 'Sharing' }).getByText(ben.name, { exact: true })).toBeVisible();
+		await shareProjectDialog(page).getByLabel('Email address').fill(ben.email);
+		await shareProjectDialog(page).getByRole('button', { name: 'Share', exact: true }).click();
+		await expect(shareProjectDialog(page).getByText(ben.name, { exact: true })).toBeVisible();
 
 		await visit(ben.page, new URL(url).pathname);
 		await (await projectMenu(ben.page)).getByRole('menuitem', { name: 'Leave project' }).click();

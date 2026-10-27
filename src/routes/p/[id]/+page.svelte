@@ -10,11 +10,8 @@
 	import MeasurementRow from './MeasurementRow.svelte';
 	import MeasurementTable from './MeasurementTable.svelte';
 	import PhotoGrid from './PhotoGrid.svelte';
-	import ProjectEditForm from './ProjectEditForm.svelte';
-	import ProjectSharePanel from './ProjectSharePanel.svelte';
 	import RoomCard from './RoomCard.svelte';
 	import RoomMenu from './RoomMenu.svelte';
-	import RoomRenameForm from './RoomRenameForm.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -22,8 +19,6 @@
 	const NO_ROOM = 'no-room';
 	const collapsed = new CollapsedState(() => data.project.id);
 	onMount(() => collapsed.load());
-
-	let renamingId = $state<string | null>(null);
 
 	const unitSystem = $derived(data.project.unitSystem);
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -53,8 +48,6 @@
 
 <svelte:head><title>{data.project.name} · Mehzur</title></svelte:head>
 
-<ProjectEditForm project={data.project} canDelete={data.access.role === 'owner'} />
-{#if data.access.role === 'owner'}<ProjectSharePanel guests={data.guests} />{/if}
 {#if form?.error}<p class="error">{form.error}</p>{/if}
 
 <section>
@@ -71,18 +64,9 @@
 				collapsed={collapsed.has(room.id)}
 				ontoggle={() => collapsed.toggle(room.id)}
 				summary="{area ? `${area} · ` : ''}{plural(roomPhotos.length, 'photo')} · {plural(roomAnnotations.length, 'measurement')}"
-				renaming={renamingId === room.id}
 			>
 				{#snippet menu()}
-					<RoomMenu
-						{room}
-						measured={roomAnnotations.filter((a) => a.valueMm !== null)}
-						{unitSystem}
-						onrename={() => (renamingId = room.id)}
-					/>
-				{/snippet}
-				{#snippet rename()}
-					<RoomRenameForm {room} ondone={() => (renamingId = null)} />
+					<RoomMenu {room} measured={roomAnnotations.filter((a) => a.valueMm !== null)} {unitSystem} />
 				{/snippet}
 
 				{#if area}<p class="area">{area}</p>{/if}

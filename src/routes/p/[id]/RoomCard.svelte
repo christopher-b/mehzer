@@ -7,10 +7,8 @@
 		collapsed,
 		summary,
 		variant,
-		renaming = false,
 		ontoggle,
 		menu,
-		rename,
 		children
 	}: {
 		id: string;
@@ -19,36 +17,29 @@
 		/** One line shown instead of the content while collapsed. */
 		summary: string;
 		variant?: 'unassigned';
-		/** While true, `rename` replaces the title and the menu. */
-		renaming?: boolean;
 		ontoggle: () => void;
 		menu?: Snippet;
-		rename?: Snippet;
 		children: Snippet;
 	} = $props();
 </script>
 
 <article class="room" class:no-room={variant === 'unassigned'} aria-labelledby="room-title-{id}">
 	<header>
-		{#if renaming && rename}
-			{@render rename()}
-		{:else}
-			<h3 id="room-title-{id}">
-				<button
-					type="button"
-					class="toggle"
-					class:collapsed
-					aria-expanded={!collapsed}
-					aria-controls="room-{id}"
-					onclick={ontoggle}
-				>
-					{title}
-				</button>
-			</h3>
-			{#if menu}
-				<span class="spacer"></span>
-				{@render menu()}
-			{/if}
+		<h3 id="room-title-{id}">
+			<button
+				type="button"
+				class="toggle"
+				class:collapsed
+				aria-expanded={!collapsed}
+				aria-controls="room-{id}"
+				onclick={ontoggle}
+			>
+				{title}
+			</button>
+		</h3>
+		{#if menu}
+			<span class="spacer"></span>
+			{@render menu()}
 		{/if}
 	</header>
 

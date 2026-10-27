@@ -26,7 +26,7 @@ test('a new project starts with only the No room card and no hint text', async (
 	await expect(page.getByRole('heading', { name: 'Measurements' })).toHaveCount(0); // hidden until there is one
 });
 
-test('adding a room with the "+ Room" popover', async ({ page }) => {
+test('adding a room with the "+ Room" dialog', async ({ page }) => {
 	await createProject(page, uniqueName('Rooms'));
 	const addButton = page.getByRole('button', { name: 'Room', exact: true });
 	const popover = page.getByRole('dialog', { name: 'Add a room' });
@@ -37,13 +37,13 @@ test('adding a room with the "+ Room" popover', async ({ page }) => {
 	await expect(popover.getByLabel('Room name')).toBeFocused();
 	await expectFitsViewport(page, popover);
 
-	// a blank name is refused inside the popover, which stays open
+	// a blank name is refused inside the dialog, which stays open
 	await popover.getByLabel('Room name').fill('   ');
 	await popover.getByRole('button', { name: 'Add room' }).click();
 	await expect(popover.getByText(/Enter a room name/)).toBeVisible();
 	await expect(popover).toBeVisible();
 
-	// Enter submits; the popover closes and is empty next time
+	// Enter submits; the dialog closes and is empty next time
 	await popover.getByLabel('Room name').fill('Kitchen');
 	await page.keyboard.press('Enter');
 	await expect(roomCard(page, 'Kitchen')).toBeVisible();
@@ -52,16 +52,14 @@ test('adding a room with the "+ Room" popover', async ({ page }) => {
 	await expect(popover.getByLabel('Room name')).toHaveValue('');
 	await expect(popover.getByText(/Enter a room name/)).toHaveCount(0);
 
-	// Escape, Cancel and clicking elsewhere all close it
+	// Escape and Cancel both close it
 	await page.keyboard.press('Escape');
 	await expect(popover).toBeHidden();
 	await expect(addButton).toBeFocused();
 	await addButton.click();
 	await popover.getByRole('button', { name: 'Cancel' }).click();
 	await expect(popover).toBeHidden();
-	await addButton.click();
-	await page.mouse.click(5, 5);
-	await expect(popover).toBeHidden();
+	await expect(addButton).toBeFocused();
 	await expect(page.getByRole('article')).toHaveCount(2); // Kitchen + No room
 });
 
@@ -87,13 +85,18 @@ test('rename and delete a room from its menu', async ({ page, confirmations }) =
 	// rename, including cancelling
 	await roomMenuButton(page, 'Kitchen').click();
 	await roomMenu(page, 'Kitchen').getByRole('button', { name: 'Rename' }).click();
-	await page.locator('form.rename').getByLabel('Room name').fill('Galley');
-	await page.locator('form.rename').getByRole('button', { name: 'Cancel' }).click();
+	const rename = page.getByRole('dialog', { name: 'Rename room' });
+	await expect(rename.getByLabel('Room name')).toHaveValue('Kitchen');
+	await rename.getByLabel('Room name').fill('Galley');
+	await rename.getByRole('button', { name: 'Cancel' }).click();
+	await expect(rename).toBeHidden();
 	await expect(roomCard(page, 'Kitchen')).toBeVisible();
 	await roomMenuButton(page, 'Kitchen').click();
 	await roomMenu(page, 'Kitchen').getByRole('button', { name: 'Rename' }).click();
-	await page.locator('form.rename').getByLabel('Room name').fill('Galley');
-	await page.locator('form.rename').getByRole('button', { name: 'Save' }).click();
+	await expect(rename.getByLabel('Room name')).toHaveValue('Kitchen');
+	await rename.getByLabel('Room name').fill('Galley');
+	await rename.getByRole('button', { name: 'Save' }).click();
+	await expect(rename).toBeHidden();
 	await expect(roomCard(page, 'Galley')).toBeVisible();
 	await expect(roomCard(page, 'Kitchen')).toHaveCount(0);
 

@@ -21,6 +21,7 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 - [ ] The **account menu** (your name in the header) shows your email, **Account**, **Users** (administrator only) and **Sign out**. Tap outside it: it closes. A long name is shortened with "…" and the project-menu button still fits beside the project name.
 - [ ] **Invite** (administrator): Users > Create invite link. Send the link to yourself (or open it in a private tab): the Join page asks for a name and a password, signs you in, and shows no projects from the administrator. Opening the same link again says it is no longer valid.
 - [ ] **Sharing** (two accounts): Project menu > Share, enter the other person's email: they appear in the list, and the project shows under **Shared with me** on their home page with "Shared by ...". As a guest they can add photos and rooms but the menu has no Share and Edit project has no Delete; **Leave project** works. **Hand over** swaps the roles; **Remove** takes the project away from them at once.
+- [ ] **Project list menu:** on the home page each project row has a menu button with the same items as the project page (Edit project, Share, Export CSV, Export PDF). Edit project and Share open a dialog; saving a new name or units updates the row without leaving the list. The menu opens fully on screen for the last row.
 - [ ] **Forgot your password?** (needs email set up): the email arrives from mehzur@cbennell.com within a minute, the link opens the new-password page, and the old password stops working afterwards. Asking for an address that has no account shows the same "we have sent it a link" message and sends nothing.
 - [ ] **Account > Email address** (needs email set up): enter a new address and your password; a link arrives at the new address, and your email does not change until you open it and tap the button. The old address gets a notice, other devices are signed out, and signing in works with the new address only.
 - [ ] **Passkeys** (production, https): Account > Passkeys > name it, **Add a passkey**: the phone asks for fingerprint, face or PIN, and it appears in the list. Sign out, then **Sign in with a passkey** on the sign-in page: it offers the passkey, and you are in without typing anything. Remove the passkey: the password still signs you in.
@@ -29,10 +30,10 @@ Takes about 15 minutes. Use a **fresh project** so nothing old gets in the way.
 ## 2. Project, header and rooms
 
 - [ ] Create a project with a **very long name** (for example "The Very Long Named Cottage By The Lake"). The header shows `Mehzur / <name…> ☰` with the name shortened by "…", the project-menu button still visible beside it, and **"Sign out" stays on one line** and fully on screen.
-- [ ] Tap **+ Room**: a popover opens centred under the button, the name field is focused and the keyboard opens. The **name field and the Add room button are still visible above the keyboard** (scroll if you must, but they must be reachable).
-- [ ] Add rooms "Kitchen" and "Bedroom". The popover closes and both cards appear.
+- [ ] Tap **+ Room**: an **Add a room** dialog opens, the name field is focused and the keyboard opens. The **name field and the Add room button are still visible above the keyboard** (scroll if you must, but they must be reachable).
+- [ ] Add rooms "Kitchen" and "Bedroom". The dialog closes and both cards appear.
 - [ ] Open a room's **hamburger menu**: Rename and Delete room appear fully on screen. Tap outside the menu: it closes.
-- [ ] Rename a room from the menu; the rename field and its Save button work with the keyboard open.
+- [ ] Rename a room from the menu: a **Rename room** dialog opens with the current name; Save and Cancel work with the keyboard open.
 - [ ] Tap a room's title: it collapses to a one-line summary and expands again. Reload the page: the choice is remembered.
 
 ## 3. Photos: camera and upload
@@ -88,11 +89,11 @@ Use **airplane mode** (or switch Wi-Fi and mobile data off) to go offline, and s
 
 - [ ] Go offline with the app open. A slim banner under the header says **"You're offline. Changes won't be saved until you reconnect."** Buttons are still tappable (they are not greyed out).
 - [ ] **During a save:** on a photo, tap two points, type a value, switch to airplane mode, tap **Save**. The dialog **stays open with your value** and says "You're offline. Check your connection and try again." (it must not close or lose the value). Reconnect: the banner goes, **"Back online"** appears briefly, and **Save** now works.
-- [ ] **Add room offline:** tap **+ Room**, type a name, go offline, tap **Add room**. The popover stays open with the name and shows the offline message. Reconnect and tap **Add room** again: the room appears.
+- [ ] **Add room offline:** tap **+ Room**, type a name, go offline, tap **Add room**. The dialog stays open with the name and shows the offline message. Reconnect and tap **Add room** again: the room appears.
 - [ ] **A dragged end point offline:** select a measurement, go offline, drag a handle. The point jumps back and a message at the bottom says "Couldn't save the new position." with a **Retry** button. Reconnect and tap **Retry**: "Saved" appears and the point stays where you dragged it. The message sits **above the iPhone home bar**, not hidden behind it.
 - [ ] **During an upload:** start uploading several photos, then switch to airplane mode. Each file that did not finish shows "Failed: You're offline…" with a **Retry** button. Reconnect and tap **Retry** on each: they upload. If every file succeeds you land on the first photo.
 - [ ] **Leave the app overnight** (or until the session would have expired, or sign out in another tab), then open it and try to save a measurement. A **"Signed out"** box appears with **Sign in** and **Cancel**. Your typed value is still in the measurement dialog behind it. Tap **Sign in**, sign in, and you land **back on the same photo** with the measurement dialog reopened and the value filled in. Save it.
-- [ ] The same after expiry for **+ Room**: the sign-in brings you back to the project page with the popover reopened and the name filled in.
+- [ ] The same after expiry for **+ Room**: the sign-in brings you back to the project page with the dialog reopened and the name filled in.
 - [ ] The same for an **upload** after expiry: the files show "Not uploaded" with **Retry**, and the "Signed out" box opens. After signing in again, choose the photos again.
 - [ ] Open an address that does not exist (for example add `/nothing` to the end of the site address): you see **"Page not found"** with a **Back to projects** link, and the header still shows.
 - [ ] Error messages at the bottom of the screen are readable, can be closed with **Dismiss**, and fit on a narrow screen without sideways scrolling.

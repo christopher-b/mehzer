@@ -6,21 +6,36 @@
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import { enhance } from '$app/forms';
 	import { submitWith } from '#lib/client/enhance.ts';
-	import { projectEdit } from '#lib/client/projectEdit.svelte.ts';
-	import { projectShare } from '#lib/client/projectShare.svelte.ts';
+	import ProjectEditDialog from '#lib/components/ProjectEditDialog.svelte';
+	import ProjectShareDialog from '#lib/components/ProjectShareDialog.svelte';
 	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
+	import type { Guest } from '#lib/server/sharing.ts';
 	import { unitLabel, type UnitSystem } from '#lib/units.ts';
 
+	/**
+	 * The menu button for one project (header of the project page, each row of the project list). It
+	 * brings its own edit and share dialogs, so the page it sits on needs nothing else.
+	 */
 	let {
 		project,
-		access
+		access,
+		guests = [],
+		label = 'Project menu',
+		align = 'left'
 	}: {
 		project: { id: string; name: string; unitSystem: UnitSystem };
 		access?: { role: 'owner' | 'guest'; ownerName: string | null };
+		/** Who the project is shared with; only the owner gets (and needs) the list. */
+		guests?: Guest[];
+		label?: string;
+		align?: 'left' | 'right';
 	} = $props();
+
+	let editing = $state(false);
+	let sharing = $state(false);
 </script>
 
-<PopupMenu label="Project menu" align="left">
+<PopupMenu {label} {align}>
 	{#snippet children(close)}
 		<p role="none" class="menu-note">
 			Units: {unitLabel(project.unitSystem)}
@@ -31,8 +46,8 @@
 			role="menuitem"
 			class="item"
 			onclick={() => {
-				close();
-				projectEdit.editing = true;
+				close(true);
+				editing = true;
 			}}
 		>
 			<Pencil size={18} />Edit project
@@ -43,8 +58,8 @@
 				role="menuitem"
 				class="item"
 				onclick={() => {
-					close();
-					projectShare.open = true;
+					close(true);
+					sharing = true;
 				}}
 			>
 				<UserPlus size={18} />Share
@@ -61,6 +76,7 @@
 				method="POST"
 				action="/p/{project.id}?/leave"
 				use:enhance={submitWith({
+					navigate: false,
 					confirm: () => confirm(`Leave "${project.name}"? You will no longer see it unless the owner shares it with you again.`)
 				})}
 			>
@@ -70,11 +86,15 @@
 	{/snippet}
 </PopupMenu>
 
+<ProjectEditDialog bind:open={editing} {project} canDelete={access?.role === 'owner'} />
+{#if access?.role === 'owner'}<ProjectShareDialog bind:open={sharing} {project} {guests} />{/if}
+
 <style>
 	.menu-note {
 		margin: 0;
 		padding: 0.5rem 0.75rem;
 		color: var(--text-muted);
 		border-bottom: 1px solid var(--border);
+		overflow-wrap: anywhere;
 	}
 </style>

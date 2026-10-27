@@ -6,18 +6,19 @@
 	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
 	import type { UnitSystem } from '#lib/units.ts';
 	import RoomAreaForm from './RoomAreaForm.svelte';
+	import RoomRenameDialog from './RoomRenameDialog.svelte';
 
 	let {
 		room,
 		measured,
-		unitSystem,
-		onrename
+		unitSystem
 	}: {
 		room: { id: string; name: string; areaAAnnotationId: string | null; areaBAnnotationId: string | null };
 		measured: { id: string; name: string | null; valueMm: number | null; number: number }[];
 		unitSystem: UnitSystem;
-		onrename: () => void;
 	} = $props();
+
+	let renaming = $state(false);
 </script>
 
 <PopupMenu label="Menu for {room.name}" kind="panel" wide>
@@ -26,8 +27,8 @@
 			type="button"
 			class="item"
 			onclick={() => {
-				onrename();
-				close();
+				close(true);
+				renaming = true;
 			}}
 		>
 			<Pencil size={18} />Rename
@@ -49,3 +50,5 @@
 		</form>
 	{/snippet}
 </PopupMenu>
+
+<RoomRenameDialog bind:open={renaming} {room} />

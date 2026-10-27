@@ -36,8 +36,20 @@
 		/>
 	</label>
 {:else}
-	{@const { mode, children, ...rest } = props}
-	<button type="button" class="tile action" {...rest}>{@render children()}</button>
+	{@const { mode, children, onclick, ...rest } = props}
+	<!-- Safari does not focus a button when it is clicked; without this a dialog opened from here
+	     would have nowhere to return focus to when it closes. -->
+	<button
+		type="button"
+		class="tile action"
+		{...rest}
+		onclick={(e) => {
+			e.currentTarget.focus();
+			(onclick as ((e: MouseEvent) => void) | undefined)?.(e);
+		}}
+	>
+		{@render children()}
+	</button>
 {/if}
 
 <style>
