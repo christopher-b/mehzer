@@ -45,6 +45,8 @@
 	/** The measurement dialog is open exactly when this is set. */
 	let dialogState = $state<DialogState | null>(null);
 	let dialogInitial = $state({ name: '', value: '' });
+	// The value text the edit dialog was opened with (not a restored draft): saving it unchanged keeps the stored length.
+	let prefilledValue: string | null = null;
 	let dialogError = $state('');
 
 	const canvasAnnotations = $derived(
@@ -52,6 +54,7 @@
 	);
 
 	function openDialog(state: DialogState) {
+		prefilledValue = null;
 		if (state.mode === 'create') {
 			dialogInitial = { name: '', value: '' };
 		} else {
@@ -61,6 +64,7 @@
 				name: a.name ?? '',
 				value: a.valueMm === null ? '' : formatLength(a.valueMm, unitSystem)
 			};
+			prefilledValue = dialogInitial.value;
 		}
 		dialogError = '';
 		dialogState = state;
@@ -76,7 +80,9 @@
 				const result = await postAction('create', { ...state.line, ...fields });
 				selectedId = (result?.id as string) ?? null;
 			} else {
-				await postAction('update', { id: state.id, ...fields });
+				// The prefilled text is rounded; sending it back would change the stored length.
+				const valueUntouched = fields.value === prefilledValue;
+				await postAction('update', valueUntouched ? { id: state.id, name: fields.name } : { id: state.id, ...fields });
 			}
 			dialogState = null;
 		} catch (err) {
@@ -94,6 +100,7 @@
 	}
 
 	async function deleteAnnotation(id: string) {
+		if (busy) return;
 		const a = data.annotations.find((x) => x.id === id);
 		if (!a || !confirm(`Delete ${a.name ? `"${a.name}"` : 'this measurement'}?`)) return;
 		busy = true;
@@ -126,20 +133,25 @@
 		}
 	}
 
-	async function moveAnnotation(id: string, line: Line, retry = false) {
+	// Each drag of a line gets a number, so a slow first save cannot clear the second drag's position.
+	const moveSeq: Record<string, number> = {};
+
+	// `path` is this photo's page: a Retry may be pressed after the user has moved to another photo.
+	async function moveAnnotation(id: string, line: Line, retry = false, path = `/p/${data.project.id}/photo/${data.photo.id}`) {
+		const seq = (moveSeq[id] = (moveSeq[id] ?? 0) + 1);
 		movedLines[id] = line;
 		try {
-			await postAction('move', { id, ...line });
+			await postAction('move', { id, ...line }, { path });
 			if (retry) notify({ kind: 'success', message: 'Saved' });
 		} catch (err) {
 			if (reportSession(err)) return;
 			notify({
 				kind: 'error',
 				message: `Couldn't save the new position. ${messageFor(err)}`,
-				action: { label: 'Retry', run: () => moveAnnotation(id, line, true) }
+				action: { label: 'Retry', run: () => moveAnnotation(id, line, true, path) }
 			});
 		} finally {
-			delete movedLines[id];
+			if (moveSeq[id] === seq) delete movedLines[id];
 		}
 	}
 

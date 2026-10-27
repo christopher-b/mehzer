@@ -67,7 +67,7 @@ describe('parseAnnotationFields', () => {
 	});
 
 	it('allows blank name and value', () => {
-		expect(parseAnnotationFields(project('imperial'), form({}))).toEqual({
+		expect(parseAnnotationFields(project('imperial'), form({ name: '', value: '' }))).toEqual({
 			ok: true,
 			fields: { name: null, valueMm: null }
 		});
@@ -92,7 +92,14 @@ describe('parseAnnotationFields', () => {
 	});
 
 	it('ignores any roomId: a measurement takes its room from its photo', () => {
-		const result = parseAnnotationFields(project('imperial'), form({ roomId: 'whatever' }));
+		const result = parseAnnotationFields(project('imperial'), form({ roomId: 'whatever', value: '' }));
 		expect(result).toEqual({ ok: true, fields: { name: null, valueMm: null } });
+	});
+
+	it('leaves the value out of the result when the form has none, so a rename keeps the stored length', () => {
+		expect(parseAnnotationFields(project('imperial'), form({ name: 'Wall' }))).toEqual({
+			ok: true,
+			fields: { name: 'Wall', valueMm: undefined }
+		});
 	});
 });

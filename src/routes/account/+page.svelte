@@ -37,7 +37,7 @@
 
 <section class="card">
 	<h3>Email address</h3>
-	<form method="POST" action="?/email" use:enhance={() => async ({ update }) => update({ reset: true })} class="stack">
+	<form method="POST" action="?/email" use:enhance={submitWith({ reset: true })} class="stack">
 		<label>New email address <input type="email" name="email" autocomplete="email" required /></label>
 		<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
 		<button type="submit">{data.emailConfirmation ? 'Send a confirmation link' : 'Change email address'}</button>
@@ -52,7 +52,7 @@
 
 <section class="card">
 	<h3>Name</h3>
-	<form method="POST" action="?/profile" use:enhance class="row">
+	<form method="POST" action="?/profile" use:enhance={submitWith({ reset: false })} class="row">
 		<input name="name" value={data.account.name} maxlength={NAME_MAX_LENGTH} aria-label="Name" required />
 		<button type="submit">Save name</button>
 	</form>
@@ -62,7 +62,7 @@
 
 <section class="card">
 	<h3>Password</h3>
-	<form method="POST" action="?/password" use:enhance={() => async ({ update }) => update({ reset: true })} class="stack">
+	<form method="POST" action="?/password" use:enhance={submitWith({ reset: true })} class="stack">
 		<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
 		<label>
 			New password
@@ -88,7 +88,7 @@
 			<ul class="passkeys">
 				{#each data.passkeys as passkey (passkey.id)}
 					<li>
-						<form method="POST" action="?/renamePasskey" use:enhance={() => async ({ update }) => update({ reset: false })} class="row">
+						<form method="POST" action="?/renamePasskey" use:enhance={submitWith({ reset: false })} class="row">
 							<input type="hidden" name="id" value={passkey.id} />
 							<input name="name" value={passkey.name} maxlength={NAME_MAX_LENGTH} aria-label="Name of passkey {passkey.name}" />
 							<button type="submit">Rename</button>
@@ -135,7 +135,7 @@
 
 <section class="card">
 	<h3>Other devices</h3>
-	<form method="POST" action="?/signOutOthers" use:enhance>
+	<form method="POST" action="?/signOutOthers" use:enhance={submitWith()}>
 		<button type="submit">Sign out everywhere else</button>
 	</form>
 	{#if form?.signedOutOthers}<p class="ok" role="status">Signed out of your other devices.</p>{/if}

@@ -89,7 +89,7 @@ Priority key:
 
 ## P1: bugs a user can hit
 
-### B1. Upload queue keeps running after leaving the project page
+### B1. Upload queue keeps running after leaving the project page (done)
 - **Files:** `src/lib/client/uploads.svelte.ts`, `src/lib/client/upload.ts`, `src/routes/p/[id]/+page.svelte`.
 - **Problems:**
   1. Nothing stops the queue when the page is left. When the batch finishes, `onsettled` calls `goto('/p/<id>/photo/<first>')` and pulls the user back from wherever they went.
@@ -108,7 +108,7 @@ Priority key:
   - A new `uploads.svelte.test.ts` (mock `./upload.ts` with `vi.mock` and deferred promises) shows that `destroy()` mid-batch prevents `onsettled`, and that files added during `onsettled` are uploaded.
   - An e2e test starts a slow upload (`page.route` delay), clicks the "Mehzur" home link, accepts the prompt, and stays on `/`.
 
-### B2. Overlapping drags of one line race each other
+### B2. Overlapping drags of one line race each other (done)
 - **Files:** `src/routes/p/[id]/photo/[photoId]/PhotoView.svelte` (the move handler around lines 129–144), `src/lib/client/actions.ts`.
 - **Problems:**
   - When a line is dragged twice quickly, the first request's `finally { delete movedLines[id] }` removes the second drag's override, so the line snaps back.
@@ -118,7 +118,7 @@ Priority key:
   2. Give `postAction` an optional explicit path (for example `postAction('move', fields, { path: '/p/<id>/photo/<photoId>' })`, posting to `${path}?/move`). Use it for the move and its retry.
 - **Done when:** the move e2e tests still pass. A new e2e test delays the first `?/move` response (`page.route`), drags twice, and checks the line ends at the second position.
 
-### B3. Accepting an invite can leave it used up, or fail with a 500
+### B3. Accepting an invite can leave it used up, or fail with a 500 (done)
 - **Files:** `src/lib/server/invites.ts` (`acceptInvite`), `src/lib/server/users.ts` (`createUser`).
 - **Problem:** `acceptInvite` marks the invite used, calls `createUser`, then undoes the mark if that returned an error. `createUser` checks `findUserByEmail`, then `await hashPassword(...)` (which yields), then inserts. Two requests for the same email can both pass the check. The second insert then throws a UNIQUE error, so the user gets a 500 and the invite stays marked used with no account. The same race affects `/setup` (two admins could be created) and `setEmail` in `emailChange.ts`.
 - **Change:**
@@ -130,7 +130,7 @@ Priority key:
   - `createUser` returns `EMAIL_TAKEN` (not a throw) when a row with that email is inserted between the check and the insert. Simulate it by inserting directly and then calling `createUser`, or test the catch path.
   - A failed `acceptInvite` leaves the invite usable.
 
-### B4. Add basic security headers
+### B4. Add basic security headers (done)
 - **Files:** `src/hooks.server.ts`, `vite.config.ts` (the `kit` options passed to `sveltekit({...})`), `src/routes/api/photos/[...key]/+server.ts`.
 - **Problem:** There is no `X-Content-Type-Options`, `Referrer-Policy`, frame protection or CSP. Reset and invite links carry their token in the path (`/reset/<token>`), so a referrer must never leak it. Photos are served with the content type the browser claimed at upload.
 - **Change:**
@@ -142,25 +142,25 @@ Priority key:
   3. **Optional:** in the upload endpoint, check the first bytes match the claimed type (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF....WEBP`) and answer 415 otherwise.
 - **Done when:** a route test (`src/tests/`) checks the three headers on a page response, and all e2e suites pass.
 
-### B5. Error notifications are pushed out by success notifications
+### B5. Error notifications are pushed out by success notifications (done)
 - **Files:** `src/lib/client/notify.svelte.ts` (around line 22), `src/lib/client/notify.test.ts`.
 - **Problem:** When more than `MAX_VISIBLE` notifications are shown, the oldest is removed, even if it is an error that is meant to stay until dismissed. That can remove a "Couldn't save the new position" notification together with its Retry button.
 - **Change:** When over the limit, remove the oldest notification that is **not** an error. Only remove errors when every notification is an error.
 - **Done when:** a new test shows one error followed by `MAX_VISIBLE` successes keeps the error. Update the existing eviction test if it asserts otherwise.
 
-### B6. `postAction` turns a successful save into an error when the refresh fails
+### B6. `postAction` turns a successful save into an error when the refresh fails (done)
 - **Files:** `src/lib/client/actions.ts` (around lines 35 and 42).
 - **Problem:** `await invalidateAll()` runs after the action has succeeded but is not caught. If it rejects, `PhotoView.saveMeasurement` shows a failure and leaves the dialog open, and pressing Save again creates a second measurement **(unconfirmed whether Kit 3 rejects here)**. `enhance.ts` already uses `.catch(() => {})` for the same call.
 - **Change:** Use `await invalidateAll().catch(() => {})` in both places.
 - **Done when:** a unit test (mock `$app/navigation`) shows `postAction` resolves with the action data even when `invalidateAll` rejects.
 
-### B7. Uploads have no timeout
+### B7. Uploads have no timeout (done)
 - **Files:** `src/lib/client/upload.ts` (`sendPhoto`).
 - **Problem:** There is no `xhr.timeout`. On a stalled mobile connection the request hangs forever, the queue stays busy, and no later file is sent.
 - **Change:** Set `xhr.timeout = 120_000` and add `xhr.ontimeout = () => reject(classifyThrown(new TypeError('timeout')))`, matching the `onerror` path so it is retryable.
 - **Done when:** a unit test with a fake XHR (assign `globalThis.XMLHttpRequest`) shows a timeout rejects with a retryable network error.
 
-### B8. The client error hook reports every `TypeError` as a network error
+### B8. The client error hook reports every `TypeError` as a network error (done)
 - **Files:** `src/hooks.client.ts`, `src/app.d.ts` (`App.Error`), `src/lib/client/enhance.ts` (around line 30), `src/routes/+error.svelte`, `src/lib/client/errors.ts`.
 - **Problem:**
   - Any `TypeError` in client code (for example `x is undefined` in a universal load) is shown as "Network error" with status 503 and never logged.
@@ -173,37 +173,37 @@ Priority key:
   4. Move `GENERIC_MESSAGE` into `errors.ts` (or reuse `MESSAGES.server`) and import it in both hooks and in `+error.svelte`. Keep the exported name in `hooks.server.ts` if tests import it.
 - **Done when:** a new `src/hooks.client.test.ts` covers a fetch `TypeError` (network) and a plain `TypeError('x is undefined')` (logged, given an id). `src/tests/error-hook.test.ts` still passes.
 
-### B9. Account and admin forms skip `submitWith`
+### B9. Account and admin forms skip `submitWith` (done)
 - **Files:** `src/routes/account/+page.svelte` (forms around lines 40, 55, 65, 91, 138), `src/routes/admin/users/+page.svelte` (around lines 16, 45, 74, 78, 82), `src/routes/account/email/[token]/+page.svelte` (around line 17).
 - **Problem:** These use bare `use:enhance` or a custom callback. A network error or 500 replaces the whole page with the error page, and an expired session skips the "Signed out" prompt. On the account page the passkey Remove form uses `submitWith` but its sibling Rename form does not. **(Unconfirmed:)** plain `use:enhance` resets the Name form on success, which may empty the field.
 - **Change:** Use `submitWith({ reset: true })` for password-type forms (they should clear) and `submitWith({ reset: false })` for the name, email and rename forms. Keep the existing `form?.x` result messages working: `submitWith` calls `update()` for success and `fail` results unless `onFailure` is given.
 - **Done when:** e2e tests in `tests/e2e/account.spec.ts` and the admin tests pass. A new e2e test with `page.route('**/account?/signOutOthers', r => r.abort())` shows a notification and no error page.
 
-### B10. The keyboard Delete path ignores `busy`
+### B10. The keyboard Delete path ignores `busy` (done)
 - **Files:** `PhotoView.svelte` (`deleteAnnotation`, around line 96).
 - **Problem:** `saveMeasurement` and `saveRoom` return early when `busy`, but `deleteAnnotation` does not. Pressing Delete twice quickly asks twice and sends two requests.
 - **Change:** Start `deleteAnnotation` with `if (busy) return;`.
 - **Done when:** checked by reading the code; no new test is required.
 
-### B11. Renaming a measurement changes its stored value
+### B11. Renaming a measurement changes its stored value (done)
 - **Files:** `PhotoView.svelte` (the dialog prefill, around line 61), `MeasurementDialog.svelte`, `src/routes/p/[id]/photo/[photoId]/+page.server.ts` (`update`), `src/lib/server/annotations.ts`.
 - **Problem:** The edit dialog fills the value field with `formatLength(valueMm)`, which rounds to ⅛″ (or 1 mm). Saving only a new name sends that rounded text, which the server parses again. The stored length therefore drifts (for example 1000.05 mm becomes 1000.125 mm), and room areas change slightly.
 - **Change:** When the value field still holds exactly the text it was prefilled with, leave out the `value` field (or send `valueUnchanged=1`). In `parseAnnotationFields`, return `valueMm: undefined` in that case, and have `update` not overwrite `valueMm` when it is `undefined`. Keep `''` meaning "clear the value".
 - **Done when:** a route test in `src/tests/photo-actions.test.ts` creates a measurement with valueMm 1000.05, updates only its name, and checks valueMm is unchanged.
 
-### B12. A successful sign-in clears the per-address failure counter
+### B12. A successful sign-in clears the per-address failure counter (done)
 - **Files:** `src/lib/server/users.ts` (`authenticate`), `src/routes/login/passkey/verify/+server.ts`.
 - **Problem:** `clearFailures(db, keys)` clears the `ip:` key as well as the `email:` key. Anyone with one working account can sign in between guesses and reset the 50-per-address limit, which makes it useless.
 - **Change:** On success, clear only the `email:` key: `clearFailures(db, keys.filter((k) => k.startsWith('email:')))`. In the passkey verify route, do not clear the `ip:` key on success.
 - **Done when:** a test in `src/lib/server/accounts.test.ts` records failures for an IP, signs in successfully from it, and finds the IP failures still counted.
 
-### B13. "Forgot password" timing shows whether an account exists
+### B13. "Forgot password" timing shows whether an account exists (done)
 - **Files:** `src/routes/forgot/+page.server.ts`.
 - **Problem:** The answer is the same either way, but for a real account the handler waits for the SMTP send (often hundreds of ms). For an unknown address it returns at once. Response time therefore shows which addresses have accounts.
 - **Change:** Do not await the send: `void sendEmail(...)`. `sendEmail` already catches and logs its own errors, so this cannot cause an unhandled rejection.
 - **Done when:** existing forgot-password route tests pass. They may need `await vi.waitFor(...)` on the test mailer.
 
-### B14. Limit wrong "current password" attempts on the account page
+### B14. Limit wrong "current password" attempts on the account page (done)
 - **Files:** `src/routes/account/+page.server.ts` (`passwordIsRight`).
 - **Problem:** The email, password and delete-account actions check the current password without any limit. Someone with a stolen session cookie can guess the password and then take over the account.
 - **Change:** Inside `passwordIsRight`, use the existing limiter with the key `current-password:<userId>`. If `isBlocked` is true, return a "blocked" result that the actions show as "Too many attempts. Wait a few minutes and try again." (status 429). Call `recordFailure` when the password is wrong and `clearFailures` when it is right.

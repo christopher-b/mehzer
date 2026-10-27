@@ -150,6 +150,37 @@ test('dragging an end point moves the measurement and the change is saved', asyn
 	}).toPass();
 });
 
+test('dragging a line twice quickly: a slow first save does not undo the second drag', async ({ page }) => {
+	test.skip(isTouch(), 'mouse drags');
+	await createProject(page, uniqueName('Drag twice'));
+	await addRoom(page, 'Kitchen');
+	await addAndOpenPhoto(page, 'Kitchen', 640, 480);
+	await drawMeasurement(page, `12'`, { y: 0.3 });
+
+	// the first save answers after 1.5 s, the second after 3 s
+	const delays = [1500, 3000];
+	await page.route(/\?\/move/, async (route) => {
+		const response = await route.fetch();
+		await new Promise((resolve) => setTimeout(resolve, delays.shift() ?? 0));
+		await route.fulfill({ response }).catch(() => {});
+	});
+	await dragHandle(page, 1, 0.8, 0.5);
+	await dragHandle(page, 1, 0.6, 0.7);
+
+	const stroke = page.locator('.annotation .stroke');
+	const expectAtSecondDrag = async () => {
+		expect(Math.abs(Number(await stroke.getAttribute('x2')) - 0.6 * 640)).toBeLessThan(3);
+		expect(Math.abs(Number(await stroke.getAttribute('y2')) - 0.7 * 480)).toBeLessThan(3);
+	};
+	await page.waitForTimeout(2200); // the first save has answered, the second has not
+	await expectAtSecondDrag();
+	await page.waitForTimeout(1500);
+	await expectAtSecondDrag();
+	await reload(page);
+	await waitForPhoto(page);
+	await expectAtSecondDrag();
+});
+
 test('a metric project reads a bare number as metres and offers metric unit keys', async ({ page }) => {
 	await createProject(page, uniqueName('Metric'), 'metric');
 	await addRoom(page, 'Kitchen');

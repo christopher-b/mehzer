@@ -26,7 +26,8 @@ export function parseCoords(form: FormData): Coords | null {
 
 export interface AnnotationFields {
 	name: string | null;
-	valueMm: number | null;
+	/** `undefined` when the form left the value out: an edit that only renames keeps the stored length. */
+	valueMm: number | null | undefined;
 }
 
 type ParseResult =
@@ -40,6 +41,8 @@ export function parseAnnotationFields(project: Project, form: FormData): ParseRe
 	const name = formString(form, 'name').trim();
 	if (name.length > NAME_MAX_LENGTH) return bad(messages.annotationName);
 
+	// An empty value clears the length; no value at all leaves it as it is.
+	if (!form.has('value')) return { ok: true, fields: { name: name || null, valueMm: undefined } };
 	const valueText = formString(form, 'value').trim();
 	const valueMm = valueText ? parseLength(valueText, project.unitSystem) : null;
 	if (valueText && valueMm === null) {

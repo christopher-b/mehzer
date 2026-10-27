@@ -30,6 +30,18 @@ describe('notify', () => {
 		expect(notifications.items.map((n) => n.message)).toEqual(['b', 'c', 'd']);
 	});
 
+	it('drops the oldest that is not an error: an error and its Retry stay until dismissed', () => {
+		notify({ kind: 'error', message: 'Could not save' });
+		for (const m of ['a', 'b', 'c', 'd']) notify({ kind: 'success', message: m });
+		expect(notifications.items.map((n) => n.message)).toEqual(['Could not save', 'c', 'd']);
+	});
+
+	it('never makes room for a success by dropping one of three errors', () => {
+		for (const m of ['e1', 'e2', 'e3']) notify({ kind: 'error', message: m });
+		notify({ kind: 'success', message: 'ok' });
+		expect(notifications.items.map((n) => n.message)).toEqual(['e1', 'e2', 'e3']);
+	});
+
 	it('keeps the action', () => {
 		const run = vi.fn();
 		notify({ kind: 'error', message: 'x', action: { label: 'Retry', run } });

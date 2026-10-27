@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { beforeNavigate, goto, invalidateAll } from '$app/navigation';
+	import { onDestroy, onMount } from 'svelte';
 	import { CollapsedState } from '#lib/client/collapsed.svelte.ts';
 	import { UploadQueue } from '#lib/client/uploads.svelte.ts';
 	import { formatValue, measurementName } from '#lib/measurements.ts';
@@ -43,6 +43,12 @@
 			}
 		}
 	);
+	onDestroy(() => uploads.destroy());
+	beforeNavigate(({ cancel, willUnload }) => {
+		if (!uploads.busy) return;
+		// Closing the tab or reloading gets the browser's own prompt; in-app links get ours.
+		if (willUnload || !confirm('Photos are still uploading. Leave anyway?')) cancel();
+	});
 	const uploadFiles = (files: FileList, roomId: string | null) => uploads.add(files, roomId);
 </script>
 

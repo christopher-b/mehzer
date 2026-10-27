@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { submitWith } from '#lib/client/enhance.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -13,7 +14,7 @@
 
 <section class="card">
 	<h3>Invite someone</h3>
-	<form method="POST" action="?/invite" use:enhance class="stack">
+	<form method="POST" action="?/invite" use:enhance={submitWith()} class="stack">
 		<label>
 			Email address (optional)
 			<input type="email" name="email" autocomplete="off" />
@@ -42,7 +43,7 @@
 			{#each data.invites as invite (invite.id)}
 				<li>
 					<span>{invite.email ?? 'Any email'} · expires {day.format(invite.expiresAt)}</span>
-					<form method="POST" action="?/revoke" use:enhance>
+					<form method="POST" action="?/revoke" use:enhance={submitWith()}>
 						<input type="hidden" name="inviteId" value={invite.id} />
 						<button type="submit">Revoke</button>
 					</form>
@@ -71,15 +72,15 @@
 				</div>
 				{#if user.id !== data.me}
 					<div class="actions">
-						<form method="POST" action="?/resetLink" use:enhance>
+						<form method="POST" action="?/resetLink" use:enhance={submitWith()}>
 							<input type="hidden" name="userId" value={user.id} />
 							<button type="submit">Reset link</button>
 						</form>
-						<form method="POST" action={user.disabled ? '?/enable' : '?/disable'} use:enhance>
+						<form method="POST" action={user.disabled ? '?/enable' : '?/disable'} use:enhance={submitWith()}>
 							<input type="hidden" name="userId" value={user.id} />
 							<button type="submit">{user.disabled ? 'Enable' : 'Disable'}</button>
 						</form>
-						<form method="POST" action="?/delete" use:enhance class="delete">
+						<form method="POST" action="?/delete" use:enhance={submitWith()} class="delete">
 							<input type="hidden" name="userId" value={user.id} />
 							<input name="confirmEmail" placeholder="Type email to delete" aria-label="Type the email of {user.name} to delete" />
 							<button type="submit" class="danger">Delete</button>

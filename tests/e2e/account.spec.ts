@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 import { PORT } from './constants';
-import { inviteAndJoin, uniqueName, visit } from './helpers';
+import { failAction, inviteAndJoin, uniqueName, visit } from './helpers';
 
 const PASSWORD = 'a long enough password';
 
@@ -45,4 +45,13 @@ test('changing your email address: the new one signs you in, the old one does no
 	} finally {
 		await ben.context.close();
 	}
+});
+
+test('a form on the account page that cannot reach the server shows a message, not the error page', async ({ page }) => {
+	await visit(page, '/account');
+	await failAction(page, 'signOutOthers', 'offline');
+	await page.getByRole('button', { name: 'Sign out everywhere else' }).click();
+	await expect(page.getByRole('alert')).toBeVisible();
+	await expect(page).toHaveURL(/\/account$/);
+	await expect(page.getByRole('heading', { name: 'Something went wrong' })).toHaveCount(0);
 });

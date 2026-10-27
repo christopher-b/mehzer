@@ -150,6 +150,13 @@ describe('photo actions: update / move / delete', () => {
 		expect(row).toMatchObject({ name: 'New', valueMm: 3000, x1: a.x1 });
 	});
 
+	it('a rename that sends no value keeps the stored length exactly', async () => {
+		const s = await setup();
+		const a = await seedAnnotation(s.db, s.photo.id, { name: 'Old', valueMm: 1000.05 });
+		await run('update', s, { id: a.id, name: 'Renamed' });
+		expect((await all(s))[0]).toMatchObject({ name: 'Renamed', valueMm: 1000.05 });
+	});
+
 	it('can clear a value and a name', async () => {
 		const s = await setup();
 		const a = await seedAnnotation(s.db, s.photo.id, { name: 'Old', valueMm: 1000 });

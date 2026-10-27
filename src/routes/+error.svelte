@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { MESSAGES } from '#lib/client/errors.ts';
 
 	const status = $derived(page.status);
 	const notFound = $derived(status === 404);
@@ -11,7 +12,7 @@
 <section>
 	<h1>{notFound ? 'Page not found' : 'Something went wrong'}</h1>
 	{#if serverFault}
-		<p>Something went wrong on our side. Try again in a moment.</p>
+		<p>{MESSAGES.server}</p>
 		{#if page.error?.id}<p class="id">Error id: <code>{page.error.id}</code></p>{/if}
 	{:else}
 		<p>{page.error?.message}</p>

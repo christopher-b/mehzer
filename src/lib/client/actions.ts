@@ -5,14 +5,20 @@ import { classifyResponse, classifyThrown } from './errors.ts';
 /**
  * Post to a form action of the current page (`?/name`) and reload the page data on success. Throws an
  * `ActionError` unless the server said it worked, so a caller never mistakes a failure for success.
+ * `path` names the page the action belongs to, for a request that may be sent after the user has moved
+ * on (a "Retry" button).
  */
-export async function postAction(action: string, fields: Record<string, string | number | null>) {
+export async function postAction(
+	action: string,
+	fields: Record<string, string | number | null>,
+	options: { path?: string } = {}
+) {
 	const body = new FormData();
 	for (const [key, value] of Object.entries(fields)) body.set(key, value === null ? '' : String(value));
 	let res: Response;
 	let text: string;
 	try {
-		res = await fetch(`?/${action}`, {
+		res = await fetch(`${options.path ?? ''}?/${action}`, {
 			method: 'POST',
 			body,
 			headers: { 'x-sveltekit-action': 'true' }
@@ -32,14 +38,15 @@ export async function postAction(action: string, fields: Record<string, string |
 	const error = classifyResponse(res, result);
 	if (error) {
 		// Someone deleted the item elsewhere: show what is really there now.
-		if (error.kind === 'not-found') await invalidateAll();
+		if (error.kind === 'not-found') await invalidateAll().catch(() => {});
 		throw error;
 	}
 	if (result?.type === 'redirect') {
 		await goto(result.location, { invalidateAll: true });
 		return undefined;
 	}
-	await invalidateAll();
+	// The save worked; a failed refresh must not make it look as if it had not.
+	await invalidateAll().catch(() => {});
 	return (result as { data?: Record<string, unknown> }).data;
 }
 

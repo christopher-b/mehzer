@@ -11,6 +11,8 @@ declare global {
 			message: string;
 			/** Short id of a logged unexpected error, for the user to quote. */
 			id?: string;
+			/** Set by `hooks.client.ts` when the request got no response, so callers need not compare message text. */
+			code?: 'network';
 		}
 		interface Locals {
 			/** The signed-in user, or null (public pages only). */

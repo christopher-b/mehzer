@@ -28,7 +28,7 @@ Also: `npm run test:e2e:safari` after UI or style changes; `npm run db:generate`
 - **Accessible names are a contract:** the browser tests find things by role and name (`getByRole`, `getByLabel`; see `tests/e2e/helpers.ts`). Renaming a button, field or dialog means updating the tests in the same change. A few helpers still use CSS classes (`.annotation`, `.handle`, `.canvas`, `.room`, `.grid li`, ...); keep them or update the helpers.
 - **Hydration:** the app sets `data-hydrated` on `<html>` once its scripts run, and the test helpers wait for it; a click before then is lost.
 - **Timestamps:** `created_at` has whole-second resolution. Ties in ordering are broken by `rowid` (`photoOrder`, `roomOrder`, `annotationOrder` in `src/lib/server/photos.ts`).
-- **Database calls:** better-sqlite3 is synchronous, but server code still `await`s every call through the shared `Db` type (a leftover from when D1 was supported). Transactions are available but most multi-step writes are not wrapped in one yet.
+- **Database calls:** better-sqlite3 is synchronous, but server code still `await`s every call through the shared `Db` type (a leftover from when D1 was supported). Transactions are available (`db.transaction((tx) => ...)`, synchronous inside: use `.get()`, `.all()`, `.run()`). Account creation, invites and email changes use one; most other multi-step writes are not wrapped yet. Hash a password before the transaction starts, never inside it.
 - **Shared pieces:** shared UI is in `src/lib/components/ui/`, shared styles and design tokens in `src/app.css`, failure messages in one table in `src/lib/client/errors.ts`. Prefer these over new one-off versions.
 
 AI coding agents: see also [AGENTS.md](../AGENTS.md).

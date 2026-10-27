@@ -216,3 +216,42 @@ test('the \u2715 on a thumbnail deletes that photo, after a confirmation', async
 	await remove.click();
 	await expect(gridPhotos(page, 'No room')).toHaveCount(0);
 });
+
+/** Holds every photo upload for a while, so there is time to do something else meanwhile. */
+async function slowUploads(page: import('@playwright/test').Page, ms = 4000) {
+	await page.route('**/api/projects/*/photos', async (route) => {
+		const response = await route.fetch();
+		await new Promise((resolve) => setTimeout(resolve, ms));
+		await route.fulfill({ response }).catch(() => {});
+	});
+}
+
+test('leaving while photos upload asks first; leaving anyway ends the upload and stays away', async ({ page }) => {
+	await createProject(page, uniqueName('Leave'));
+	await addRoom(page, 'Kitchen');
+	await slowUploads(page);
+	const prompts: string[] = [];
+	page.on('dialog', (dialog) => prompts.push(dialog.message()));
+
+	await addPhotos(page, 'Kitchen', await makeImage(page, 640, 480));
+	await page.getByRole('link', { name: 'Mehzur', exact: true }).click();
+	await expect(page).toHaveURL(/\/$/);
+	expect(prompts).toEqual(['Photos are still uploading. Leave anyway?']);
+
+	// the upload that was in flight must not pull us to its photo afterwards
+	await page.waitForTimeout(6000);
+	await expect(page).toHaveURL(/\/$/);
+});
+
+test('answering Cancel to the prompt keeps you on the project page, and the upload finishes', async ({ page, confirmations, browserName }) => {
+	await createProject(page, uniqueName('Stay'));
+	await addRoom(page, 'Kitchen');
+	await slowUploads(page, 1500);
+	confirmations.answer = false;
+
+	await addPhotos(page, 'Kitchen', await makeImage(page, 640, 480));
+	await page.getByRole('link', { name: 'Mehzur', exact: true }).click();
+	await expect(page).toHaveURL(/\/p\/[0-9a-f-]+$/);
+	// WebKit hands the server an empty body for an upload held by `page.route`, so only Chromium can finish it
+	if (browserName === 'chromium') await expect(page).toHaveURL(/\/photo\//, { timeout: 15_000 });
+});

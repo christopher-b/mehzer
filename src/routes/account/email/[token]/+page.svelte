@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { submitWith } from '#lib/client/enhance.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -14,7 +15,7 @@
 		<p><a href="/account">Back to your account</a></p>
 	{:else if data.newEmail}
 		<p>Change the email address of your account to <strong>{data.newEmail}</strong>?</p>
-		<form method="POST" use:enhance>
+		<form method="POST" use:enhance={submitWith()}>
 			{#if form?.error}<p class="error">{form.error}</p>{/if}
 			<button type="submit" class="primary">Change my email address</button>
 		</form>

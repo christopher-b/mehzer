@@ -19,7 +19,8 @@ class Notifications {
 	notify(n: Omit<Notification, 'id'>): number {
 		const id = this.#nextId++;
 		this.items.push({ ...n, id });
-		while (this.items.length > MAX_VISIBLE) this.dismiss(this.items[0].id);
+		// Make room by dropping the oldest that can go: an error stays until it is dismissed.
+		while (this.items.length > MAX_VISIBLE) this.dismiss((this.items.find((i) => i.kind !== 'error') ?? this.items[0]).id);
 		if (n.kind !== 'error') this.#timers.set(id, setTimeout(() => this.dismiss(id), AUTO_DISMISS_MS));
 		return id;
 	}

@@ -1,6 +1,6 @@
 import type { SubmitFunction } from '$app/forms';
 import { invalidateAll } from '$app/navigation';
-import { ActionError, classifyResponse, classifyThrown, messageFor, NETWORK_ERROR_MESSAGE } from './errors.ts';
+import { ActionError, classifyResponse, classifyThrown, messageFor } from './errors.ts';
 import { showSessionExpired } from './session.svelte.ts';
 import { notify } from './notify.svelte.ts';
 
@@ -36,8 +36,8 @@ const inFlight = new WeakSet<HTMLFormElement>();
  * a response that was not a valid action result has no status of its own.
  */
 function classifyErrorResult(result: { status?: number; error?: unknown }): ActionError {
-	const err = result.error as { status?: number; message?: string } | undefined;
-	if (err?.message === NETWORK_ERROR_MESSAGE) return classifyThrown(new TypeError(err.message));
+	const err = result.error as { status?: number; code?: string } | undefined;
+	if (err?.code === 'network') return classifyThrown(new TypeError('network'));
 	if (typeof navigator !== 'undefined' && !navigator.onLine) return new ActionError('offline');
 	const status = result.status ?? err?.status;
 	return classifyResponse({ status: 200 }, { type: 'error', status, error: result.error }) ?? new ActionError('server');
