@@ -63,6 +63,11 @@ test('an unsafe "next" address is ignored after signing in', async ({ page }) =>
 	await expect(page).toHaveURL('/');
 });
 
+test('a "next" address with a backslash does not leave the site either', async ({ page }) => {
+	await signInAs(page, ADMIN, '/login?next=%2F%5Cevil.example');
+	await expect(page).toHaveURL('/');
+});
+
 test('the setup page is gone once an account exists', async ({ request }) => {
 	expect((await request.get('/setup')).status()).toBe(404);
 });

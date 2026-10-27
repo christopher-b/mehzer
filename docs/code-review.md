@@ -36,7 +36,7 @@ Priority key:
 
 ## P0: security and silent data errors
 
-### A1. Close the open redirect in `safeNext`
+### A1. Close the open redirect in `safeNext` (done)
 - **Files:** `src/lib/safeNext.ts`. New test file `src/lib/safeNext.test.ts`.
 - **Problem:** `value.startsWith('/') && !value.startsWith('//')` accepts `/\evil.com`, `/\t/evil.com` and `/\n/evil.com`. Browsers treat `\` as `/` and strip tab and newline characters, so all three go to `https://evil.com/` (checked with `new URL('/\\evil.com', 'https://app.x')`). The helper is used by `login/+page.server.ts` (server redirect) and `login/+page.svelte` (passkey sign-in), so `/login?next=%2F%5Cevil.com` sends people to another site right after a real sign-in.
 - **Change:**
