@@ -186,10 +186,24 @@ html [role='status']:empty {
 	position: absolute;
 	width: 1px;
 	height: 1px;
+	padding: 0;
+	margin: -1px;
 	overflow: hidden;
-	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
-	opacity: 0;
+	border: 0;
+}
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		transition: none !important;
+		animation: none !important;
+	}
 }
 
 /* Sign-in, setup, invite and reset pages: one narrow centred form. */

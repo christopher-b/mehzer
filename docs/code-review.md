@@ -213,7 +213,7 @@ Priority key:
 
 ## P2: accessibility
 
-### C1. Announce form errors with one shared component
+### C1. Announce form errors with one shared component (done)
 - **Files:** new `src/lib/components/ui/FormError.svelte`. It replaces `{#if ...}<p class="error">...</p>{/if}` in:
   - `login`, `forgot`, `reset/[token]`, `setup`, `invite/[token]` and `account/email/[token]` `+page.svelte`
   - `account/+page.svelte` and `admin/users/+page.svelte`
@@ -223,7 +223,7 @@ Priority key:
 - **Change:** `FormError` takes `message: string | null | undefined` and `id?: string`, and renders `<p class="error" role="alert" {id}>{message}</p>` only when there is a message. Where a single field is at fault, set `aria-invalid="true"` and `aria-describedby={id}` on it.
 - **Done when:** an e2e test (in `accessibility.spec.ts`) submits a wrong login and finds `getByRole('alert')` with the message. Keep the CSS class `error` so existing selectors keep working.
 
-### C2. Keep status regions mounted
+### C2. Keep status regions mounted (done)
 - **Files:**
   - `src/routes/+layout.svelte` (offline banner, around line 76)
   - `account/+page.svelte` (`role="status"` paragraphs)
@@ -233,7 +233,7 @@ Priority key:
 - **Change:** Render the `role="status"` element always and put the `{#if}` *inside* it. Hide it when empty with `:empty { display: none }`, or use `.visually-hidden` for the empty state.
 - **Done when:** the existing e2e tests pass. Check the markup has the status element present before the message appears.
 
-### C3. Put focus somewhere sensible after menu actions
+### C3. Put focus somewhere sensible after menu actions (done)
 - **Files:**
   - `src/lib/components/ProjectMenu.svelte` (Edit project, Share)
   - `src/routes/p/[id]/RoomMenu.svelte` (Rename, Delete)
@@ -248,7 +248,7 @@ Priority key:
   5. In `RoomMenu` and `PhotoView` delete forms, move `close` from `before` to `onSuccess`.
 - **Done when:** an e2e test opens Room menu → Rename and expects the name input `toBeFocused()`, then presses Escape and expects the room's menu button focused.
 
-### C4. `PopupMenu` keyboard behaviour
+### C4. `PopupMenu` keyboard behaviour (done)
 - **Files:** `src/lib/components/ui/PopupMenu.svelte`.
 - **Problem:** Tabbing out leaves the popup open. Home and End do nothing in `role="menu"`.
 - **Change:**
@@ -257,7 +257,7 @@ Priority key:
   - For `kind === 'menu'`, close on `Tab` without preventing default.
 - **Done when:** an e2e test opens the project menu, presses Tab past the last item and expects the menu hidden. Check the add-project and add-room dialog popovers still work, because they also use `PopupMenu` with `kind="dialog"`. Clicking from an input to a button inside the panel must not close it.
 
-### C5. Give repeated buttons unique names and expose the selected measurement
+### C5. Give repeated buttons unique names and expose the selected measurement (done)
 - **Files:** `src/routes/p/[id]/photo/[photoId]/MeasurementList.svelte`, `src/routes/p/[id]/PhotoGrid.svelte`, and the e2e helpers and specs that use these names.
 - **Problem:**
   - Every row's buttons are named "Edit" and "Delete", and every photo's remove button is "Delete photo".
@@ -271,7 +271,7 @@ Priority key:
   - Update `tests/e2e/helpers.ts` and the specs in the same commit (search for `'Edit'`, `'Delete'` and `'Delete photo'`).
 - **Done when:** all e2e suites pass with the new names.
 
-### C6. Measurement dialog field naming
+### C6. Measurement dialog field naming (done)
 - **Files:** `src/routes/p/[id]/photo/[photoId]/MeasurementDialog.svelte`.
 - **Problem:**
   - The changing hint (`<small>`: "Optional…", "Not recognised", "= 12′ 6″") sits inside the `<label>`, so the input's accessible name changes as the user types.
@@ -281,7 +281,7 @@ Priority key:
   - Add `aria-label` to the unit keys: `'` → "feet", `"` → "inches", others stay as they are. Add `aria-pressed` on the ABC/123 toggle.
 - **Done when:** `getByLabel('Length')` (or whatever the tests use today) still finds the input and e2e tests pass.
 
-### C7. Make line end points usable without dragging
+### C7. Make line end points usable without dragging (done)
 - **Files:** `src/lib/components/AnnotationCanvas.svelte`.
 - **Problem:**
   - Line end points can only be moved by dragging a 22 px circle (`r={11 * k}`), below the 24 px WCAG 2.5.8 minimum.
@@ -294,7 +294,7 @@ Priority key:
   4. Remove `role="application"` from the SVG.
 - **Done when:** an e2e test selects a measurement, focuses "End of …", presses ArrowRight five times, waits for the save, reloads, and finds the line's end x increased. Existing drag tests pass. This was not listed in `docs/decisions.md`; add a line there describing the keyboard support.
 
-### C8. Smaller accessibility fixes (can be one commit)
+### C8. Smaller accessibility fixes (can be one commit) (done)
 - `account/+page.svelte` and `admin/users/+page.svelte`: the page title is an `<h2>` and there is no `<h1>`. Make it `<h1>` and move the card headings up one level. Update e2e `getByRole('heading', { level })` uses, if any.
 - `PhotoView.svelte`: add `aria-live="polite"` to the hint text (`.hint span`).
 - `PhotoView.svelte` line 35: only use `?select=` if `data.annotations.some((a) => a.id === id)`.

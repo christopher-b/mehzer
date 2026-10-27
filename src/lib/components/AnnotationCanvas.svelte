@@ -50,12 +50,26 @@
 		onpending
 	}: Props = $props();
 
+	const NUDGE_STEP = 0.005;
+	const NUDGE_STEP_LARGE = 0.02;
+	const NUDGE_SAVE_MS = 400;
+	const NUDGE_DIRECTIONS: Record<string, [number, number]> = {
+		ArrowLeft: [-1, 0],
+		ArrowRight: [1, 0],
+		ArrowUp: [0, -1],
+		ArrowDown: [0, 1]
+	};
+
 	let svg: SVGSVGElement;
 	let displayWidth = $state(0);
 	let pointA = $state<Point | null>(null);
 	let hover = $state<Point | null>(null);
 	let drag = $state<{ id: string; end: 1 | 2; line: Line } | null>(null);
 	let suppressClick = false;
+	/** A line being moved with the arrow keys; saved once the keys have been still for `NUDGE_SAVE_MS`. */
+	let nudged = $state<{ id: string; line: Line } | null>(null);
+	let nudgeTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => () => clearTimeout(nudgeTimer));
 
 	/** Image pixels per CSS pixel, so markers and text keep a constant on-screen size. */
 	const k = $derived(displayWidth ? width / displayWidth : 1);
@@ -141,6 +155,28 @@
 		}
 	}
 
+	function onHandleKeydown(e: KeyboardEvent, a: CanvasAnnotation, end: 1 | 2) {
+		const direction = NUDGE_DIRECTIONS[e.key];
+		if (!direction || e.altKey || e.ctrlKey || e.metaKey || !interactive) return;
+		e.preventDefault();
+		const step = e.shiftKey ? NUDGE_STEP_LARGE : NUDGE_STEP;
+		const clamp = (n: number) => Math.min(1, Math.max(0, n));
+		const [dx, dy] = direction;
+		const line: Line =
+			end === 1
+				? { x1: clamp(a.x1 + dx * step), y1: clamp(a.y1 + dy * step), x2: a.x2, y2: a.y2 }
+				: { x1: a.x1, y1: a.y1, x2: clamp(a.x2 + dx * step), y2: clamp(a.y2 + dy * step) };
+		if (line.x1 === line.x2 && line.y1 === line.y2) return;
+		nudged = { id: a.id, line };
+		clearTimeout(nudgeTimer);
+		nudgeTimer = setTimeout(() => {
+			if (!nudged) return;
+			const { id, line } = nudged;
+			nudged = null;
+			onmove(id, line);
+		}, NUDGE_SAVE_MS);
+	}
+
 	function onKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape' && pointA) {
 			cancel();
@@ -148,7 +184,9 @@
 	}
 
 	const lines = $derived(
-		annotations.map((a) => (drag && drag.id === a.id ? { ...a, ...drag.line } : a))
+		annotations.map((a) =>
+			drag && drag.id === a.id ? { ...a, ...drag.line } : nudged && nudged.id === a.id ? { ...a, ...nudged.line } : a
+		)
 	);
 	const selected = $derived(lines.find((a) => a.id === selectedId) ?? null);
 
@@ -174,7 +212,7 @@
 		bind:this={svg}
 		viewBox="0 0 {width} {height}"
 		preserveAspectRatio="none"
-		role="application"
+		role="group"
 		aria-label="Photo annotations"
 		onpointermove={onPointerMove}
 		onpointerup={endDrag}
@@ -211,14 +249,20 @@
 
 		{#if selected && interactive && !pointA}
 			{#each [1, 2] as const as end}
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<circle
+				{@const cx = px(end === 1 ? selected.x1 : selected.x2)}
+				{@const cy = py(end === 1 ? selected.y1 : selected.y2)}
+				<g
 					class="handle"
-					cx={px(end === 1 ? selected.x1 : selected.x2)}
-					cy={py(end === 1 ? selected.y1 : selected.y2)}
-					r={11 * k}
+					role="button"
+					tabindex="0"
+					aria-label="{end === 1 ? 'Start' : 'End'} of {selected.label}"
 					onpointerdown={(e) => startDrag(e, selected, end)}
-				/>
+					onlostpointercapture={endDrag}
+					onkeydown={(e) => onHandleKeydown(e, selected, end)}
+				>
+					<circle class="grab" {cx} {cy} r={22 * k} />
+					<circle class="dot" {cx} {cy} r={11 * k} />
+				</g>
 			{/each}
 		{/if}
 
@@ -314,12 +358,27 @@
 		stroke: #1f6feb;
 	}
 	.handle {
+		cursor: grab;
+		touch-action: none;
+	}
+	.grab {
+		fill: transparent;
+		pointer-events: all;
+	}
+	.dot {
 		fill: rgb(31 111 235 / 0.25);
 		stroke: #1f6feb;
 		stroke-width: 2px;
 		vector-effect: non-scaling-stroke;
-		cursor: grab;
-		touch-action: none;
+		pointer-events: none;
+	}
+	.handle:focus-visible {
+		outline: none;
+	}
+	.handle:focus-visible .dot {
+		fill: rgb(31 111 235 / 0.6);
+		stroke: #fff;
+		stroke-width: 3px;
 	}
 	.draft .stroke {
 		stroke: #ff453a;

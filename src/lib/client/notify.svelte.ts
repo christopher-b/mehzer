@@ -21,8 +21,22 @@ class Notifications {
 		this.items.push({ ...n, id });
 		// Make room by dropping the oldest that can go: an error stays until it is dismissed.
 		while (this.items.length > MAX_VISIBLE) this.dismiss((this.items.find((i) => i.kind !== 'error') ?? this.items[0]).id);
-		if (n.kind !== 'error') this.#timers.set(id, setTimeout(() => this.dismiss(id), AUTO_DISMISS_MS));
+		this.resume(id);
 		return id;
+	}
+
+	/** Stop a notification's countdown while it is hovered or focused. */
+	pause(id: number) {
+		clearTimeout(this.#timers.get(id));
+		this.#timers.delete(id);
+	}
+
+	/** Start the countdown again, from the full time. Errors have none. */
+	resume(id: number) {
+		const n = this.items.find((i) => i.id === id);
+		if (!n || n.kind === 'error') return;
+		clearTimeout(this.#timers.get(id));
+		this.#timers.set(id, setTimeout(() => this.dismiss(id), AUTO_DISMISS_MS));
 	}
 
 	dismiss(id: number) {

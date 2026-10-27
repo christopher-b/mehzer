@@ -32,7 +32,9 @@
 	let roomDialogOpen = $state(false);
 	let roomError = $state('');
 
-	let selectedId = $state<string | null>(page.url.searchParams.get('select'));
+	const selectParam = page.url.searchParams.get('select');
+	// svelte-ignore state_referenced_locally
+	let selectedId = $state<string | null>(data.annotations.some((a) => a.id === selectParam) ? selectParam : null);
 	let pendingPoint = $state(false);
 	let busy = $state(false);
 
@@ -166,7 +168,7 @@
 
 	const TEXT_FIELD = 'input, textarea, select, [contenteditable]';
 	// Enter on these already activates them (a click follows), so it must not also open the dialog.
-	const ACTIVATED_BY_ENTER = `${TEXT_FIELD}, button, a, [role="menuitem"], dialog`;
+	const ACTIVATED_BY_ENTER = `${TEXT_FIELD}, button, a, [role="menuitem"], [role="button"], dialog`;
 
 	function onKeydown(e: KeyboardEvent) {
 		if (e.defaultPrevented) return;
@@ -217,7 +219,7 @@
 <div class="layout">
 	<div class="stage">
 		<div class="hint">
-			<span>{hint}</span>
+			<span aria-live="polite">{hint}</span>
 			{#if pendingPoint}<button type="button" onclick={() => canvas.cancel()}>Cancel</button>{/if}
 		</div>
 		<div class="room-row">

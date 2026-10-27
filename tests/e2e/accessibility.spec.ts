@@ -107,6 +107,19 @@ test('menu keys: Home and End jump to the ends, and tabbing out closes the menu'
 	await expect(items.first()).toBeHidden();
 });
 
+test('the account and users pages each have one h1', async ({ page }) => {
+	for (const url of ['/account', '/admin/users']) {
+		await visit(page, url);
+		await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+	}
+});
+
+test('a ?select= that matches no measurement selects nothing', async ({ page }) => {
+	await seedKitchenWithMeasurements(page);
+	await visit(page, page.url().split('?')[0] + '?select=nope');
+	await expect(page.getByText('Tap two points on the photo to add a measurement.')).toBeVisible();
+});
+
 test.describe('signed out', () => {
 	test.use({ storageState: { cookies: [], origins: [] } });
 

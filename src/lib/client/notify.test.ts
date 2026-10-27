@@ -25,6 +25,19 @@ describe('notify', () => {
 		expect(notifications.items.map((n) => n.message)).toEqual(['Bad']);
 	});
 
+	it('keeps a notification while it is hovered or focused, and counts down again afterwards', () => {
+		const id = notify({ kind: 'success', message: 'Saved' });
+		vi.advanceTimersByTime(3000);
+		notifications.pause(id);
+		vi.advanceTimersByTime(60_000);
+		expect(notifications.items).toHaveLength(1);
+		notifications.resume(id);
+		vi.advanceTimersByTime(3999);
+		expect(notifications.items).toHaveLength(1);
+		vi.advanceTimersByTime(2);
+		expect(notifications.items).toEqual([]);
+	});
+
 	it('shows at most three, dropping the oldest', () => {
 		for (const m of ['a', 'b', 'c', 'd']) notify({ kind: 'error', message: m });
 		expect(notifications.items.map((n) => n.message)).toEqual(['b', 'c', 'd']);

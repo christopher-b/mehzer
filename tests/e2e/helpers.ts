@@ -133,7 +133,7 @@ export async function addPhotos(page: Page, room: string, images: TestImage | Te
 	await roomCard(page, room).getByLabel(`Add photos to ${room}`).setInputFiles(images);
 }
 
-export const photoCanvas = (page: Page) => page.getByRole('application', { name: 'Photo annotations' });
+export const photoCanvas = (page: Page) => page.getByRole('group', { name: 'Photo annotations' });
 
 export async function waitForPhoto(page: Page) {
 	await expect(photoCanvas(page)).toBeVisible();

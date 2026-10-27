@@ -33,11 +33,11 @@
 
 <svelte:head><title>Account · Mehzur</title></svelte:head>
 
-<h2>Your account</h2>
+<h1>Your account</h1>
 <p class="muted">{data.account.email}</p>
 
 <section class="card">
-	<h3>Email address</h3>
+	<h2>Email address</h2>
 	<form method="POST" action="?/email" use:enhance={submitWith({ reset: true })} class="stack">
 		<label>New email address <input type="email" name="email" autocomplete="email" required /></label>
 		<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
@@ -52,7 +52,7 @@
 </section>
 
 <section class="card">
-	<h3>Name</h3>
+	<h2>Name</h2>
 	<form method="POST" action="?/profile" use:enhance={submitWith({ reset: false })} class="row">
 		<input name="name" value={data.account.name} maxlength={NAME_MAX_LENGTH} aria-label="Name" required />
 		<button type="submit">Save name</button>
@@ -62,7 +62,7 @@
 </section>
 
 <section class="card">
-	<h3>Password</h3>
+	<h2>Password</h2>
 	<form method="POST" action="?/password" use:enhance={submitWith({ reset: true })} class="stack">
 		<label>Current password <input type="password" name="current" autocomplete="current-password" required /></label>
 		<label>
@@ -81,7 +81,7 @@
 
 {#if data.passkeysAvailable}
 	<section class="card" aria-labelledby="passkeys-heading">
-		<h3 id="passkeys-heading">Passkeys</h3>
+		<h2 id="passkeys-heading">Passkeys</h2>
 		<p class="muted">
 			A passkey signs you in with your fingerprint, face or device PIN instead of typing a password. Your password keeps working.
 		</p>
@@ -135,7 +135,7 @@
 {/if}
 
 <section class="card">
-	<h3>Other devices</h3>
+	<h2>Other devices</h2>
 	<form method="POST" action="?/signOutOthers" use:enhance={submitWith()}>
 		<button type="submit">Sign out everywhere else</button>
 	</form>
@@ -144,7 +144,7 @@
 
 {#if data.account.role !== 'admin'}
 	<section class="card danger-zone">
-		<h3>Delete your account</h3>
+		<h2>Delete your account</h2>
 		<p>
 			This permanently deletes your account and <strong>all your projects, photos and measurements</strong>, including
 			projects you have shared (other people lose access to them). Projects other people shared with you are not deleted. It
@@ -171,7 +171,7 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 	}
-	.card h3 {
+	.card h2 {
 		margin: 0 0 0.6rem;
 	}
 	.row {

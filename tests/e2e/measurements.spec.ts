@@ -158,6 +158,28 @@ test('dragging an end point moves the measurement and the change is saved', asyn
 	}).toPass();
 });
 
+test('an end point can be moved with the arrow keys, and the move is saved', async ({ page }) => {
+	await createProject(page, uniqueName('Nudge'));
+	await addRoom(page, 'Kitchen');
+	await addAndOpenPhoto(page, 'Kitchen', 640, 480);
+	await drawMeasurement(page, `12'`, { y: 0.3 });
+
+	const stroke = page.locator('.annotation .stroke');
+	const before = Number(await stroke.getAttribute('x2'));
+	const handle = page.getByRole('button', { name: /^End of/ });
+	await handle.focus();
+	const saved = page.waitForResponse((res) => res.url().includes('?/move'));
+	for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight');
+	await expect(handle).toBeFocused();
+	await expect.poll(async () => Number(await stroke.getAttribute('x2'))).toBeCloseTo(before + 5 * 0.005 * 640, 0);
+	await expect(page).toHaveURL(/\/photo\//); // the arrow keys did not flip to another photo
+
+	expect((await saved).ok()).toBe(true); // five key presses make one save
+	await reload(page);
+	await waitForPhoto(page);
+	expect(Number(await stroke.getAttribute('x2'))).toBeGreaterThan(before + 10);
+});
+
 test('dragging a line twice quickly: a slow first save does not undo the second drag', async ({ page }) => {
 	test.skip(isTouch(), 'mouse drags');
 	await createProject(page, uniqueName('Drag twice'));

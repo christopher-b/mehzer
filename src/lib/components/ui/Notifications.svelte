@@ -6,7 +6,14 @@
 </script>
 
 {#snippet item(n: Notification)}
-	<div class="notification {n.kind}">
+	<div
+		class="notification {n.kind}"
+		role="presentation"
+		onpointerenter={() => notifications.pause(n.id)}
+		onfocusin={() => notifications.pause(n.id)}
+		onpointerleave={() => notifications.resume(n.id)}
+		onfocusout={() => notifications.resume(n.id)}
+	>
 		<span class="message">{n.message}</span>
 		{#if n.action}
 			<button

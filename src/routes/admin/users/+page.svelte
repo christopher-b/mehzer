@@ -11,10 +11,10 @@
 
 <svelte:head><title>Users · Mehzur</title></svelte:head>
 
-<h2>Users</h2>
+<h1>Users</h1>
 
 <section class="card">
-	<h3>Invite someone</h3>
+	<h2>Invite someone</h2>
 	<form method="POST" action="?/invite" use:enhance={submitWith()} class="stack">
 		<label>
 			Email address (optional)
@@ -37,7 +37,7 @@
 
 {#if data.invites.length > 0}
 	<section class="card">
-		<h3>Waiting to be used</h3>
+		<h2>Waiting to be used</h2>
 		<ul class="list">
 			{#each data.invites as invite (invite.id)}
 				<li>
@@ -53,7 +53,7 @@
 {/if}
 
 <section class="card wide">
-	<h3>People</h3>
+	<h2>People</h2>
 	<FormError message={form?.userError} />
 	<div class="link" role="status">{#if form?.resetLink}
 			<p>Reset link for {form.resetFor}{#if form.emailed} (emailed){/if}. It works once and expires in 1 hour.</p>
@@ -102,7 +102,7 @@
 	.card.wide {
 		max-width: 48rem;
 	}
-	.card h3 {
+	.card h2 {
 		margin: 0 0 0.6rem;
 	}
 	.stack {
