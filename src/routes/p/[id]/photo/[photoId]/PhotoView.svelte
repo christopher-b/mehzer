@@ -80,7 +80,7 @@
 		try {
 			if (state.mode === 'create') {
 				const result = await postAction('create', { ...state.line, ...fields });
-				selectedId = (result?.id as string) ?? null;
+				selectedId = typeof result?.id === 'string' ? result.id : null;
 			} else {
 				// The prefilled text is rounded; sending it back would change the stored length.
 				const valueUntouched = fields.value === prefilledValue;
@@ -268,7 +268,7 @@
 				openDialog({ mode: 'create', line });
 			}}
 			onmove={moveAnnotation}
-			onpending={(p) => (pendingPoint = p)}
+			bind:pending={pendingPoint}
 		/>
 		{#if data.neighbours.total > 1}
 			<PhotoNav projectId={data.project.id} roomName={currentRoomName} neighbours={data.neighbours} />

@@ -1,19 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Db } from './db/types.ts';
-import { NAME_MAX_LENGTH } from '#lib/constants.ts';
-import { UNIT_SYSTEMS, type UnitSystem } from '#lib/units.ts';
 import { photos, projectMembers, projects } from './db/schema.ts';
 import type { BlobStorage } from './storage/types.ts';
-
-export function parseUnitSystem(value: FormDataEntryValue | null): UnitSystem | null {
-	return (UNIT_SYSTEMS as readonly unknown[]).includes(value) ? (value as UnitSystem) : null;
-}
-
-export function parseName(value: FormDataEntryValue | null, max = NAME_MAX_LENGTH): string | null {
-	const name = String(value ?? '').trim();
-	return name && name.length <= max ? name : null;
-}
 
 export type ProjectRole = 'owner' | 'guest';
 

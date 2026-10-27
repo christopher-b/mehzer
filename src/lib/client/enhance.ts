@@ -1,5 +1,6 @@
 import type { SubmitFunction } from '$app/forms';
 import { invalidateAll } from '$app/navigation';
+import { failureMessage } from './actions.ts';
 import { ActionError, classifyResponse, classifyThrown, messageFor } from './errors.ts';
 import { showSessionExpired } from './session.svelte.ts';
 import { notify } from './notify.svelte.ts';
@@ -28,6 +29,19 @@ export interface SubmitOptions {
 	pending?: (pending: boolean) => void;
 }
 
+/**
+ * Options for a form that shows its errors inline (in a dialog, where a toast could not be reached):
+ * `set` receives the message, or '' when a new submit starts. With a `fallback`, a `fail(...)` result's
+ * own message is shown too.
+ */
+export function inlineErrors(set: (message: string) => void, fallback?: string): SubmitOptions {
+	return {
+		before: () => set(''),
+		onError: (message) => set(message),
+		...(fallback ? { onFailure: (result: { data?: unknown }) => set(failureMessage(result, fallback)) } : {})
+	};
+}
+
 /** Forms with a request in flight: a second submit (a double tap) is dropped, not sent twice. */
 const inFlight = new WeakSet<HTMLFormElement>();
 
@@ -40,7 +54,7 @@ function classifyErrorResult(result: { status?: number; error?: unknown }): Acti
 	if (err?.code === 'network') return classifyThrown(new TypeError('network'));
 	if (typeof navigator !== 'undefined' && !navigator.onLine) return new ActionError('offline');
 	const status = result.status ?? err?.status;
-	return classifyResponse({ status: 200 }, { type: 'error', status, error: result.error }) ?? new ActionError('server');
+	return classifyResponse({ status: 200 }, { type: 'error', status, error: result.error })!;
 }
 
 /**
@@ -68,10 +82,8 @@ export function submitWith(opts: SubmitOptions = {}): SubmitFunction {
 				if (result.type === 'error') error = classifyErrorResult(result);
 				else if (result.type === 'redirect') error = classifyResponse({ status: 200 }, result);
 				// Deleted elsewhere: say so, and show what is really there now.
-				if (result.type === 'failure' && result.status === 404) {
-					error = new ActionError('not-found');
-					await invalidateAll().catch(() => {});
-				}
+				if (result.type === 'failure' && result.status === 404) error = new ActionError('not-found');
+				if (error?.kind === 'not-found') await invalidateAll().catch(() => {});
 				if (error?.kind === 'session') {
 					opts.onSession?.();
 					showSessionExpired();

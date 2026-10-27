@@ -1,8 +1,7 @@
 <script lang="ts">
 	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
-	import { failureMessage } from '#lib/client/actions.ts';
-	import { submitWith } from '#lib/client/enhance.ts';
+	import { inlineErrors, submitWith } from '#lib/client/enhance.ts';
 	import { optionLabel } from '#lib/measurements.ts';
 	import type { UnitSystem } from '#lib/units.ts';
 
@@ -29,9 +28,7 @@
 	use:enhance={submitWith({
 		pending: (p) => (busy = p),
 		reset: false,
-		before: () => (error = ''),
-		onFailure: (result) => (error = failureMessage(result, 'Could not calculate')),
-		onError: (message) => (error = message),
+		...inlineErrors((message) => (error = message), 'Could not calculate'),
 		onSuccess: ondone
 	})}
 >

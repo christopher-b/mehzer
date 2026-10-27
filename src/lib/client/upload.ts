@@ -1,4 +1,4 @@
-import { resizeImage } from '#lib/image.ts';
+import { UnreadableImageError, resizeImage } from '#lib/image.ts';
 import { ActionError, classifyThrown } from './errors.ts';
 
 /** A file the browser or server will not take; trying again cannot help. */
@@ -13,8 +13,9 @@ export const UNREADABLE_IMAGE = "This file couldn't be read as an image.";
 export async function prepareImage(file: File) {
 	try {
 		return await resizeImage(file);
-	} catch {
-		throw new RefusedError(UNREADABLE_IMAGE);
+	} catch (e) {
+		if (e instanceof UnreadableImageError) throw new RefusedError(UNREADABLE_IMAGE);
+		throw e;
 	}
 }
 

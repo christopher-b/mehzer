@@ -9,7 +9,7 @@
 	import ProjectEditDialog from '#lib/components/ProjectEditDialog.svelte';
 	import ProjectShareDialog from '#lib/components/ProjectShareDialog.svelte';
 	import PopupMenu from '#lib/components/ui/PopupMenu.svelte';
-	import type { Guest } from '#lib/server/sharing.ts';
+	import type { Guest } from '#lib/types.ts';
 	import { unitLabel, type UnitSystem } from '#lib/units.ts';
 
 	/**
@@ -88,13 +88,3 @@
 
 <ProjectEditDialog bind:open={editing} {project} canDelete={access?.role === 'owner'} />
 {#if access?.role === 'owner'}<ProjectShareDialog bind:open={sharing} {project} {guests} />{/if}
-
-<style>
-	.menu-note {
-		margin: 0;
-		padding: 0.5rem 0.75rem;
-		color: var(--text-muted);
-		border-bottom: 1px solid var(--border);
-		overflow-wrap: anywhere;
-	}
-</style>

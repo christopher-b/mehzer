@@ -1,9 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { count, desc, eq } from 'drizzle-orm';
 import { computeRoomArea } from '#lib/rooms.ts';
 import { annotations, photos, projects, rooms, users } from '#lib/server/db/schema.ts';
 import { messages } from '#lib/server/messages.ts';
-import { accessibleTo, parseName, parseUnitSystem } from '#lib/server/projects.ts';
+import { parseName, parseUnitSystem } from '#lib/server/forms.ts';
+import { accessibleTo } from '#lib/server/projects.ts';
 import { listGuestsOfOwned } from '#lib/server/sharing.ts';
 import { requireUser } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';

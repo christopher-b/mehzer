@@ -1,10 +1,9 @@
 <script lang="ts">
 	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
-	import { failureMessage } from '#lib/client/actions.ts';
-	import { submitWith } from '#lib/client/enhance.ts';
+	import { inlineErrors, submitWith } from '#lib/client/enhance.ts';
 	import Dialog from '#lib/components/ui/Dialog.svelte';
-	import type { Guest } from '#lib/server/sharing.ts';
+	import type { Guest } from '#lib/types.ts';
 
 	let {
 		open = $bindable(false),
@@ -17,6 +16,8 @@
 	} = $props();
 
 	let error = $state('');
+	const setError = (message: string) => (error = message);
+	const showError = inlineErrors(setError);
 	let email = $state('');
 	let sharing = $state(false);
 	const action = (name: string) => `/p/${project.id}?/${name}`;
@@ -41,8 +42,7 @@
 							action={action('handOver')}
 							use:enhance={submitWith({
 								navigate: false,
-								before: () => (error = ''),
-								onError: (message) => (error = message),
+								...showError,
 								confirm: () =>
 									confirm(
 										`Hand this project over to ${guest.name}? They become the owner. You stay on it as a guest and can no longer delete it or share it.`
@@ -55,7 +55,7 @@
 						<form
 							method="POST"
 							action={action('unshare')}
-							use:enhance={submitWith({ navigate: false, before: () => (error = ''), onError: (message) => (error = message) })}
+							use:enhance={submitWith({ navigate: false, ...showError })}
 						>
 							<input type="hidden" name="userId" value={guest.userId} />
 							<button type="submit" aria-label="Stop sharing with {guest.name}">Remove</button>
@@ -72,9 +72,7 @@
 			use:enhance={submitWith({
 				navigate: false,
 				pending: (p) => (sharing = p),
-				before: () => (error = ''),
-				onFailure: (result) => (error = failureMessage(result, 'Could not share the project')),
-				onError: (message) => (error = message)
+				...inlineErrors(setError, 'Could not share the project')
 			})}
 		>
 			<input

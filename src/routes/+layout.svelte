@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '#lib/assets/favicon.svg';
 	import wordmark from '../art/wordmark.svg';
 	import { page } from '$app/state';
 	import { notify } from '#lib/client/notify.svelte.ts';
@@ -27,10 +26,6 @@
 		});
 	});
 </script>
-
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
 
 {#if page.url.pathname !== '/login'}
 	<header>
@@ -120,13 +115,6 @@
 		text-decoration: none;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
-	header :global(.menu-note) {
-		margin: 0;
-		padding: 0.5rem 0.75rem;
-		color: var(--text-muted);
-		border-bottom: 1px solid var(--border);
-		overflow-wrap: anywhere;
 	}
 	.brand {
 		display: block;

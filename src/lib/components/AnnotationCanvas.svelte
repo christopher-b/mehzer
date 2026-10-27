@@ -32,7 +32,8 @@
 		onselect: (id: string | null) => void;
 		oncreate: (line: Line) => void;
 		onmove: (id: string, line: Line) => void;
-		onpending?: (pending: boolean) => void;
+		/** True while the first point of a new line is placed and the second is awaited. */
+		pending?: boolean;
 	}
 
 	let {
@@ -47,7 +48,7 @@
 		onselect,
 		oncreate,
 		onmove,
-		onpending
+		pending = $bindable(false)
 	}: Props = $props();
 
 	const NUDGE_STEP = 0.005;
@@ -74,10 +75,13 @@
 	/** Image pixels per CSS pixel, so markers and text keep a constant on-screen size. */
 	const k = $derived(displayWidth ? width / displayWidth : 1);
 
-	$effect(() => onpending?.(pointA !== null));
+	function setPointA(p: Point | null) {
+		pointA = p;
+		pending = p !== null;
+	}
 
 	export function cancel() {
-		pointA = null;
+		setPointA(null);
 		hover = null;
 	}
 
@@ -108,13 +112,13 @@
 				onselect(null);
 				return;
 			}
-			pointA = p;
+			setPointA(p);
 			hover = p;
 			return;
 		}
 		if (screenDistance(pointA, p) < 6) return;
 		oncreate({ x1: pointA.x, y1: pointA.y, x2: p.x, y2: p.y });
-		pointA = null;
+		setPointA(null);
 		hover = null;
 	}
 
@@ -348,14 +352,14 @@
 		pointer-events: none;
 	}
 	.selected .stroke {
-		stroke: #1f6feb;
+		stroke: var(--accent);
 	}
 	.selected .end {
-		fill: #1f6feb;
+		fill: var(--accent);
 	}
 	.selected text {
 		fill: white;
-		stroke: #1f6feb;
+		stroke: var(--accent);
 	}
 	.handle {
 		cursor: grab;
@@ -366,8 +370,8 @@
 		pointer-events: all;
 	}
 	.dot {
-		fill: rgb(31 111 235 / 0.25);
-		stroke: #1f6feb;
+		fill: color-mix(in srgb, var(--accent) 25%, transparent);
+		stroke: var(--accent);
 		stroke-width: 2px;
 		vector-effect: non-scaling-stroke;
 		pointer-events: none;
@@ -376,7 +380,7 @@
 		outline: none;
 	}
 	.handle:focus-visible .dot {
-		fill: rgb(31 111 235 / 0.6);
+		fill: color-mix(in srgb, var(--accent) 60%, transparent);
 		stroke: #fff;
 		stroke-width: 3px;
 	}

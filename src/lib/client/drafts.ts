@@ -20,7 +20,8 @@ export function takeDraft(): Draft | null {
 		const raw = sessionStorage.getItem(key());
 		if (raw === null) return null;
 		sessionStorage.removeItem(key());
-		return JSON.parse(raw) as Draft;
+		const draft = JSON.parse(raw) as Draft | null;
+		return draft?.kind === 'room' || draft?.kind === 'measurement' ? draft : null;
 	} catch {
 		return null;
 	}

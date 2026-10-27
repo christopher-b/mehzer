@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('#lib/image.ts', () => ({ resizeImage: vi.fn() }));
+vi.mock('#lib/image.ts', async (original) => ({ ...(await original<typeof import('#lib/image.ts')>()), resizeImage: vi.fn() }));
 
 import { ActionError } from './errors.ts';
-import { UPLOAD_TIMEOUT_MS, sendPhoto } from './upload.ts';
+import { UnreadableImageError, resizeImage } from '#lib/image.ts';
+import { RefusedError, UPLOAD_TIMEOUT_MS, prepareImage, sendPhoto } from './upload.ts';
 
 class FakeXhr {
 	static last: FakeXhr;
@@ -55,5 +56,20 @@ describe('sendPhoto', () => {
 		const before = FakeXhr.last;
 		await expect(sendPhoto('p1', prepared, null, () => {}, controller.signal)).rejects.toBeInstanceOf(ActionError);
 		expect(FakeXhr.last).toBe(before);
+	});
+});
+
+describe('prepareImage', () => {
+	const file = new File(['x'], 'a.jpg');
+
+	it('refuses a file the browser cannot decode', async () => {
+		vi.mocked(resizeImage).mockRejectedValueOnce(new UnreadableImageError('no'));
+		await expect(prepareImage(file)).rejects.toBeInstanceOf(RefusedError);
+	});
+
+	it('lets any other failure through, so the upload can be retried', async () => {
+		const failure = new Error('Could not encode image');
+		vi.mocked(resizeImage).mockRejectedValueOnce(failure);
+		await expect(prepareImage(file)).rejects.toBe(failure);
 	});
 });

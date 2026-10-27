@@ -24,7 +24,7 @@
 
 <Dialog bind:open {title} {onopen} {onclose}>
 	{#snippet children(close)}
-		<form {onsubmit}>
+		<form onsubmit={onsubmit ?? ((e) => e.preventDefault())}>
 			{@render content()}
 			{#if footer}<div class="buttons">{@render footer(close)}</div>{/if}
 		</form>

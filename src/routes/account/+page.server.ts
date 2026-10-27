@@ -5,7 +5,7 @@ import { APP_URL, SESSION_SECRET } from '$app/env/private';
 import { users } from '#lib/server/db/schema.ts';
 import { appUrl, emailChangeEmail, emailConfigured, sendEmail } from '#lib/server/email.ts';
 import { createEmailChange, setEmail } from '#lib/server/emailChange.ts';
-import { formString } from '#lib/server/forms.ts';
+import { formString, parseName } from '#lib/server/forms.ts';
 import { listPasskeys, parsePasskeyName, passkeySettings, removePasskey, renamePasskey } from '#lib/server/passkeys.ts';
 import { verifyPassword } from '#lib/server/password.ts';
 import { deleteUserSessions } from '#lib/server/sessions.ts';
@@ -16,7 +16,6 @@ import {
 	findUserByEmail,
 	isBlocked,
 	normalizeEmail,
-	parsePersonName,
 	recordFailure,
 	requireUser,
 	setPassword
@@ -54,7 +53,7 @@ async function currentPasswordProblem(locals: App.Locals, form: FormData): Promi
 export const actions: Actions = {
 	profile: async ({ request, locals }) => {
 		const user = requireUser(locals);
-		const name = parsePersonName((await request.formData()).get('name'));
+		const name = parseName((await request.formData()).get('name'));
 		if (!name) return fail(400, { profileError: 'Enter your name.' });
 		await locals.db.update(users).set({ name }).where(eq(users.id, user.id));
 		return { profileSaved: true };

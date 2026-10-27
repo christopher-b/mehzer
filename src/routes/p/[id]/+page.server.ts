@@ -2,12 +2,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { computeRoomArea } from '#lib/rooms.ts';
 import { annotations, photos, projects, rooms, users } from '#lib/server/db/schema.ts';
-import { formId, formString } from '#lib/server/forms.ts';
+import { formId, formString, parseName, parseUnitSystem } from '#lib/server/forms.ts';
 import { messages } from '#lib/server/messages.ts';
 import { annotationOrder, deletePhoto, numberWithinPhoto, photoOrder, roomOrder } from '#lib/server/photos.ts';
-import { setRoomArea } from '#lib/server/rooms.ts';
-import { handOver, listGuests, removeGuest, shareProject, sharingMessages } from '#lib/server/sharing.ts';
-import { deleteProject, getProjectOr404, parseName, parseUnitSystem } from '#lib/server/projects.ts';
+import { roomAreaFailures, setRoomArea } from '#lib/server/rooms.ts';
+import { handOver, listGuests, removeGuest, shareFailures, shareProject, sharingMessages } from '#lib/server/sharing.ts';
+import { deleteProject, getProjectOr404 } from '#lib/server/projects.ts';
 import { requireUser } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -100,11 +100,10 @@ export const actions: Actions = {
 			formId(form, 'areaA'),
 			formId(form, 'areaB')
 		);
-		if (result === 'need-two') return fail(400, { error: 'Pick two measurements' });
-		if (result === 'same') return fail(400, { error: 'Pick two different measurements' });
-		if (result === 'not-in-room') return fail(400, { error: 'Measurements must belong to this room' });
-		if (result === 'no-value') return fail(400, { error: 'Both measurements need a value' });
-		if (result === 'room-not-found') return fail(404, { error: 'Room not found' });
+		if (result !== 'ok') {
+			const [status, message] = roomAreaFailures[result];
+			return fail(status, { error: message });
+		}
 	},
 
 	update: async ({ request, locals, params }) => {
@@ -130,10 +129,10 @@ export const actions: Actions = {
 		const user = requireUser(locals);
 		const project = await getProjectOr404(locals.db, user.id, params.id, 'owner');
 		const result = await shareProject(locals.db, project, user.id, (await request.formData()).get('email'));
-		if (result === 'invalid-email') return fail(400, { error: sharingMessages.email });
-		if (result === 'no-account') return fail(400, { error: sharingMessages.noAccount });
-		if (result === 'self') return fail(400, { error: sharingMessages.self });
-		if (result === 'already') return fail(400, { error: sharingMessages.already });
+		if (result !== 'shared') {
+			const [status, message] = shareFailures[result];
+			return fail(status, { error: message });
+		}
 		return { shared: true };
 	},
 

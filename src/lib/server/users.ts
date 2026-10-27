@@ -1,6 +1,5 @@
 import { error } from '@sveltejs/kit';
 import { and, count, eq, gt, inArray, isNull, lt } from 'drizzle-orm';
-import { NAME_MAX_LENGTH } from '#lib/constants.ts';
 import { loginAttempts, projects, users, type User, type UserRole } from './db/schema.ts';
 import type { Db } from './db/types.ts';
 import { hashPassword, passwordProblem, verifyPassword } from './password.ts';
@@ -29,11 +28,6 @@ export function normalizeEmail(value: FormDataEntryValue | string | null | undef
 	const email = String(value ?? '').trim().toLowerCase();
 	if (!email || email.length > EMAIL_MAX_LENGTH) return null;
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
-}
-
-export function parsePersonName(value: FormDataEntryValue | null): string | null {
-	const name = String(value ?? '').trim();
-	return name && name.length <= NAME_MAX_LENGTH ? name : null;
 }
 
 export async function countUsers(db: Db): Promise<number> {

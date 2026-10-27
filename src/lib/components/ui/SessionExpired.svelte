@@ -7,7 +7,7 @@
 	const signInHref = $derived(`/login?next=${encodeURIComponent(page.url.pathname + page.url.search)}`);
 </script>
 
-<Modal bind:open={sessionPrompt.open} title="Signed out" onsubmit={(e) => e.preventDefault()}>
+<Modal bind:open={sessionPrompt.open} title="Signed out">
 	<p>Your session has expired. Sign in again to continue.</p>
 	{#snippet footer(close)}
 		<span class="spacer"></span>
@@ -24,8 +24,6 @@
 		padding: 0.45rem 0.9rem;
 		border: 1px solid var(--accent);
 		border-radius: var(--radius-sm);
-		background: var(--accent);
-		color: white;
 		text-decoration: none;
 	}
 </style>

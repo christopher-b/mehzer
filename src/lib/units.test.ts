@@ -26,6 +26,8 @@ describe('parseLength (imperial)', () => {
 		[`12,6`, 12 * FT + 6 * IN],
 		[`12, 6`, 12 * FT + 6 * IN],
 		[`5ft6in`, 5 * FT + 6 * IN],
+		[`12ft6in`, 12 * FT + 6 * IN],
+		[`5ft6`, 5 * FT + 6 * IN],
 		[`5' 6"`, 5 * FT + 6 * IN],
 		[`12',6"`, 12 * FT + 6 * IN],
 		[`3.2m`, 3200],
@@ -34,7 +36,7 @@ describe('parseLength (imperial)', () => {
 		expect(parseLength(input, 'imperial')).toBeCloseTo(mm, 6);
 	});
 
-	it.each([``, `abc`, `6" 12'`, `1' 2' 3'`, `0`, `5/0"`, `12 6 3`, `-3`, `1,000`, `1,000'`, `12,600`])('rejects %j', (input) => {
+	it.each([``, `abc`, `6" 12'`, `1' 2' 3'`, `0`, `5/0"`, `12 6 3`, `-3`, `1,000`, `1,000'`, `12,600`, `12 1/2 6`, `0.5 1/2`, `1/2 1/2`, `1.5/2`, `0.01"`])('rejects %j', (input) => {
 		expect(parseLength(input, 'imperial')).toBeNull();
 	});
 });
@@ -64,6 +66,7 @@ describe('parseLength (metric)', () => {
 
 	it('rejects absurd values', () => {
 		expect(parseLength('5000', 'metric')).toBeNull();
+		expect(parseLength('0.5mm', 'metric')).toBeNull();
 	});
 });
 
@@ -83,9 +86,15 @@ describe('formatLength', () => {
 		[3250, '3.25 m'],
 		[3000, '3 m'],
 		[855, '85.5 cm'],
-		[3255.4, '3.255 m']
+		[3255.4, '3.255 m'],
+		[999.96, '1 m']
 	])('metric %d mm → %s', (mm, text) => {
 		expect(formatLength(mm, 'metric')).toBe(text);
+	});
+
+	it.each([NaN, Infinity, -5])('shows a dash for %d', (mm) => {
+		expect(formatLength(mm, 'imperial')).toBe('—');
+		expect(formatLength(mm, 'metric')).toBe('—');
 	});
 
 	it('round-trips imperial formatting through the parser', () => {

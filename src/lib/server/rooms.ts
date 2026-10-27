@@ -17,6 +17,14 @@ export type SetRoomAreaResult =
 	| 'no-value'
 	| 'room-not-found';
 
+export const roomAreaFailures: Record<Exclude<SetRoomAreaResult, 'ok'>, [status: number, message: string]> = {
+	'need-two': [400, 'Pick two measurements'],
+	same: [400, 'Pick two different measurements'],
+	'not-in-room': [400, 'Measurements must belong to this room'],
+	'no-value': [400, 'Both measurements need a value'],
+	'room-not-found': [404, 'Room not found']
+};
+
 /**
  * Choose the two measurements (length and width) a room's area is computed from, or clear the choice
  * when both are null. Both must be measurements on this room's photos and have a value.

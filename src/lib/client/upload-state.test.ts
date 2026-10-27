@@ -46,6 +46,11 @@ describe('upload state', () => {
 		expect(items.map((i) => i.photoId)).toEqual(['a', 'b', 'c']);
 	});
 
+	it('ignores a retry for a file that has not failed', () => {
+		const items = run([three, { type: 'uploaded', id: 1, photoId: 'a' }, { type: 'uploading', id: 2 }]);
+		expect(run([{ type: 'retry', id: 1 }, { type: 'retry', id: 2 }], items)).toEqual(items);
+	});
+
 	it('marks everything not yet sent as not uploaded when the session ends, keeping finished files', () => {
 		const items = run([three, { type: 'uploaded', id: 1, photoId: 'a' }, { type: 'preparing', id: 2 }, { type: 'session-expired' }]);
 		expect(items.map((i) => statusLabel(i))).toEqual(['Uploaded', 'Not uploaded', 'Not uploaded']);

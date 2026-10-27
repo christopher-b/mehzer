@@ -1,8 +1,7 @@
 <script lang="ts">
 	import FormError from '#lib/components/ui/FormError.svelte';
 	import { enhance } from '$app/forms';
-	import { failureMessage } from '#lib/client/actions.ts';
-	import { submitWith } from '#lib/client/enhance.ts';
+	import { inlineErrors, submitWith } from '#lib/client/enhance.ts';
 	import { NAME_MAX_LENGTH } from '#lib/constants.ts';
 	import { UNIT_OPTIONS, type UnitSystem } from '#lib/units.ts';
 
@@ -36,6 +35,7 @@
 	} = $props();
 
 	let busy = $state(false);
+	const inline = inlineErrors((message) => (error = message), 'Could not save the project');
 </script>
 
 <form
@@ -46,12 +46,11 @@
 		// The action may belong to another page (the project list posts to a project's page); stay put.
 		navigate: false,
 		pending: (p) => (busy = p),
+		...inline,
 		before: () => {
-			error = '';
+			inline.before?.();
 			before?.();
 		},
-		onFailure: (result) => (error = failureMessage(result, 'Could not save the project')),
-		onError: (message) => (error = message),
 		onSuccess: ondone
 	})}
 >

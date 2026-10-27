@@ -24,7 +24,18 @@
 	const unitSystem = $derived(data.project.unitSystem);
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 	const photoNumbers = $derived(new Map(data.photos.map((p, i) => [p.id, i + 1])));
-	const unassignedPhotos = $derived(data.photos.filter((p) => p.roomId === null));
+	function groupByRoom<T extends { roomId: string | null }>(items: T[]) {
+		const groups = new Map<string | null, T[]>();
+		for (const item of items) {
+			const group = groups.get(item.roomId);
+			if (group) group.push(item);
+			else groups.set(item.roomId, [item]);
+		}
+		return groups;
+	}
+	const photosByRoom = $derived(groupByRoom(data.photos));
+	const annotationsByRoom = $derived(groupByRoom(data.annotations));
+	const unassignedPhotos = $derived(photosByRoom.get(null) ?? []);
 
 	// Go straight to the first new photo to start measuring, but only when every file made it;
 	// otherwise stay here so the list of failures stays visible.
@@ -62,8 +73,8 @@
 
 	<div class="rooms">
 		{#each data.rooms as room (room.id)}
-			{@const roomPhotos = data.photos.filter((p) => p.roomId === room.id)}
-			{@const roomAnnotations = data.annotations.filter((a) => a.roomId === room.id)}
+			{@const roomPhotos = photosByRoom.get(room.id) ?? []}
+			{@const roomAnnotations = annotationsByRoom.get(room.id) ?? []}
 			{@const area = room.areaMm2 !== null ? formatArea(room.areaMm2, unitSystem) : null}
 			<RoomCard
 				id={room.id}

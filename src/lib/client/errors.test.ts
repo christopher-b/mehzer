@@ -63,6 +63,8 @@ describe('messageFor', () => {
 			'Something went wrong on our side. Try again in a moment. (Error id: ab12cd34)'
 		);
 		vi.stubGlobal('navigator', { onLine: true });
-		expect(messageFor(new Error('Unexpected token b in JSON'))).toBe("Couldn't reach the server. Check your connection and try again.");
+		expect(messageFor(new SyntaxError('Unexpected token b in JSON'))).toBe(
+			'Something went wrong on our side. Try again in a moment.'
+		);
 	});
 });

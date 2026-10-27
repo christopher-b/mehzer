@@ -4,7 +4,7 @@ const invalidateAll = vi.fn();
 vi.mock('$app/navigation', () => ({ invalidateAll: () => invalidateAll(), goto: vi.fn() }));
 vi.mock('$app/forms', () => ({ deserialize: (text: string) => JSON.parse(text) }));
 
-import { postAction } from './actions.ts';
+import { failureMessage, postAction } from './actions.ts';
 
 const respond = (body: unknown, status = 200) =>
 	vi.fn(async (_url: string, _init?: unknown) => new Response(JSON.stringify(body), { status }));
@@ -30,5 +30,13 @@ describe('postAction', () => {
 		const result = await postAction('create', {});
 		expect(invalidateAll).toHaveBeenCalled();
 		expect(result).toEqual({ id: 'new' });
+	});
+});
+
+describe('failureMessage', () => {
+	it('uses the form\'s message only when it is text', () => {
+		expect(failureMessage({ data: { error: 'Pick two' } }, 'Nope')).toBe('Pick two');
+		expect(failureMessage({ data: { error: { nested: true } } }, 'Nope')).toBe('Nope');
+		expect(failureMessage({}, 'Nope')).toBe('Nope');
 	});
 });

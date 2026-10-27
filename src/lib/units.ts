@@ -42,7 +42,7 @@ function parseImperial(input: string, bareIsFeet: boolean): number | null {
 		.replace(/\s*(inches|inch|in)(?![a-z])\.?/g, '"');
 
 	const tokens: Token[] = [];
-	const re = /\s*(\d+(?:\.\d+)?|\.\d+)(?:\s*\/\s*(\d+))?\s*(['"])?\s*[-,]?/y;
+	const re = /\s*(?:(\d+)\s*\/\s*(\d+)|(\d+(?:\.\d+)?|\.\d+))\s*(['"])?\s*[-,]?/y;
 	let pos = 0;
 	while (pos < s.length) {
 		re.lastIndex = pos;
@@ -55,18 +55,18 @@ function parseImperial(input: string, bareIsFeet: boolean): number | null {
 		const denom = m[2] ? Number(m[2]) : 1;
 		if (denom === 0) return null;
 		tokens.push({
-			value: Number(m[1]) / denom,
-			unit: m[3] === "'" ? 'ft' : m[3] === '"' ? 'in' : null,
+			value: Number(m[2] ? m[1] : m[3]) / denom,
+			unit: m[4] === "'" ? 'ft' : m[4] === '"' ? 'in' : null,
 			fraction: Boolean(m[2])
 		});
 	}
 	if (tokens.length === 0) return null;
 
-	// Merge "6 1/2"" style: a fraction joins the whole number in front of it.
+	// Merge "6 1/2"" style: a fraction joins the whole number in front of it, and only a whole number.
 	const merged: Token[] = [];
 	for (const t of tokens) {
 		const prev = merged.at(-1);
-		if (t.fraction && prev && !prev.fraction && (prev.unit === null || t.unit === null || prev.unit === t.unit)) {
+		if (t.fraction && prev && !prev.fraction && Number.isInteger(prev.value) && (prev.unit === null || t.unit === null || prev.unit === t.unit)) {
 			prev.value += t.value;
 			prev.unit = prev.unit ?? t.unit;
 			prev.fraction = true;
@@ -78,7 +78,7 @@ function parseImperial(input: string, bareIsFeet: boolean): number | null {
 	if (merged.length > 2) return null;
 	if (merged.length === 2) {
 		const [a, b] = merged;
-		if ((a.unit ?? 'ft') !== 'ft' || (b.unit ?? 'in') !== 'in') return null;
+		if ((a.unit ?? 'ft') !== 'ft' || (b.unit ?? 'in') !== 'in' || !Number.isInteger(a.value)) return null;
 		return a.value * MM_PER_FOOT + b.value * MM_PER_INCH;
 	}
 	const [t] = merged;
@@ -108,7 +108,7 @@ export function parseLength(input: string, system: UnitSystem): number | null {
 		mm = parseImperial(s, true);
 	}
 
-	return mm !== null && Number.isFinite(mm) && mm > 0 && mm <= MAX_MM ? mm : null;
+	return mm !== null && Number.isFinite(mm) && mm >= 1 && mm <= MAX_MM ? mm : null;
 }
 
 function gcd(a: number, b: number): number {
@@ -117,9 +117,11 @@ function gcd(a: number, b: number): number {
 
 /** Imperial lengths round to the nearest 1/8"; metric shows cm under 1 m, else m. */
 export function formatLength(mm: number, system: UnitSystem): string {
+	if (!Number.isFinite(mm) || mm < 0) return '—';
 	if (system === 'metric') {
-		if (mm < 1000) return `${trim((mm / 10).toFixed(1))} cm`;
-		return `${trim((mm / 1000).toFixed(3))} m`;
+		const tenths = Math.round(mm * 10) / 10; // so 999.96 mm is "1 m", not "100 cm"
+		if (tenths < 1000) return `${trim((tenths / 10).toFixed(1))} cm`;
+		return `${trim((tenths / 1000).toFixed(3))} m`;
 	}
 
 	const eighths = Math.round((mm / MM_PER_INCH) * 8);

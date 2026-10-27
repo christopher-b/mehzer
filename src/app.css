@@ -56,7 +56,8 @@ button {
 	color: var(--text);
 	cursor: pointer;
 }
-button.primary {
+button.primary,
+a.primary {
 	background: var(--accent);
 	border-color: var(--accent);
 	color: white;
@@ -64,13 +65,6 @@ button.primary {
 button.danger {
 	color: var(--danger);
 	border-color: var(--danger-border);
-}
-button.link {
-	border: none;
-	background: none;
-	padding: 0;
-	color: inherit;
-	text-decoration: underline;
 }
 button:disabled {
 	opacity: 0.6;
@@ -135,6 +129,13 @@ html [role='status']:empty {
 	display: grid;
 	min-width: 11rem;
 	padding: 0.25rem;
+}
+.menu-note {
+	margin: 0;
+	padding: 0.5rem 0.75rem;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--border);
+	overflow-wrap: anywhere;
 }
 .menu form {
 	margin: 0;

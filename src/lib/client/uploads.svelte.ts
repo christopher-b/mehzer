@@ -1,7 +1,7 @@
 import { ActionError, messageFor } from './errors.ts';
 import { showSessionExpired } from './session.svelte.ts';
 import { allUploaded, isBusy, reduceUploads, type UploadAction, type UploadItem } from './upload-state.ts';
-import { RefusedError, prepareImage, sendPhoto } from './upload.ts';
+import { RefusedError, UNREADABLE_IMAGE, prepareImage, sendPhoto } from './upload.ts';
 
 /** Uploads photos to a project one at a time, keeping per-file state for the page to show. */
 export class UploadQueue {
@@ -85,7 +85,11 @@ export class UploadQueue {
 	}
 
 	async #upload(item: UploadItem) {
-		const queued = this.#files.get(item.id)!;
+		const queued = this.#files.get(item.id);
+		if (!queued) {
+			this.#dispatch({ type: 'failed', id: item.id, message: UNREADABLE_IMAGE, retryable: false });
+			return;
+		}
 		this.#dispatch({ type: 'preparing', id: item.id });
 		try {
 			const prepared = await prepareImage(queued.file);

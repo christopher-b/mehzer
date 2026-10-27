@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { photos, projects } from './db/schema.ts';
-import { deleteProject, getProjectOr404, parseName, parseUnitSystem } from './projects.ts';
+import { deleteProject, getProjectOr404 } from './projects.ts';
 import {
 	createContext,
 	seedAnnotation,
@@ -11,33 +11,6 @@ import {
 	seedUser,
 	TEST_USER
 } from '../../tests/helpers.ts';
-
-describe('parseName', () => {
-	it('trims and returns the name', () => {
-		expect(parseName('  Elm St  ')).toBe('Elm St');
-	});
-	it.each([null, '', '   ', undefined as never])('rejects blank %j', (value) => {
-		expect(parseName(value)).toBeNull();
-	});
-	it('enforces the 100 character default maximum', () => {
-		expect(parseName('x'.repeat(100))).toHaveLength(100);
-		expect(parseName('x'.repeat(101))).toBeNull();
-	});
-	it('accepts a custom maximum', () => {
-		expect(parseName('abcd', 3)).toBeNull();
-		expect(parseName('abc', 3)).toBe('abc');
-	});
-});
-
-describe('parseUnitSystem', () => {
-	it('accepts only imperial and metric', () => {
-		expect(parseUnitSystem('imperial')).toBe('imperial');
-		expect(parseUnitSystem('metric')).toBe('metric');
-		for (const bad of ['', 'cubits', 'Imperial', ' metric', null]) {
-			expect(parseUnitSystem(bad)).toBeNull();
-		}
-	});
-});
 
 describe('getProjectOr404', () => {
 	it('returns the project, or throws a 404', async () => {

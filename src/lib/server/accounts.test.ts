@@ -14,8 +14,7 @@ import {
 	recordFailure,
 	deleteUserAndContent,
 	findUserByEmail,
-	normalizeEmail,
-	parsePersonName
+	normalizeEmail
 } from './users.ts';
 import { verifyPassword } from './password.ts';
 import { SESSION_TTL_MS } from './auth.ts';
@@ -25,7 +24,7 @@ const SECRET = 'unit-test-secret';
 const PASSWORD = 'correct horse battery';
 const NOW = 1_800_000_000_000;
 
-describe('normalizeEmail / parsePersonName', () => {
+describe('normalizeEmail', () => {
 	it('trims and lower-cases a valid address', () => {
 		expect(normalizeEmail('  Anna@Example.COM ')).toBe('anna@example.com');
 	});
@@ -35,11 +34,6 @@ describe('normalizeEmail / parsePersonName', () => {
 			expect(normalizeEmail(value as string)).toBeNull();
 		}
 	);
-	it('accepts a name of sensible length only', () => {
-		expect(parsePersonName(' Anna ')).toBe('Anna');
-		expect(parsePersonName('')).toBeNull();
-		expect(parsePersonName('x'.repeat(101))).toBeNull();
-	});
 });
 
 describe('createUser', () => {

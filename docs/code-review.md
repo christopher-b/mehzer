@@ -308,7 +308,7 @@ Priority key:
 
 ## P3: modularity, readability and concision
 
-### D1. Extract the "+ tile with a popover form" component
+### D1. Extract the "+ tile with a popover form" component (not needed)
 - **Files:** `src/routes/AddProject.svelte` is now a dialog around `ProjectForm.svelte`, and `AddRoom.svelte` is a dialog around `RoomNameForm.svelte` too, so nothing is a popover form any more; this task is no longer needed. (Original idea: a new `src/lib/components/ui/AddPopover.svelte`.)
 - **Change:**
   - Props: `label` (the tile text), `action`, `failureFallback`, `onSuccess?`, `onSession?`, and a `fields` snippet for the inputs. The component owns the `PopupMenu kind="dialog"`, the `AddTile` trigger, error state (with `FormError`), the pending state from A5, the Create/Cancel row and the shared styles.
@@ -316,16 +316,16 @@ Priority key:
   - AddRoom's draft saving (`onSession`) must keep working.
 - **Done when:** both components are mostly the `fields` snippet, and e2e passes.
 
-### D2. One helper for form error state
+### D2. One helper for form error state (done)
 - **Files:** `RoomNameForm.svelte`, `RoomAreaForm.svelte`, `ProjectShareDialog.svelte` (and `AddPopover` from D1).
 - **Problem:** Each repeats `let error = $state(''); submitWith({ before: () => (error = ''), onFailure: (r) => (error = failureMessage(r, ...)), onError: (m) => (error = m) })`.
 - **Change:** Add `formErrors(fallback: string)` in `src/lib/client/enhance.ts`, returning `{ get error(), options: SubmitOptions }`, using a `$state` inside a `.svelte.ts` file. Rename the file to `enhance.svelte.ts` if needed, and update imports.
 
-### D3. Replace the `onpending` effect with a bindable prop
+### D3. Replace the `onpending` effect with a bindable prop (done)
 - **Files:** `AnnotationCanvas.svelte` (`$effect(() => onpending?.(pointA !== null))`), `PhotoView.svelte` (`onpending={(p) => (pendingPoint = p)}`).
 - **Change:** In `AnnotationCanvas`, `let { pending = $bindable(false), ... } = $props()`, set `pending` wherever `pointA` changes (or `$effect.pre` if many places), and in `PhotoView` use `bind:pending={pendingPoint}`. Remove `onpending`.
 
-### D4. Server parsing and result mapping tidy-up
+### D4. Server parsing and result mapping tidy-up (done)
 - **Files:** `src/lib/server/projects.ts` (`parseName`), `src/lib/server/users.ts` (`parsePersonName`, the same function), `src/routes/p/[id]/+page.server.ts`.
 - **Change:**
   1. Delete `parsePersonName` and use `parseName` from a single place. Move `parseName` and `parseUnitSystem` into `src/lib/server/forms.ts`, next to `formString`.
@@ -333,25 +333,25 @@ Priority key:
   3. Remove the unused `and` import in `src/routes/+page.server.ts`.
 - **Done when:** the route tests pass with the same messages and statuses.
 
-### D5. Per-project client state carries across project changes
+### D5. Per-project client state carries across project changes (not done: no in-app link reaches it)
 - **Files:** `src/routes/p/[id]/+page.svelte`, `src/lib/client/collapsed.svelte.ts`.
 - **Problem:** The collapsed-rooms state is loaded only on mount. If SvelteKit reuses the page for `/p/A` → `/p/B` (back/forward or a typed URL), A's collapsed state carries over, and toggles save A's state under B's key **(no in-app link does this today)**.
 - **Change:** Wrap the project page's markup in `{#key data.project.id}`, as the photo page does, and move `collapsed.load()` into an `$effect` that reads `data.project.id`.
 
-### D6. Small UI correctness and concision fixes (one commit)
+### D6. Small UI correctness and concision fixes (one commit) (done)
 - `MeasurementTable.svelte`: when the filtered room has been deleted, the select shows "All rooms" but the list still filters by the old id. Use `const filter = $derived(roomFilter === 'all' || roomFilter === 'none' || rooms.some((r) => r.id === roomFilter) ? roomFilter : 'all')` and filter on `filter`.
 - `src/routes/p/[id]/+page.svelte`: replace the per-room `{@const ... .filter(...)}` with one `$derived` that groups `data.photos` and `data.annotations` into `Map`s by `roomId` (null key for "No room").
 - `src/lib/components/ui/Modal.svelte`: default `onsubmit` to `(e) => e.preventDefault()`, so a Modal without a handler never does a GET submit. Then remove the explicit `preventDefault`-only handler in `SessionExpired.svelte`.
 - `ProjectShareDialog.svelte` imports `type Guest` from `#lib/server/sharing.ts`. Move the `Guest` interface to `src/lib/types.ts` (or similar shared module) and import it from there in both.
 
-### D7. CSS duplication
+### D7. CSS duplication (done)
 - `.menu-note` is defined in both `ProjectMenu.svelte` and `+layout.svelte`. Move it to `src/app.css` next to `.menu` and delete both copies.
 - `SessionExpired.svelte` `a.primary` copies `button.primary`. Change the `app.css` rule to `button.primary, a.primary` and delete the local copy. Check `+error.svelte` `.links a` for the same.
 - `src/app.css`: delete the unused `button.link` rule (confirm with `grep -rn 'class="link"' src`).
 - `AnnotationCanvas.svelte`: replace the hard-coded `#1f6feb` with `var(--accent)` (check the token's value matches; if not, add a token).
 - `src/app.html` and `+layout.svelte` both declare a favicon. Keep one (`/icon.svg` in `app.html`) and remove the other, plus `src/lib/assets/favicon.svg` if it is then unused.
 
-### D8. Image resizing robustness
+### D8. Image resizing robustness (done)
 - **Files:** `src/lib/image.ts`, `src/lib/client/upload.ts` (`prepareImage`).
 - **Change:**
   - Fill the canvas white before drawing, so transparent PNGs do not turn black.
@@ -359,7 +359,7 @@ Priority key:
   - In a `finally`, set `canvas.width = canvas.height = 0` to free memory on iOS.
   - In `prepareImage`, only treat a `createImageBitmap` rejection as `RefusedError(UNREADABLE_IMAGE)`. A null context or null blob should throw a normal (retryable) error.
 
-### D9. Client type strictness and small guards (one commit)
+### D9. Client type strictness and small guards (one commit) (done)
 - `src/lib/client/actions.ts`: `failureMessage` should use the error only if `typeof data.error === 'string'`, so the user never sees `[object Object]`. In `PhotoView.svelte`, replace `result?.id as string` with a `typeof` check.
 - `src/lib/client/uploads.svelte.ts`: replace `this.#files.get(item.id)!` with a check that marks the item failed when the file is missing.
 - `src/lib/client/upload-state.ts`: the `retry` action should only apply to items whose status is `failed` or `not-uploaded`. Add a test.
@@ -367,7 +367,7 @@ Priority key:
 - `src/lib/client/enhance.ts`: an `error` result with status 404 should also `invalidateAll()`, as the `failure` 404 path does. Remove the unreachable `?? new ActionError('server')`.
 - `src/lib/client/errors.test.ts` (around lines 65–66) asserts that a JSON parse error reads as "Couldn't reach the server". Revisit this after B8; a parse error is a server problem, not a connection problem.
 
-### D10. Units parser edge cases (after A2 and A3)
+### D10. Units parser edge cases (after A2 and A3) (done)
 - **Files:** `src/lib/units.ts`, `src/lib/units.test.ts`.
 - **Change:**
   - Accept `5ft6in`, `12ft6in` and `5ft6` by replacing `\b` with `(?![a-z])` in the `ft`/`in` replacements.

@@ -101,6 +101,11 @@ export async function deletePhoto(
 
 export type SetPhotoRoomResult = 'ok' | 'unknown-room' | 'not-found';
 
+export const photoRoomFailures: Record<Exclude<SetPhotoRoomResult, 'ok'>, [status: number, message: string]> = {
+	'unknown-room': [400, 'Unknown room'],
+	'not-found': [404, 'Photo not found']
+};
+
 /**
  * Put a photo in a room (or in "No room" when `roomId` is null). Its measurements follow,
  * since a measurement's room is its photo's room, so any room area that was built from this

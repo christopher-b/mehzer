@@ -4,7 +4,7 @@ vi.mock('$app/navigation', () => ({ invalidateAll: vi.fn(async () => {}) }));
 vi.mock('./session.svelte.ts', () => ({ showSessionExpired: vi.fn() }));
 vi.mock('./notify.svelte.ts', () => ({ notify: vi.fn() }));
 
-import { submitWith } from './enhance.ts';
+import { inlineErrors, submitWith } from './enhance.ts';
 
 function start(handler: ReturnType<typeof submitWith>, formElement: object) {
 	const cancel = vi.fn();
@@ -59,5 +59,21 @@ describe('submitWith', () => {
 		expect(cancel).toHaveBeenCalledOnce();
 		expect(pending).not.toHaveBeenCalled();
 		expect(start(submitWith(), form).cancel).not.toHaveBeenCalled();
+	});
+});
+
+describe('inlineErrors', () => {
+	it('clears the message when a submit starts, and shows an error or a failure message', () => {
+		const set = vi.fn();
+		const options = inlineErrors(set, 'Could not save');
+		options.before?.();
+		options.onError?.('Offline', {} as never);
+		options.onFailure?.({ status: 400, data: { error: 'Name needed' } });
+		options.onFailure?.({ status: 400 });
+		expect(set.mock.calls).toEqual([[''], ['Offline'], ['Name needed'], ['Could not save']]);
+	});
+
+	it('leaves a fail(...) result to SvelteKit when there is no fallback', () => {
+		expect(inlineErrors(vi.fn()).onFailure).toBeUndefined();
 	});
 });

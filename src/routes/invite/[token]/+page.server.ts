@@ -1,9 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { SESSION_SECRET } from '$app/env/private';
-import { formString } from '#lib/server/forms.ts';
+import { formString, parseName } from '#lib/server/forms.ts';
 import { acceptInvite, findUsableInvite } from '#lib/server/invites.ts';
 import { startSession } from '#lib/server/signin.ts';
-import { normalizeEmail, parsePersonName } from '#lib/server/users.ts';
+import { normalizeEmail } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -20,7 +20,7 @@ export const actions: Actions = {
 		const invite = await findUsableInvite(locals.db, SESSION_SECRET, params.token);
 		if (!invite) return fail(400, { error: 'This invite link is no longer valid.', ...values });
 
-		const personName = parsePersonName(name);
+		const personName = parseName(name);
 		const address = normalizeEmail(invite.email ?? email);
 		if (!personName) return fail(400, { error: 'Enter your name.', ...values });
 		if (!address) return fail(400, { error: 'Enter a valid email address.', ...values });

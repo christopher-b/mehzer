@@ -21,17 +21,19 @@
 	let roomFilter = $state('all');
 
 	const roomNames = $derived(new Map(rooms.map((r) => [r.id, r.name])));
+	// A room deleted while it is chosen falls back to "All rooms", which is what the select then shows.
+	const filter = $derived(
+		roomFilter === 'all' || roomFilter === 'none' || rooms.some((r) => r.id === roomFilter) ? roomFilter : 'all'
+	);
 	const visible = $derived(
-		annotations.filter((a) =>
-			roomFilter === 'all' ? true : roomFilter === 'none' ? a.roomId === null : a.roomId === roomFilter
-		)
+		annotations.filter((a) => (filter === 'all' ? true : filter === 'none' ? a.roomId === null : a.roomId === filter))
 	);
 </script>
 
 <section aria-labelledby="measurements-heading">
 	<div class="toolbar">
 		<h2 id="measurements-heading">Measurements</h2>
-		<select bind:value={roomFilter} aria-label="Filter by room">
+		<select value={filter} onchange={(e) => (roomFilter = e.currentTarget.value)} aria-label="Filter by room">
 			<option value="all">All rooms</option>
 			<option value="none">No room</option>
 			{#each rooms as room (room.id)}

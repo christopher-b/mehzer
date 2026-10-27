@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { projectMembers, projects, users } from './db/schema.ts';
 import type { Db } from './db/types.ts';
+import type { Guest } from '#lib/types.ts';
 import { findUserByEmail, normalizeEmail } from './users.ts';
 
 export const sharingMessages = {
@@ -10,12 +11,6 @@ export const sharingMessages = {
 	already: 'This project is already shared with that person',
 	ownerCannotLeave: 'The owner cannot leave. Hand the project over to someone first.'
 };
-
-export interface Guest {
-	userId: string;
-	name: string;
-	email: string;
-}
 
 /** Everyone the project is shared with (not the owner), in the order they were added. */
 export async function listGuests(db: Db, projectId: string): Promise<Guest[]> {
@@ -42,6 +37,14 @@ export async function listGuestsOfOwned(db: Db, ownerId: string): Promise<Record
 }
 
 export type ShareResult = 'shared' | 'invalid-email' | 'no-account' | 'self' | 'already';
+
+/** The status and message the share action answers with for each refusal. */
+export const shareFailures: Record<Exclude<ShareResult, 'shared'>, [status: number, message: string]> = {
+	'invalid-email': [400, sharingMessages.email],
+	'no-account': [400, sharingMessages.noAccount],
+	self: [400, sharingMessages.self],
+	already: [400, sharingMessages.already]
+};
 
 /** Adds a guest by email address. Only people who already have an (enabled) account can be added. */
 export async function shareProject(

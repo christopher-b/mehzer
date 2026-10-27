@@ -49,6 +49,7 @@ export function reduceUploads(items: UploadItem[], action: UploadAction): Upload
 		case 'failed':
 			return update(action.id, { status: 'failed', message: action.message, retryable: action.retryable });
 		case 'retry':
+			if (!items.some((i) => i.id === action.id && (i.status === 'failed' || i.status === 'not-uploaded'))) return items;
 			return update(action.id, { status: 'queued', progress: 0, message: undefined, retryable: false });
 		case 'session-expired':
 			return items.map((item) =>

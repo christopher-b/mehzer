@@ -11,6 +11,7 @@ import {
 	annotationOrder,
 	numberWithinPhoto,
 	roomOrder,
+	photoRoomFailures,
 	setPhotoRoom
 } from '#lib/server/photos.ts';
 import { requireUser } from '#lib/server/users.ts';
@@ -90,8 +91,10 @@ export const actions: Actions = {
 			formId(form, 'roomId'),
 			user.id
 		);
-		if (result === 'unknown-room') return fail(400, { error: 'Unknown room' });
-		if (result === 'not-found') return fail(404, { error: 'Photo not found' });
+		if (result !== 'ok') {
+			const [status, message] = photoRoomFailures[result];
+			return fail(status, { error: message });
+		}
 	},
 
 	move: async ({ request, locals, params }) => {

@@ -52,5 +52,6 @@ export async function postAction(
 
 /** The `error` text of a failed form action result, or the fallback. */
 export function failureMessage(result: { data?: unknown }, fallback: string): string {
-	return String((result.data as { error?: string } | undefined)?.error ?? fallback);
+	const text = (result.data as { error?: unknown } | undefined)?.error;
+	return typeof text === 'string' ? text : fallback;
 }

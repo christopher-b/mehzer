@@ -1,7 +1,7 @@
 import { APP_PASSWORD, SESSION_SECRET } from '$app/env/private';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { checkPassword } from '#lib/server/auth.ts';
-import { formString } from '#lib/server/forms.ts';
+import { formString, parseName } from '#lib/server/forms.ts';
 import { startSession } from '#lib/server/signin.ts';
 import {
 	SETUP_DONE,
@@ -10,7 +10,6 @@ import {
 	createFirstAdmin,
 	isBlocked,
 	normalizeEmail,
-	parsePersonName,
 	recordFailure
 } from '#lib/server/users.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -37,7 +36,7 @@ export const actions: Actions = {
 			await recordFailure(locals.db, [KEY], Date.now());
 			return fail(400, { error: 'Incorrect setup password', ...values });
 		}
-		const personName = parsePersonName(name);
+		const personName = parseName(name);
 		const address = normalizeEmail(email);
 		if (!personName) return fail(400, { error: 'Enter your name.', ...values });
 		if (!address) return fail(400, { error: 'Enter a valid email address.', ...values });

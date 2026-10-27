@@ -35,9 +35,13 @@ export function messageFor(error: unknown): string {
 
 const isOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false;
 
-/** Classify something thrown while sending a request (fetch rejects when there is no response). */
+/**
+ * Classify something thrown while sending a request. A fetch that gets no response rejects with a
+ * `TypeError` (or an abort); anything else, such as a body that is not JSON, is the server's fault.
+ */
 export function classifyThrown(error: unknown): ActionError {
 	if (error instanceof ActionError) return error;
+	if (!(error instanceof TypeError || error instanceof DOMException)) return new ActionError('server');
 	return new ActionError(isOffline() ? 'offline' : 'network');
 }
 
