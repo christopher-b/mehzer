@@ -49,28 +49,77 @@ export type CreateUserResult = { user: User } | { error: string };
 
 export const EMAIL_TAKEN = 'That email address already has an account.';
 
+/** Thrown inside a transaction to undo it and hand back the reason. */
+export class Rollback {
+	constructor(readonly result: { error: string }) {}
+}
+
+/** The handle a `db.transaction` callback gets; its calls are synchronous (`.get()`, `.all()`, `.run()`). */
+export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+export function isUniqueViolation(err: unknown): boolean {
+	const e = err as { code?: string; cause?: { code?: string } } | null;
+	return e?.code === 'SQLITE_CONSTRAINT_UNIQUE' || e?.cause?.code === 'SQLITE_CONSTRAINT_UNIQUE';
+}
+
+/**
+ * Adds a user inside a transaction. The email check and the insert run together (and a unique
+ * violation is caught as well), so two requests for one address cannot both succeed or throw a 500.
+ */
+export function insertUser(
+	tx: Tx,
+	input: { email: string; name: string; passwordHash: string; role?: UserRole }
+): CreateUserResult {
+	if (tx.select({ id: users.id }).from(users).where(eq(users.email, input.email)).get()) return { error: EMAIL_TAKEN };
+	try {
+		const user = tx
+			.insert(users)
+			.values({ email: input.email, name: input.name, passwordHash: input.passwordHash, role: input.role ?? 'member' })
+			.returning()
+			.get();
+		return { user };
+	} catch (err) {
+		if (isUniqueViolation(err)) return { error: EMAIL_TAKEN };
+		throw err;
+	}
+}
+
 export async function createUser(
 	db: Db,
 	input: { email: string; name: string; password: string; role?: UserRole }
 ): Promise<CreateUserResult> {
 	const problem = passwordProblem(input.password);
 	if (problem) return { error: problem };
-	if (await findUserByEmail(db, input.email)) return { error: EMAIL_TAKEN };
-	const [user] = await db
-		.insert(users)
-		.values({
-			email: input.email,
-			name: input.name,
-			passwordHash: await hashPassword(input.password),
-			role: input.role ?? 'member'
-		})
-		.returning();
-	return { user };
+	// Hashing yields to other requests, so it happens before the check and insert, never between them.
+	const passwordHash = await hashPassword(input.password);
+	return db.transaction((tx) => insertUser(tx, { ...input, passwordHash }));
 }
 
 /** Projects from before accounts existed have no owner; the first admin gets them all. */
-export async function claimOrphanProjects(db: Db, userId: string) {
-	await db.update(projects).set({ ownerId: userId, createdBy: userId }).where(isNull(projects.ownerId));
+export function claimOrphanProjects(db: Db | Tx, userId: string) {
+	db.update(projects).set({ ownerId: userId, createdBy: userId }).where(isNull(projects.ownerId)).run();
+}
+
+export const SETUP_DONE = 'Setup is already done.';
+
+/**
+ * Creates the first administrator, and only while there are no accounts: the count is checked in the
+ * same transaction as the insert, so two setup requests cannot make two admins. Projects from before
+ * accounts existed (no owner) go to the new admin.
+ */
+export async function createFirstAdmin(
+	db: Db,
+	input: { email: string; name: string; password: string }
+): Promise<CreateUserResult> {
+	const problem = passwordProblem(input.password);
+	if (problem) return { error: problem };
+	const passwordHash = await hashPassword(input.password);
+	return db.transaction((tx) => {
+		if (tx.select({ n: count() }).from(users).get()!.n > 0) return { error: SETUP_DONE };
+		const created = insertUser(tx, { ...input, passwordHash, role: 'admin' });
+		if ('user' in created) claimOrphanProjects(tx, created.user.id);
+		return created;
+	});
 }
 
 export async function setPassword(db: Db, userId: string, password: string): Promise<string | null> {
@@ -130,7 +179,8 @@ export async function authenticate(
 	dummyHash ??= hashPassword('not-a-real-password');
 	const valid = await verifyPassword(input.password, user?.passwordHash ?? (await dummyHash));
 	if (user && valid && !user.disabledAt) {
-		await clearFailures(db, keys);
+		// Only this address's count is cleared: one working account must not reset the per-client limit.
+		await clearFailures(db, keys.filter((k) => k.startsWith('email:')));
 		return { user };
 	}
 	await recordFailure(db, keys, now);

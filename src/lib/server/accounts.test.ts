@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { annotations, invites, passwordResets, photos, projects, rooms, sessions, users } from './db/schema.ts';
+import { annotations, invites, loginAttempts, passwordResets, photos, projects, rooms, sessions, users } from './db/schema.ts';
 import { INVITE_TTL_MS, RESET_TTL_MS, acceptInvite, completePasswordReset, createInvite, createPasswordReset, findUsableInvite, listPendingInvites, revokeInvite } from './invites.ts';
 import { createSession, deleteSession, deleteUserSessions, findSession } from './sessions.ts';
 import {
+	LOGIN_LIMIT_PER_IP,
+	SETUP_DONE,
+	authenticate,
 	claimOrphanProjects,
 	countUsers,
+	createFirstAdmin,
 	createUser,
+	recordFailure,
 	deleteUserAndContent,
 	findUserByEmail,
 	normalizeEmail,
@@ -57,6 +62,33 @@ describe('createUser', () => {
 			error: expect.stringContaining('at least')
 		});
 		expect(await countUsers(db)).toBe(2); // the test user and Anna
+	});
+
+	it('returns EMAIL_TAKEN, never throws, when two requests for one address run together', async () => {
+		const { db } = createContext();
+		const make = (name: string) => createUser(db, { email: 'race@example.com', name, password: PASSWORD });
+		const results = await Promise.all([make('One'), make('Two'), make('Three')]);
+		expect(results.filter((r) => 'user' in r)).toHaveLength(1);
+		expect(results.filter((r) => 'error' in r)).toHaveLength(2);
+		expect(await db.select().from(users).where(eq(users.email, 'race@example.com'))).toHaveLength(1);
+	});
+});
+
+describe('createFirstAdmin', () => {
+	it('makes one admin, however many setup requests arrive, and gives them the ownerless projects', async () => {
+		const { db } = createContext();
+		const orphan = await seedProject(db);
+		await db.update(projects).set({ ownerId: null, createdBy: null, updatedBy: null });
+		await db.delete(users);
+		const make = (email: string) => createFirstAdmin(db, { email, name: 'Admin', password: PASSWORD });
+		const results = await Promise.all([make('a@example.com'), make('b@example.com')]);
+		expect(results.filter((r) => 'user' in r)).toHaveLength(1);
+		expect(results.find((r) => 'error' in r)).toEqual({ error: SETUP_DONE });
+		expect(await countUsers(db)).toBe(1);
+		const [admin] = await db.select().from(users);
+		expect(admin.role).toBe('admin');
+		const [project] = await db.select().from(projects).where(eq(projects.id, orphan.id));
+		expect(project.ownerId).toBe(admin.id);
 	});
 });
 
@@ -173,6 +205,29 @@ describe('invites', () => {
 	});
 });
 
+describe('invites accepted together', () => {
+	it('one address gets one account; the invite that lost stays usable', async () => {
+		const { db } = createContext();
+		const admin = await seedUser(db, { role: 'admin' });
+		const first = await createInvite(db, SECRET, { email: null, createdBy: admin.id }, NOW);
+		const second = await createInvite(db, SECRET, { email: null, createdBy: admin.id }, NOW);
+		const person = { email: 'same@example.com', name: 'Same', password: PASSWORD };
+		const results = await Promise.all([
+			acceptInvite(db, SECRET, first.token, person, NOW),
+			acceptInvite(db, SECRET, second.token, person, NOW)
+		]);
+		expect(results.filter((r) => 'user' in r)).toHaveLength(1);
+		expect(results.filter((r) => 'error' in r)).toHaveLength(1);
+		expect(await db.select().from(users).where(eq(users.email, 'same@example.com'))).toHaveLength(1);
+
+		const used = (await db.select().from(invites)).filter((i) => i.usedAt);
+		expect(used).toHaveLength(1);
+		expect(used[0].usedBy).not.toBeNull();
+		const usable = await Promise.all([first, second].map((i) => findUsableInvite(db, SECRET, i.token, NOW)));
+		expect(usable.filter(Boolean)).toHaveLength(1);
+	});
+});
+
 describe('password reset links', () => {
 	it('sets the new password once; the old password stops working', async () => {
 		const { db } = createContext();
@@ -212,6 +267,19 @@ describe('password reset links', () => {
 		expect(await completePasswordReset(db, SECRET, token, 'short', NOW)).toMatchObject({ error: expect.stringContaining('at least') });
 		await db.update(users).set({ disabledAt: new Date() }).where(eq(users.id, user.id));
 		expect(await completePasswordReset(db, SECRET, token, 'a brand new password', NOW)).toHaveProperty('error');
+	});
+});
+
+describe('authenticate', () => {
+	it('a successful sign-in clears that address\'s failures but not the client address\'s', async () => {
+		const { db } = createContext();
+		await createUser(db, { email: 'anna@example.com', name: 'Anna', password: PASSWORD });
+		await recordFailure(db, ['email:anna@example.com', 'ip:1.2.3.4'], NOW);
+		const result = await authenticate(db, { email: 'anna@example.com', password: PASSWORD, ip: '1.2.3.4' }, NOW + 1000);
+		expect(result).toHaveProperty('user');
+		const left = (await db.select().from(loginAttempts)).map((a) => a.key);
+		expect(left).toEqual(['ip:1.2.3.4']);
+		expect(LOGIN_LIMIT_PER_IP).toBeGreaterThan(1);
 	});
 });
 

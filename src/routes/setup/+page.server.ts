@@ -4,10 +4,10 @@ import { checkPassword } from '#lib/server/auth.ts';
 import { formString } from '#lib/server/forms.ts';
 import { startSession } from '#lib/server/signin.ts';
 import {
-	claimOrphanProjects,
+	SETUP_DONE,
 	clearFailures,
 	countUsers,
-	createUser,
+	createFirstAdmin,
 	isBlocked,
 	normalizeEmail,
 	parsePersonName,
@@ -44,11 +44,13 @@ export const actions: Actions = {
 		const password = formString(form, 'password');
 		if (password !== formString(form, 'confirm')) return fail(400, { error: 'The passwords do not match.', ...values });
 
-		const created = await createUser(locals.db, { email: address, name: personName, password, role: 'admin' });
-		if ('error' in created) return fail(400, { error: created.error, ...values });
+		const created = await createFirstAdmin(locals.db, { email: address, name: personName, password });
+		if ('error' in created) {
+			if (created.error === SETUP_DONE) error(404, 'Not found');
+			return fail(400, { error: created.error, ...values });
+		}
 
 		await clearFailures(locals.db, [KEY]);
-		await claimOrphanProjects(locals.db, created.user.id);
 		await startSession(locals.db, cookies, url, request, created.user.id);
 		redirect(303, '/');
 	}

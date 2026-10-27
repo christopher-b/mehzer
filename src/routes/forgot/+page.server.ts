@@ -24,7 +24,8 @@ export const actions: Actions = {
 		const user = await findUserByEmail(locals.db, address);
 		if (user && !user.disabledAt) {
 			const token = await createPasswordReset(locals.db, SESSION_SECRET, user.id);
-			await sendEmail(resetEmail(user.email, `${appUrl()}/reset/${token}`));
+			// Not awaited: waiting for the mail server would show which addresses have accounts. `sendEmail` logs its own failures.
+			void sendEmail(resetEmail(user.email, `${appUrl()}/reset/${token}`));
 		}
 		// The same answer whether or not the address has an account.
 		return { sent: true, email };

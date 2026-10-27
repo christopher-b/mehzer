@@ -70,6 +70,33 @@ describe('changing your email address without email set up', () => {
 	});
 });
 
+describe('guessing the current password on the account page', () => {
+	beforeEach(() => setMailerForTests(undefined));
+
+	it('is refused with 429 after 5 wrong attempts, even for the right password', async () => {
+		const s = await setup();
+		for (let i = 0; i < 5; i++) {
+			expect(failure(await submit(s.locals, { email: 'x@example.com', current: 'wrong' }))?.status).toBe(400);
+		}
+		const blocked = failure(await submit(s.locals, { email: 'x@example.com', current: 'wrong' }));
+		expect(blocked?.status).toBe(429);
+		expect(await submit(s.locals, { email: 'x@example.com', current: 'wrong' })).toMatchObject({
+			data: { emailError: expect.stringContaining('Too many attempts') }
+		});
+		expect(failure(await submit(s.locals, { email: 'x@example.com' }))?.status).toBe(429);
+		expect(await emailOf(s.db)).toBe(TEST_USER.email);
+	});
+
+	it('a right password clears the count', async () => {
+		const s = await setup();
+		for (let i = 0; i < 4; i++) await submit(s.locals, { email: 'x@example.com', current: 'wrong' });
+		expect(await submit(s.locals, { email: 'x@example.com' })).toEqual({ emailChanged: 'x@example.com' });
+		for (let i = 0; i < 4; i++) {
+			expect(failure(await submit(s.locals, { email: 'y@example.com', current: 'wrong' }))?.status).toBe(400);
+		}
+	});
+});
+
 describe('changing your email address with email set up', () => {
 	let sent: Email[];
 	beforeEach(() => {
@@ -136,6 +163,9 @@ describe('changing your email address with email set up', () => {
 		await seedUser(s.db, { email: 'taken@example.com' });
 		expect(await completeEmailChange(s.db, SECRET, TEST_USER.id, token2)).toMatchObject({ error: expect.stringContaining('already has an account') });
 		expect(await emailOf(s.db)).toBe(TEST_USER.email);
+		// the link is not used up: once the address is free again it still works
+		await s.db.delete(users).where(eq(users.email, 'taken@example.com'));
+		expect(await completeEmailChange(s.db, SECRET, TEST_USER.id, token2)).toMatchObject({ newEmail: 'taken@example.com' });
 	});
 
 	it('stores only a hash of the link token, and a failed send is reported', async () => {

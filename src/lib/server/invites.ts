@@ -3,7 +3,8 @@ import { hashToken, randomToken } from './auth.ts';
 import { invites, passwordResets, users, type User } from './db/schema.ts';
 import type { Db } from './db/types.ts';
 import { passwordProblem } from './password.ts';
-import { createUser, setPassword } from './users.ts';
+import { hashPassword } from './password.ts';
+import { Rollback, insertUser, setPassword } from './users.ts';
 
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const RESET_TTL_MS = 60 * 60 * 1000;
@@ -43,7 +44,11 @@ export async function findUsableInvite(db: Db, secret: string, token: string, no
 
 export type AcceptResult = { user: User } | { error: string };
 
-/** Turns an invite into an account. The invite is claimed first so it cannot be used twice. */
+/**
+ * Turns an invite into an account. Claiming the invite and creating the user happen in one
+ * transaction, so a failure (the address is taken, say) leaves the invite usable and a used invite
+ * always has an account.
+ */
 export async function acceptInvite(
 	db: Db,
 	secret: string,
@@ -54,21 +59,29 @@ export async function acceptInvite(
 	const invite = await findUsableInvite(db, secret, token, now);
 	if (!invite) return { error: 'This invite link is no longer valid.' };
 	if (invite.email && invite.email !== input.email) return { error: 'This invite is for a different email address.' };
+	const problem = passwordProblem(input.password);
+	if (problem) return { error: problem };
+	// Hashing yields to other requests, so it happens before the transaction, never inside it.
+	const passwordHash = await hashPassword(input.password);
 
-	const claimed = await db
-		.update(invites)
-		.set({ usedAt: new Date(now) })
-		.where(and(eq(invites.id, invite.id), isNull(invites.usedAt)))
-		.returning({ id: invites.id });
-	if (claimed.length === 0) return { error: 'This invite link is no longer valid.' };
-
-	const created = await createUser(db, { ...input, role: 'member' });
-	if ('error' in created) {
-		await db.update(invites).set({ usedAt: null }).where(eq(invites.id, invite.id));
-		return created;
+	try {
+		return db.transaction((tx) => {
+			const claimed = tx
+				.update(invites)
+				.set({ usedAt: new Date(now) })
+				.where(and(eq(invites.id, invite.id), isNull(invites.usedAt)))
+				.returning({ id: invites.id })
+				.all();
+			if (claimed.length === 0) throw new Rollback({ error: 'This invite link is no longer valid.' });
+			const created = insertUser(tx, { email: input.email, name: input.name, passwordHash, role: 'member' });
+			if ('error' in created) throw new Rollback(created);
+			tx.update(invites).set({ usedBy: created.user.id }).where(eq(invites.id, invite.id)).run();
+			return created;
+		});
+	} catch (err) {
+		if (err instanceof Rollback) return err.result;
+		throw err;
 	}
-	await db.update(invites).set({ usedBy: created.user.id }).where(eq(invites.id, invite.id));
-	return created;
 }
 
 export async function revokeInvite(db: Db, id: string, now = Date.now()) {

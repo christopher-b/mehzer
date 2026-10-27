@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import { APP_URL } from '$app/env/private';
 import { PASSKEY_COOKIE, finishLogin, passkeySettings } from '#lib/server/passkeys.ts';
 import { clientIp, startSession } from '#lib/server/signin.ts';
-import { clearFailures, isBlocked, recordFailure } from '#lib/server/users.ts';
+import { isBlocked, recordFailure } from '#lib/server/users.ts';
 import type { RequestHandler } from './$types';
 
 /** Finishes signing in with a passkey: checks the device's answer and starts a session. */
@@ -23,7 +23,6 @@ export const POST: RequestHandler = async ({ request, locals, cookies, url, getC
 		if (keys.length) await recordFailure(locals.db, keys, Date.now());
 		return json({ ok: false, error: result.error }, { status: 400 });
 	}
-	if (keys.length) await clearFailures(locals.db, keys);
 	await startSession(locals.db, cookies, url, request, result.user.id);
 	return json({ ok: true });
 };

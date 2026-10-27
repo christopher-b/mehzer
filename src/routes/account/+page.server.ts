@@ -10,6 +10,7 @@ import { listPasskeys, parsePasskeyName, passkeySettings, removePasskey, renameP
 import { verifyPassword } from '#lib/server/password.ts';
 import { deleteUserSessions } from '#lib/server/sessions.ts';
 import {
+	clearFailures,
 	deleteUserAndContent,
 	EMAIL_TAKEN,
 	findUserByEmail,
@@ -31,11 +32,23 @@ export const load: PageServerLoad = async ({ locals }) => ({
 	emailConfirmation: emailConfigured()
 });
 
-/** The user's current password must be right before anything sensitive changes. */
-async function passwordIsRight(locals: App.Locals, form: FormData): Promise<boolean> {
+const CURRENT_PASSWORD_LIMIT_MESSAGE = 'Too many attempts. Wait a few minutes and try again.';
+
+/**
+ * The user's current password must be right before anything sensitive changes. Wrong guesses are
+ * counted, so a stolen session cookie cannot be used to guess the password. Null when it is right.
+ */
+async function currentPasswordProblem(locals: App.Locals, form: FormData): Promise<{ status: number; message: string } | null> {
 	const user = requireUser(locals);
+	const key = [`current-password:${user.id}`];
+	if (await isBlocked(locals.db, key)) return { status: 429, message: CURRENT_PASSWORD_LIMIT_MESSAGE };
 	const row = await locals.db.query.users.findFirst({ where: eq(users.id, user.id) });
-	return row !== undefined && (await verifyPassword(formString(form, 'current'), row.passwordHash));
+	if (row && (await verifyPassword(formString(form, 'current'), row.passwordHash))) {
+		await clearFailures(locals.db, key);
+		return null;
+	}
+	await recordFailure(locals.db, key, Date.now());
+	return { status: 400, message: 'Your current password is not right.' };
 }
 
 export const actions: Actions = {
@@ -53,7 +66,8 @@ export const actions: Actions = {
 		const address = normalizeEmail(form.get('email'));
 		if (!address) return fail(400, { emailError: 'Enter a valid email address.' });
 		if (address === user.email) return fail(400, { emailError: 'That is already your email address.' });
-		if (!(await passwordIsRight(locals, form))) return fail(400, { emailError: 'Your current password is not right.' });
+		const wrong = await currentPasswordProblem(locals, form);
+		if (wrong) return fail(wrong.status, { emailError: wrong.message });
 		if (await findUserByEmail(locals.db, address)) return fail(400, { emailError: EMAIL_TAKEN });
 
 		if (!emailConfigured()) {
@@ -76,7 +90,8 @@ export const actions: Actions = {
 	password: async ({ request, locals }) => {
 		const user = requireUser(locals);
 		const form = await request.formData();
-		if (!(await passwordIsRight(locals, form))) return fail(400, { passwordError: 'Your current password is not right.' });
+		const wrong = await currentPasswordProblem(locals, form);
+		if (wrong) return fail(wrong.status, { passwordError: wrong.message });
 		const password = formString(form, 'password');
 		if (password !== formString(form, 'confirm')) return fail(400, { passwordError: 'The new passwords do not match.' });
 		const problem = await setPassword(locals.db, user.id, password);
@@ -114,7 +129,8 @@ export const actions: Actions = {
 		if (formString(form, 'confirmEmail').trim().toLowerCase() !== user.email) {
 			return fail(400, { deleteError: 'Type your email address to confirm.' });
 		}
-		if (!(await passwordIsRight(locals, form))) return fail(400, { deleteError: 'Your current password is not right.' });
+		const wrong = await currentPasswordProblem(locals, form);
+		if (wrong) return fail(wrong.status, { deleteError: wrong.message });
 		await deleteUserAndContent(locals.db, locals.storage, user.id);
 		clearSessionCookie(cookies);
 		redirect(303, '/login');
